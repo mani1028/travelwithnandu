@@ -610,22 +610,23 @@
         let firebaseConfig;
         
         // CHECK IF WE ARE IN CANVAS ENVIRONMENT
-        if (typeof __firebase_config !== 'undefined') {
-            firebaseConfig = JSON.parse(__firebase_config);
-        } else {
-            // --- GITHUB HOSTING INSTRUCTIONS ---
-            // 1. Go to Firebase Console -> Project Settings -> General
-            // 2. Scroll down to "Your apps" and select "SDK setup and configuration" -> "Config"
-            // 3. Copy the object and replace the below placeholder
-            const firebaseConfig = {
-  apiKey: "AIzaSyArnKRnUQDwaXsoKGG3PHDKTNmCKF5qpxg",
-  authDomain: "travel-with-nandu.firebaseapp.com",
-  projectId: "travel-with-nandu",
-  storageBucket: "travel-with-nandu.firebasestorage.app",
-  messagingSenderId: "323442917828",
-  appId: "1:323442917828:web:4185f668ca435903622491",
-  measurementId: "G-MTZYBGJGMZ"
-};
+        try {
+            if (typeof __firebase_config !== 'undefined') {
+                firebaseConfig = JSON.parse(__firebase_config);
+            }
+        } catch(e) { console.error("Config Parse Error", e); }
+
+        // Fallback for GitHub/Local Hosting
+        if (!firebaseConfig) {
+            firebaseConfig = {
+                apiKey: "AIzaSyArnKRnUQDwaXsoKGG3PHDKTNmCKF5qpxg",
+                authDomain: "travel-with-nandu.firebaseapp.com",
+                projectId: "travel-with-nandu",
+                storageBucket: "travel-with-nandu.firebasestorage.app",
+                messagingSenderId: "323442917828",
+                appId: "1:323442917828:web:4185f668ca435903622491",
+                measurementId: "G-MTZYBGJGMZ"
+            };
             
             // Allow override via window global (easier for beginners to paste in separate script tag)
             if(window.firebaseConfig) firebaseConfig = window.firebaseConfig;
