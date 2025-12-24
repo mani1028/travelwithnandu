@@ -169,45 +169,59 @@
     <!-- Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, updateDoc, runTransaction, serverTimestamp, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, updateDoc, runTransaction, serverTimestamp, query, where, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
         lucide.createIcons();
 
         // --- CONFIGURATION ---
         let firebaseConfig;
+        
         if (typeof __firebase_config !== 'undefined') {
             firebaseConfig = JSON.parse(__firebase_config);
         } else {
-            firebaseConfig = {
-                apiKey: "YOUR_API_KEY_HERE",
-                authDomain: "your-app.firebaseapp.com",
-                projectId: "your-app-id",
-                storageBucket: "your-app.appspot.com",
-                messagingSenderId: "123456789",
-                appId: "1:123456789:web:abcdef"
-            };
+            // --- GITHUB HOSTING CONFIG ---
+            const firebaseConfig = {
+  apiKey: "AIzaSyArnKRnUQDwaXsoKGG3PHDKTNmCKF5qpxg",
+  authDomain: "travel-with-nandu.firebaseapp.com",
+  projectId: "travel-with-nandu",
+  storageBucket: "travel-with-nandu.firebasestorage.app",
+  messagingSenderId: "323442917828",
+  appId: "1:323442917828:web:4185f668ca435903622491",
+  measurementId: "G-MTZYBGJGMZ"
+};
+            
+            if(window.firebaseConfig) firebaseConfig = window.firebaseConfig;
         }
 
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        let app, db, auth;
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+        } catch(e) { console.error("Firebase Init Error", e); }
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'travel-nandu-v1';
 
         let currentUser = null;
         let driverState = { isOnline: false, totalSeats: 7, filledSeats: 0 };
         let currentOfferId = null;
 
         const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch(e) { console.error("Auth Error", e); }
         };
-        initAuth().then(() => {
-            currentUser = auth.currentUser;
-        });
+        
+        if(auth) {
+            initAuth().then(() => {
+                currentUser = auth.currentUser;
+            });
+        }
 
         window.addEventListener('load', () => {
             const savedDriver = localStorage.getItem('driverDetails');
@@ -254,6 +268,10 @@
             
             if (!currentUser) currentUser = auth.currentUser;
             const driverData = JSON.parse(localStorage.getItem('driverDetails'));
+            
+            // Safety check
+            if(!driverData || !currentUser) return;
+            
             const driverRef = doc(db, 'artifacts', appId, 'public', 'data', 'active_drivers', currentUser.uid);
 
             if (driverState.isOnline) {
@@ -302,8 +320,10 @@
         }
 
         // --- NEW: DIRECT ASSIGNMENT LISTENER ---
+        let offerUnsubscribe = null;
         function startListeningForOffers() {
             if (!currentUser) return;
+            if (offerUnsubscribe) offerUnsubscribe(); // Prevent duplicates
             
             // Only listen for bookings explicitly OFFERED to this driver
             const q = query(
@@ -312,7 +332,7 @@
                 where("status", "==", "offered")
             );
 
-            onSnapshot(q, (snapshot) => {
+            offerUnsubscribe = onSnapshot(q, (snapshot) => {
                 if (!snapshot.empty) {
                     // Show the first offer found
                     const offerDoc = snapshot.docs[0];
@@ -337,7 +357,7 @@
             modal.classList.remove('opacity-0', 'pointer-events-none');
             card.classList.remove('translate-y-full');
             
-            // Sound notification could go here
+            // Play notification sound if possible
         }
 
         function hideOfferModal() {
@@ -371,8 +391,6 @@
                         });
                     });
                     
-                    // If accepted full cab, maybe mark self as busy/full?
-                    // For now, user said "give popup", so we just accepted.
                     alert("Job Accepted! Check 'Recent Trips'.");
 
                 } else {
@@ -381,18 +399,10 @@
                         offeredTo: null, // Clear offer
                         rejectedBy: arrayUnion(currentUser.uid) // Add self to ignore list
                     });
-                    // Note: arrayUnion requires import. If failing, simple read/write works too.
-                    // Let's use a simpler approach without importing arrayUnion to keep imports clean:
-                    // We will just set status back to 'pending_reassignment' ideally, but let's stick to simple logic:
-                    // We just remove 'offeredTo'. The customer app should see this and pick someone else.
-                    
-                    // Actually, to implement "Next Driver", we need to know who rejected.
-                    // Let's assume the Customer App is smart enough.
-                    const snap = await getDoc(bookingRef); // need getDoc import, or just use runTransaction
-                    // Simplified: Just set offeredTo: null. The customer app handles the rest.
                 }
             } catch (e) {
-                console.error(e);
+                console.error("Transaction failed: ", e);
+                alert("Action failed. The booking might have been cancelled.");
             }
         };
 

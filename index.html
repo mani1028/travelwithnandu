@@ -201,10 +201,10 @@
                             <div class="p-5 md:p-8">
                                 <!-- Tabs -->
                                 <div class="flex bg-slate-100/80 p-1.5 rounded-2xl mb-6 relative">
-                                    <button id="tab-shared" class="flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 bg-white text-blue-700 shadow-md transform scale-100" onclick="switchBookingType('shared')">
+                                    <button type="button" id="tab-shared" class="flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 bg-white text-blue-700 shadow-md transform scale-100" onclick="switchBookingType('shared')">
                                         <i data-lucide="users" class="h-4 w-4"></i> Shared
                                     </button>
-                                    <button id="tab-full" class="flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 text-slate-500 hover:text-slate-700" onclick="switchBookingType('full')">
+                                    <button type="button" id="tab-full" class="flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 text-slate-500 hover:text-slate-700" onclick="switchBookingType('full')">
                                         <i data-lucide="car-front" class="h-4 w-4"></i> Private/Amb
                                     </button>
                                 </div>
@@ -604,29 +604,45 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, onSnapshot, updateDoc, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, doc, onSnapshot, updateDoc, query, where, getDocs, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- 1. CONFIGURATION ---
         let firebaseConfig;
         
+        // CHECK IF WE ARE IN CANVAS ENVIRONMENT
         if (typeof __firebase_config !== 'undefined') {
             firebaseConfig = JSON.parse(__firebase_config);
         } else {
-            firebaseConfig = {
-                apiKey: "YOUR_API_KEY_HERE",
-                authDomain: "your-app.firebaseapp.com",
-                projectId: "your-app-id",
-                storageBucket: "your-app.appspot.com",
-                messagingSenderId: "123456789",
-                appId: "1:123456789:web:abcdef"
-            };
+            // --- GITHUB HOSTING INSTRUCTIONS ---
+            // 1. Go to Firebase Console -> Project Settings -> General
+            // 2. Scroll down to "Your apps" and select "SDK setup and configuration" -> "Config"
+            // 3. Copy the object and replace the below placeholder
+            const firebaseConfig = {
+  apiKey: "AIzaSyArnKRnUQDwaXsoKGG3PHDKTNmCKF5qpxg",
+  authDomain: "travel-with-nandu.firebaseapp.com",
+  projectId: "travel-with-nandu",
+  storageBucket: "travel-with-nandu.firebasestorage.app",
+  messagingSenderId: "323442917828",
+  appId: "1:323442917828:web:4185f668ca435903622491",
+  measurementId: "G-MTZYBGJGMZ"
+};
+            
+            // Allow override via window global (easier for beginners to paste in separate script tag)
+            if(window.firebaseConfig) firebaseConfig = window.firebaseConfig;
         }
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        // Initialize Firebase
+        let app, auth, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+        } catch (e) {
+            console.error("Firebase Init Error: Check your config!", e);
+            document.getElementById('auth-status').textContent = "Config Error";
+        }
         
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'travel-nandu-v1';
 
         let currentUser = null;
         let currentBookingUnsubscribe = null;
@@ -639,7 +655,7 @@
                 setTimeout(() => { splash.style.display = 'none'; }, 700);
             }, 1500); 
 
-            initAuth();
+            if(auth) initAuth();
             
             const savedName = localStorage.getItem('userName');
             const savedMobile = localStorage.getItem('userMobile');
@@ -648,32 +664,38 @@
         });
 
         const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (e) {
+                console.error("Auth Error", e);
             }
         };
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                const deskStatus = document.getElementById('auth-status');
-                if(deskStatus) {
-                    deskStatus.textContent = 'Connected';
-                    deskStatus.classList.replace('text-slate-400', 'text-green-600');
-                    deskStatus.classList.add('bg-green-50');
-                }
-                const mobStatus = document.getElementById('mobile-connection-status');
-                if(mobStatus) {
-                    mobStatus.classList.remove('bg-yellow-400', 'animate-pulse');
-                    mobStatus.classList.add('bg-green-500');
-                }
+        if(auth) {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUser = user;
+                    const deskStatus = document.getElementById('auth-status');
+                    if(deskStatus) {
+                        deskStatus.textContent = 'Connected';
+                        deskStatus.classList.replace('text-slate-400', 'text-green-600');
+                        deskStatus.classList.add('bg-green-50');
+                    }
+                    const mobStatus = document.getElementById('mobile-connection-status');
+                    if(mobStatus) {
+                        mobStatus.classList.remove('bg-yellow-400', 'animate-pulse');
+                        mobStatus.classList.add('bg-green-500');
+                    }
 
-                const activeId = localStorage.getItem('activeBookingId');
-                if(activeId) trackBooking(activeId);
-            }
-        });
+                    const activeId = localStorage.getItem('activeBookingId');
+                    if(activeId) trackBooking(activeId);
+                }
+            });
+        }
 
         // --- STATE & UI LOGIC ---
         let state = {
@@ -817,7 +839,7 @@
         // --- NEW: MATCHING & ASSIGNMENT LOGIC (THE BRAIN) ---
         window.handleBookingSubmit = async (e) => {
             e.preventDefault();
-            if(!currentUser) { alert("Please wait for connection..."); return; }
+            if(!currentUser) { alert("Connecting to server... please wait a moment."); return; }
 
             const btn = document.getElementById('submit-btn');
             const originalText = btn.innerHTML;
@@ -887,6 +909,7 @@
                         if (d.filledSeats === 0) {
                             if (requiredVehicle === 'CAB_7' && d.vehicleType.includes('7 Seater')) isMatch = true;
                             if (requiredVehicle === 'CAB_5' && d.vehicleType.includes('5 Seater')) isMatch = true;
+                            // Fallback: 7 Seater can accept 5 Seater Cab requests? Optional logic.
                         }
                     } 
                     else {
@@ -905,7 +928,7 @@
                 if (candidates.length > 0) {
                     assignedDriverId = candidates[0].uid; // First Come First Serve (FCFS) due to queueTime sort
                 } else {
-                    alert("No available drivers found matching your request. Please try again later.");
+                    alert("No drivers currently available for this specific request. Try a different car type.");
                     btn.innerHTML = originalText;
                     btn.disabled = false;
                     return;
@@ -922,7 +945,7 @@
                     rejectedBy: [], // Track rejections
                     requiredVehicle: requiredVehicle,
                     passengers: state.passengers, // Store for logic
-                    timestamp: new Date().toISOString()
+                    timestamp: serverTimestamp() // Use server timestamp
                 };
 
                 const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'bookings'), bookingData);
@@ -932,7 +955,7 @@
                 
             } catch (error) {
                 console.error("Booking error:", error);
-                alert("Booking failed. Please try again.");
+                alert("Booking failed. Please check internet connection.");
                 btn.innerHTML = originalText;
                 btn.disabled = false;
             }
@@ -957,7 +980,6 @@
                     document.getElementById('status-title').textContent = "Looking for next driver...";
                     
                     // Client-side Loop to find next driver
-                    // (Ideally done on server, but serverless workaround)
                     const rejectedList = data.rejectedBy || [];
                     
                     // Re-query drivers
@@ -994,9 +1016,12 @@
                         });
                     } else {
                          // No more drivers
-                         document.getElementById('status-title').textContent = "Busy";
-                         document.getElementById('status-desc').textContent = "All nearby drivers are busy. Please wait or cancel.";
+                         document.getElementById('status-title').textContent = "Drivers Busy";
+                         document.getElementById('status-desc').textContent = "All nearby drivers are busy or rejected the request. Please cancel and try again later.";
                          document.getElementById('status-icon').classList.replace('text-blue-600', 'text-red-500');
+                         document.getElementById('status-icon').classList.remove('animate-spin');
+                         document.getElementById('status-icon').setAttribute('data-lucide', 'x-circle');
+                         lucide.createIcons();
                     }
                 } else {
                     updateStatusUI(data);
@@ -1033,6 +1058,10 @@
                 document.getElementById('driver-vehicle').textContent = data.driverVehicle || "Vehicle";
                 document.getElementById('driver-plate').textContent = data.driverPlate || "";
                 document.getElementById('call-btn').href = `tel:917842424201`;
+            } else if (data.status === 'cancelled') {
+                title.textContent = "Cancelled";
+                desc.textContent = "Booking was cancelled.";
+                bar.className = "h-full bg-red-500 w-full";
             }
             lucide.createIcons();
         }
@@ -1041,7 +1070,9 @@
             if(!confirm("Are you sure you want to cancel?")) return;
             const id = localStorage.getItem('activeBookingId');
             if(id) {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', id), { status: 'cancelled' });
+                try {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', id), { status: 'cancelled' });
+                } catch(e) { console.log("Cancel error", e); }
             }
             resetUI();
         };
