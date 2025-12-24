@@ -19,8 +19,7 @@
         body { 
             font-family: 'Plus Jakarta Sans', sans-serif; 
             -webkit-tap-highlight-color: transparent;
-            /* Removed padding-bottom to eliminate extra space below footer */
-            background-color: #F3F4F6;
+            background-color: #F8FAFC;
         }
         
         /* Smooth Scrolling */
@@ -32,21 +31,32 @@
             background-color: #EFF6FF; 
             color: #1D4ED8;
             box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
+            transform: scale(1.02);
         }
         .service-option.active-red { 
             border-color: #EF4444; 
             background-color: #FEF2F2; 
             color: #B91C1C;
             box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1);
+            transform: scale(1.02);
         }
         
+        .service-option { transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); }
+
         /* Custom radio button styling */
+        .amb-radio:checked + div, .seat-radio:checked + div, .ac-radio:checked + div, .cab-radio:checked + div {
+            border-color: #3B82F6;
+            background-color: #EFF6FF;
+            color: #1D4ED8;
+            box-shadow: 0 0 0 2px #3B82F6;
+            transform: translateY(-1px);
+        }
+        
         .amb-radio:checked + div {
             border-color: #EF4444;
             background-color: #FEF2F2;
             color: #B91C1C;
             box-shadow: 0 0 0 2px #EF4444;
-            transform: translateY(-2px);
         }
 
         /* Hide Scrollbar */
@@ -63,22 +73,27 @@
         }
         .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
         
-        @keyframes popupBounce {
-            0% { transform: scale(0.9); opacity: 0; }
-            60% { transform: scale(1.05); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        .animate-popup { animation: popupBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(2); opacity: 0; } }
+        .animate-ring::before { content: ''; position: absolute; left: 0; top: 0; width: 100%; height: 100%; border-radius: 50%; border: 2px solid #3B82F6; animation: pulse-ring 2s infinite; }
 
-        /* Glassmorphism for Desktop Booking Widget */
         .glass-panel {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.5);
         }
+        
+        .whatsapp-float {
+            position: fixed; bottom: 90px; right: 20px;
+            background-color: #25D366; color: white;
+            border-radius: 50%; width: 56px; height: 56px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 40; transition: transform 0.2s;
+        }
+        .whatsapp-float:active { transform: scale(0.95); }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-900 select-none">
+<body class="bg-slate-50 text-slate-900 select-none">
 
     <!-- Splash Screen -->
     <div id="splash-screen" class="fixed inset-0 bg-blue-600 z-[100] flex flex-col items-center justify-center transition-opacity duration-700">
@@ -89,87 +104,39 @@
         <p class="text-blue-200 font-medium mt-2 tracking-wide">Premium & Safe Travel</p>
     </div>
 
-    <!-- SUCCESS POPUP MODAL -->
-    <div id="success-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center px-4">
-        <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
-        
-        <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm relative z-10 overflow-hidden transform animate-popup">
-            <div class="bg-gradient-to-br from-green-400 to-green-600 p-8 text-center relative overflow-hidden">
-                <div class="absolute inset-0 bg-white/10 opacity-30 pattern-dots"></div>
-                <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl ring-4 ring-green-400/30">
-                    <i data-lucide="check" class="h-10 w-10 text-green-600 stroke-[3]"></i>
-                </div>
-                <h3 class="text-white text-2xl font-bold mb-1">Booking Received!</h3>
-                <p class="text-green-50 font-medium text-sm opacity-90">Thank you, <span id="modal-name-display" class="font-bold">User</span>!</p>
-            </div>
-            
-            <div class="p-6 space-y-5">
-                <div class="space-y-3">
-                    <div class="flex justify-between items-center pb-3 border-b border-gray-100">
-                        <span class="text-gray-400 text-xs font-bold uppercase tracking-wider">Service</span>
-                        <span id="modal-service" class="font-bold text-gray-800 text-right">Shared Cab</span>
-                    </div>
-                    <div class="flex justify-between items-start pb-3 border-b border-gray-100">
-                        <span class="text-gray-400 text-xs font-bold uppercase tracking-wider mt-1">Route</span>
-                        <div class="text-right">
-                            <span id="modal-from" class="font-bold text-gray-800">Karimnagar</span>
-                            <i data-lucide="arrow-right" class="inline h-3 w-3 text-gray-400 mx-1"></i>
-                            <span id="modal-to" class="font-bold text-gray-800">Hyderabad</span>
-                        </div>
-                    </div>
-                    <div class="flex justify-between items-center pb-3 border-b border-gray-100">
-                        <span class="text-gray-400 text-xs font-bold uppercase tracking-wider">Date</span>
-                        <span id="modal-date" class="font-bold text-gray-800">Dec 24, 2025</span>
-                    </div>
-                </div>
-
-                <div class="bg-blue-50 rounded-2xl p-4 flex justify-between items-center ring-1 ring-blue-100">
-                    <span class="text-blue-600 text-xs font-bold uppercase tracking-wide">Estimated Cost</span>
-                    <span id="modal-price" class="text-2xl font-black text-gray-900">₹400</span>
-                </div>
-
-                <button onclick="closeModal()" class="w-full py-4 bg-gray-900 text-white font-bold rounded-2xl shadow-xl hover:bg-gray-800 hover:shadow-2xl transition-all transform active:scale-[0.98]">
-                    Done
-                </button>
-            </div>
-        </div>
-    </div>
-
     <!-- Desktop Navbar -->
-    <nav class="hidden md:block bg-white/80 backdrop-blur-md shadow-sm fixed w-full z-50 top-0 border-b border-gray-100">
+    <nav class="hidden md:block bg-white/80 backdrop-blur-md shadow-sm fixed w-full z-50 top-0 border-b border-slate-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-20 items-center">
                 <div class="flex-shrink-0 flex items-center gap-3">
                     <div class="bg-gradient-to-tr from-blue-600 to-blue-500 p-2.5 rounded-xl shadow-lg shadow-blue-200">
                         <i data-lucide="car" class="h-6 w-6 text-white"></i>
                     </div>
-                    <span class="font-extrabold text-2xl text-gray-900 tracking-tight">Travel With <span class="text-blue-600">Nandu</span></span>
+                    <span class="font-extrabold text-2xl text-slate-900 tracking-tight">Travel With <span class="text-blue-600">Nandu</span></span>
                 </div>
                 <div class="flex space-x-10 items-center">
-                    <a href="#home" class="text-gray-600 hover:text-blue-600 font-semibold transition">Home</a>
-                    <a href="#booking" class="text-gray-600 hover:text-blue-600 font-semibold transition">Book Now</a>
-                    <a href="#services" class="text-gray-600 hover:text-blue-600 font-semibold transition">Tariffs</a>
-                    <a href="#ideas" class="text-gray-600 hover:text-blue-600 font-semibold transition">Features</a>
-                    <button class="bg-gray-900 text-white px-6 py-2.5 rounded-full font-bold hover:bg-gray-800 transition shadow-lg flex items-center gap-2">
+                    <a href="#home" class="text-slate-600 hover:text-blue-600 font-semibold transition">Home</a>
+                    <a href="#booking" class="text-slate-600 hover:text-blue-600 font-semibold transition">Book Now</a>
+                    <a href="#services" class="text-slate-600 hover:text-blue-600 font-semibold transition">Tariffs</a>
+                    <button class="bg-slate-900 text-white px-6 py-2.5 rounded-full font-bold hover:bg-slate-800 transition shadow-lg flex items-center gap-2">
                         <i data-lucide="phone-call" class="h-4 w-4"></i>
                         +91 78424 24201
                     </button>
+                    <div id="auth-status" class="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full">Connecting...</div>
                 </div>
             </div>
         </div>
     </nav>
 
     <!-- Mobile Top Bar -->
-    <div class="md:hidden fixed top-0 w-full bg-white/90 backdrop-blur-sm z-40 shadow-sm px-5 py-4 flex justify-between items-center pb-safe border-b border-gray-100">
+    <div class="md:hidden fixed top-0 w-full bg-white/90 backdrop-blur-sm z-40 shadow-sm px-5 py-4 flex justify-between items-center pb-safe border-b border-slate-100">
         <div class="flex items-center gap-3">
             <div class="bg-gradient-to-tr from-blue-600 to-blue-500 p-2 rounded-xl shadow-md">
                 <i data-lucide="car" class="h-5 w-5 text-white"></i>
             </div>
-            <span class="font-extrabold text-lg text-gray-900 tracking-tight">Nandu<span class="text-blue-600">Travels</span></span>
+            <span class="font-extrabold text-lg text-slate-900 tracking-tight">Nandu<span class="text-blue-600">Travels</span></span>
         </div>
-        <a href="tel:+917842424201" class="bg-green-100 text-green-600 p-2.5 rounded-full shadow-sm active:scale-95 transition">
-            <i data-lucide="phone" class="h-5 w-5 fill-current"></i>
-        </a>
+        <div id="mobile-connection-status" class="h-2 w-2 bg-yellow-400 rounded-full animate-pulse"></div>
     </div>
 
     <!-- Main Content -->
@@ -177,48 +144,50 @@
         
         <!-- Hero Section -->
         <section id="home" class="relative pb-10 overflow-hidden">
-            <!-- Decorative Background Elements -->
             <div class="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-blue-50 to-transparent -z-10"></div>
-            <div class="hidden md:block absolute right-0 top-0 w-1/3 h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-100/50 to-transparent -z-10"></div>
-
+            
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div class="flex flex-col lg:flex-row items-start gap-8 lg:gap-16">
                     
                     <!-- Text Content -->
                     <div class="flex-1 lg:pt-12 px-2">
-                        <div class="inline-flex items-center px-4 py-1.5 rounded-full bg-blue-100/80 border border-blue-200 text-blue-700 text-xs font-bold mb-6 shadow-sm backdrop-blur-sm">
-                            <span class="w-2 h-2 rounded-full bg-blue-600 mr-2 animate-pulse"></span>
+                        <div class="inline-flex items-center px-4 py-1.5 rounded-full bg-white border border-blue-100 text-blue-700 text-xs font-bold mb-6 shadow-sm">
+                            <span class="relative flex h-2 w-2 mr-2">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                            </span>
                             Running Daily: Karimnagar ⇄ Hyderabad
                         </div>
-                        <h1 class="text-4xl md:text-6xl font-black tracking-tight text-gray-900 leading-[1.1] mb-6">
+                        <h1 class="text-4xl md:text-6xl font-black tracking-tight text-slate-900 leading-[1.1] mb-6">
                             Reliable Travel.<br/>
                             <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Every Single Day.</span>
                         </h1>
-                        <p class="text-lg text-gray-600 mb-8 max-w-xl font-medium leading-relaxed">
+                        <p class="text-lg text-slate-600 mb-8 max-w-xl font-medium leading-relaxed">
                             Experience premium comfort at affordable rates. Choose from shared seats, private family cabs, or 24/7 emergency ambulances.
                         </p>
                         
-                        <!-- Trust Indicators (Desktop) -->
-                        <div class="hidden lg:flex gap-8 border-t border-gray-200 pt-8">
-                            <div>
-                                <p class="text-3xl font-bold text-gray-900">15+</p>
-                                <p class="text-sm font-semibold text-gray-500">Years Exp.</p>
+                        <!-- Trust Indicators -->
+                        <div class="grid grid-cols-3 gap-4 border-t border-slate-200 pt-8">
+                            <div class="text-center lg:text-left">
+                                <p class="text-2xl font-black text-slate-900">15+</p>
+                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Years Exp</p>
                             </div>
-                            <div>
-                                <p class="text-3xl font-bold text-gray-900">24/7</p>
-                                <p class="text-sm font-semibold text-gray-500">Support</p>
+                            <div class="text-center lg:text-left">
+                                <p class="text-2xl font-black text-slate-900">24/7</p>
+                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Support</p>
                             </div>
-                            <div>
-                                <p class="text-3xl font-bold text-gray-900">5k+</p>
-                                <p class="text-sm font-semibold text-gray-500">Happy Riders</p>
+                            <div class="text-center lg:text-left">
+                                <p class="text-2xl font-black text-slate-900">5k+</p>
+                                <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Riders</p>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Booking Widget -->
+                    <!-- Booking Widget Area -->
                     <div id="booking" class="w-full lg:w-[480px] px-2 md:px-0">
-                        <div class="bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 overflow-hidden border border-gray-100 relative">
-                            <!-- Dynamic Header -->
+                        
+                        <!-- 1. RICH BOOKING FORM (Default View) -->
+                        <div id="booking-form-card" class="bg-white rounded-[2rem] shadow-2xl shadow-slate-200/50 overflow-hidden border border-slate-100 relative">
                             <div id="widget-header" class="bg-blue-600 p-6 text-white transition-colors duration-300 relative overflow-hidden">
                                 <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
                                 <h3 class="text-xl md:text-2xl font-bold flex items-center gap-3 relative z-10">
@@ -231,11 +200,11 @@
                             
                             <div class="p-5 md:p-8">
                                 <!-- Tabs -->
-                                <div class="flex bg-gray-100/80 p-1.5 rounded-2xl mb-6 relative">
+                                <div class="flex bg-slate-100/80 p-1.5 rounded-2xl mb-6 relative">
                                     <button id="tab-shared" class="flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 bg-white text-blue-700 shadow-md transform scale-100" onclick="switchBookingType('shared')">
                                         <i data-lucide="users" class="h-4 w-4"></i> Shared
                                     </button>
-                                    <button id="tab-full" class="flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 text-gray-500 hover:text-gray-700" onclick="switchBookingType('full')">
+                                    <button id="tab-full" class="flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 text-slate-500 hover:text-slate-700" onclick="switchBookingType('full')">
                                         <i data-lucide="car-front" class="h-4 w-4"></i> Private/Amb
                                     </button>
                                 </div>
@@ -244,55 +213,97 @@
                                     <!-- Locations -->
                                     <div class="flex gap-3">
                                         <div class="w-1/2 space-y-1.5">
-                                            <label class="text-[11px] font-bold text-gray-400 uppercase tracking-widest pl-1">From</label>
+                                            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-1">From</label>
                                             <div class="relative group">
-                                                <i data-lucide="map-pin" class="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400 group-focus-within:text-blue-500 transition-colors"></i>
-                                                <select id="from-loc" class="w-full pl-10 pr-3 py-3.5 rounded-2xl bg-gray-50 border border-gray-100 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm font-bold appearance-none transition-all cursor-pointer text-gray-800">
+                                                <i data-lucide="map-pin" class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors"></i>
+                                                <select id="from-loc" class="w-full pl-10 pr-3 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm font-bold appearance-none transition-all cursor-pointer text-slate-800 shadow-sm">
                                                     <option value="Karimnagar">Karimnagar</option>
                                                     <option value="Hyderabad">Hyderabad</option>
-                                                    <option value="Sircilla">Sircilla</option>
                                                 </select>
                                             </div>
                                         </div>
                                         <div class="w-1/2 space-y-1.5">
-                                            <label class="text-[11px] font-bold text-gray-400 uppercase tracking-widest pl-1">To</label>
+                                            <label class="text-[11px] font-bold text-slate-400 uppercase tracking-widest pl-1">To</label>
                                             <div class="relative group">
-                                                <i data-lucide="map-pin" class="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400 group-focus-within:text-blue-500 transition-colors"></i>
-                                                <select id="to-loc" class="w-full pl-10 pr-3 py-3.5 rounded-2xl bg-gray-50 border border-gray-100 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm font-bold appearance-none transition-all cursor-pointer text-gray-800">
+                                                <i data-lucide="map-pin" class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors"></i>
+                                                <select id="to-loc" class="w-full pl-10 pr-3 py-3.5 rounded-2xl bg-slate-50 border border-slate-100 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm font-bold appearance-none transition-all cursor-pointer text-slate-800 shadow-sm">
                                                     <option value="Hyderabad">Hyderabad</option>
                                                     <option value="Karimnagar">Karimnagar</option>
-                                                    <option value="JBS">JBS</option>
-                                                    <option value="Airport">RGIA Airport</option>
                                                 </select>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Service Grid -->
-                                    <div class="space-y-2">
-                                        <label class="text-[11px] font-bold text-gray-400 uppercase tracking-widest pl-1">Vehicle Type</label>
-                                        
-                                        <!-- Shared Options -->
-                                        <div id="shared-options" class="grid grid-cols-2 gap-3">
-                                            <div id="srv-normal" onclick="selectService('normal')" class="service-option cursor-pointer border-2 border-transparent bg-gray-50 rounded-2xl p-3 flex flex-col items-center justify-center transition-all active:scale-[0.98]">
-                                                <span class="font-bold text-gray-800">Normal</span>
-                                                <span class="text-xs font-semibold text-gray-500 mt-1">₹350</span>
-                                            </div>
-                                            <div id="srv-ac" onclick="selectService('ac')" class="service-option active cursor-pointer border-2 border-transparent bg-gray-50 rounded-2xl p-3 flex flex-col items-center justify-center transition-all active:scale-[0.98]">
-                                                <span class="font-bold text-gray-800">AC</span>
-                                                <span class="text-xs font-semibold text-gray-500 mt-1">₹400</span>
+                                    <!-- SHARED SEAT CONFIG -->
+                                    <div id="shared-options" class="space-y-3">
+                                        <div class="space-y-1.5">
+                                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">Car Type</label>
+                                            <div class="flex gap-2">
+                                                <label class="cursor-pointer flex-1">
+                                                    <input type="radio" name="seat-type" value="7" class="hidden seat-radio" checked onclick="calculateEstimate()">
+                                                    <div class="border border-slate-200 bg-white rounded-xl p-2.5 text-center transition-all hover:border-blue-200">
+                                                        <span class="text-xs font-bold block text-slate-800">7 Seater</span>
+                                                        <span class="text-[9px] text-slate-400">Innova/Ertiga</span>
+                                                    </div>
+                                                </label>
+                                                <label class="cursor-pointer flex-1">
+                                                    <input type="radio" name="seat-type" value="5" class="hidden seat-radio" onclick="calculateEstimate()">
+                                                    <div class="border border-slate-200 bg-white rounded-xl p-2.5 text-center transition-all hover:border-blue-200">
+                                                        <span class="text-xs font-bold block text-slate-800">5 Seater</span>
+                                                        <span class="text-[9px] text-slate-400">Sedan/Hatch</span>
+                                                    </div>
+                                                </label>
                                             </div>
                                         </div>
-
-                                        <!-- Full Options -->
-                                        <div id="full-options" class="grid grid-cols-2 gap-3 hidden">
-                                            <div id="srv-cab" onclick="selectService('cab')" class="service-option cursor-pointer border-2 border-transparent bg-gray-50 rounded-2xl p-3 flex flex-col items-center justify-center transition-all active:scale-[0.98]">
-                                                <span class="font-bold text-gray-800">Private Cab</span>
-                                                <span class="text-xs font-semibold text-gray-500 mt-1">Sedan</span>
+                                        <div class="space-y-1.5">
+                                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">Comfort</label>
+                                            <div class="flex gap-2">
+                                                <label class="cursor-pointer flex-1">
+                                                    <input type="radio" name="ac-type" value="non-ac" class="hidden ac-radio" onclick="calculateEstimate()">
+                                                    <div class="border border-slate-200 bg-white rounded-xl p-2.5 text-center transition-all hover:border-blue-200">
+                                                        <span class="text-xs font-bold block text-slate-800">Non-AC</span>
+                                                    </div>
+                                                </label>
+                                                <label class="cursor-pointer flex-1">
+                                                    <input type="radio" name="ac-type" value="ac" class="hidden ac-radio" checked onclick="calculateEstimate()">
+                                                    <div class="border border-slate-200 bg-white rounded-xl p-2.5 text-center transition-all hover:border-blue-200">
+                                                        <span class="text-xs font-bold block text-slate-800">AC</span>
+                                                    </div>
+                                                </label>
                                             </div>
-                                            <div id="srv-ambulance" onclick="selectService('ambulance')" class="service-option cursor-pointer border-2 border-transparent bg-gray-50 rounded-2xl p-3 flex flex-col items-center justify-center transition-all active:scale-[0.98]">
-                                                <span class="font-bold text-gray-800">Ambulance</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- FULL OPTIONS -->
+                                    <div id="full-options" class="hidden space-y-3">
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div id="srv-cab" onclick="selectService('cab')" class="service-option cursor-pointer border-2 border-transparent bg-slate-50 rounded-2xl p-3 flex flex-col items-center justify-center transition-all active:scale-[0.98]">
+                                                <span class="font-bold text-slate-800">Private Cab</span>
+                                                <span class="text-xs font-semibold text-slate-500 mt-1">Full Car</span>
+                                            </div>
+                                            <div id="srv-ambulance" onclick="selectService('ambulance')" class="service-option cursor-pointer border-2 border-transparent bg-slate-50 rounded-2xl p-3 flex flex-col items-center justify-center transition-all active:scale-[0.98]">
+                                                <span class="font-bold text-slate-800">Ambulance</span>
                                                 <span class="text-xs text-red-500 font-bold mt-1">Emergency</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="cab-type-selector" class="hidden space-y-1.5 animate-fade-in">
+                                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">Cab Type</label>
+                                            <div class="flex gap-2">
+                                                <label class="cursor-pointer flex-1">
+                                                    <input type="radio" name="cab-variant" value="sedan" class="hidden cab-radio" checked onclick="calculateEstimate()">
+                                                    <div class="border border-slate-200 bg-white rounded-xl p-2.5 text-center transition-all">
+                                                        <span class="text-xs font-bold block text-slate-800">Sedan (5 Str)</span>
+                                                        <span class="text-[9px] text-slate-400">Dzire/Etios</span>
+                                                    </div>
+                                                </label>
+                                                <label class="cursor-pointer flex-1">
+                                                    <input type="radio" name="cab-variant" value="suv" class="hidden cab-radio" onclick="calculateEstimate()">
+                                                    <div class="border border-slate-200 bg-white rounded-xl p-2.5 text-center transition-all">
+                                                        <span class="text-xs font-bold block text-slate-800">SUV (7 Str)</span>
+                                                        <span class="text-[9px] text-slate-400">Innova/Ertiga</span>
+                                                    </div>
+                                                </label>
                                             </div>
                                         </div>
                                     </div>
@@ -305,64 +316,81 @@
                                                 <label class="cursor-pointer min-w-[85px] flex-1">
                                                     <input type="radio" name="amb-type" value="non-ac" class="hidden amb-radio" onclick="calculateEstimate()">
                                                     <div class="border border-red-200 bg-white rounded-xl p-2.5 text-center h-full flex flex-col justify-center transition-all">
-                                                        <span class="text-xs font-bold block text-gray-900">Basic</span>
-                                                        <span class="text-[9px] font-semibold text-gray-400">Non-AC</span>
+                                                        <span class="text-xs font-bold block text-slate-900">Basic</span>
+                                                        <span class="text-[9px] font-semibold text-slate-400">Non-AC</span>
                                                     </div>
                                                 </label>
                                                 <label class="cursor-pointer min-w-[85px] flex-1">
                                                     <input type="radio" name="amb-type" value="ac" class="hidden amb-radio" checked onclick="calculateEstimate()">
                                                     <div class="border border-red-200 bg-white rounded-xl p-2.5 text-center h-full flex flex-col justify-center transition-all">
-                                                        <span class="text-xs font-bold block text-gray-900">Standard</span>
-                                                        <span class="text-[9px] font-semibold text-gray-400">AC + O2</span>
+                                                        <span class="text-xs font-bold block text-slate-900">Standard</span>
+                                                        <span class="text-[9px] font-semibold text-slate-400">AC + O2</span>
                                                     </div>
                                                 </label>
                                                 <label class="cursor-pointer min-w-[85px] flex-1">
                                                     <input type="radio" name="amb-type" value="ventilator" class="hidden amb-radio" onclick="calculateEstimate()">
                                                     <div class="border border-red-200 bg-white rounded-xl p-2.5 text-center h-full flex flex-col justify-center transition-all">
-                                                        <span class="text-xs font-bold block text-gray-900">ICU</span>
-                                                        <span class="text-[9px] font-semibold text-gray-400">Ventilator</span>
+                                                        <span class="text-xs font-bold block text-slate-900">ICU</span>
+                                                        <span class="text-[9px] font-semibold text-slate-400">Ventilator</span>
                                                     </div>
                                                 </label>
                                             </div>
                                         </div>
-
                                         <div class="space-y-1.5">
                                             <label class="text-[10px] font-bold text-red-600 uppercase tracking-wider">Trip Type</label>
                                             <div class="flex bg-white rounded-xl border border-red-200 p-1">
                                                 <button type="button" id="trip-one" class="flex-1 py-2 text-xs font-bold rounded-lg text-white bg-red-600 shadow-sm transition-all" onclick="setTripType('oneWay')">One Way</button>
-                                                <button type="button" id="trip-round" class="flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 hover:bg-gray-50 transition-all" onclick="setTripType('roundTrip')">Round Trip</button>
+                                                <button type="button" id="trip-round" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 hover:bg-slate-50 transition-all" onclick="setTripType('roundTrip')">Round Trip</button>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-3">
+                                            <div class="space-y-1.5">
+                                                <label class="text-[10px] font-bold text-red-600 uppercase tracking-wider">Exact Pickup Location</label>
+                                                <div class="relative">
+                                                    <i data-lucide="map-pin" class="absolute left-3 top-3 h-4 w-4 text-red-400"></i>
+                                                    <input type="text" id="amb-pickup-addr" placeholder="Hospital Name / House No" class="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-red-200 focus:ring-2 focus:ring-red-500/20 outline-none text-sm font-bold text-slate-800 placeholder-slate-400">
+                                                </div>
+                                            </div>
+                                            <div class="space-y-1.5">
+                                                <label class="text-[10px] font-bold text-red-600 uppercase tracking-wider">Exact Drop Location</label>
+                                                <div class="relative">
+                                                    <i data-lucide="map-pin" class="absolute left-3 top-3 h-4 w-4 text-red-400"></i>
+                                                    <input type="text" id="amb-drop-addr" placeholder="Hospital Name / Colony" class="w-full pl-9 pr-3 py-2.5 rounded-xl bg-white border border-red-200 focus:ring-2 focus:ring-red-500/20 outline-none text-sm font-bold text-slate-800 placeholder-slate-400">
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Date & Personal Info -->
+                                    <!-- Common Details -->
                                     <div class="space-y-3">
-                                        <div class="bg-gray-50 p-2 rounded-2xl border border-gray-100 flex items-center gap-3 hover:bg-white hover:border-blue-200 transition-colors group">
-                                            <div class="bg-white p-2 rounded-xl shadow-sm">
-                                                <i data-lucide="calendar" class="text-blue-500 h-5 w-5"></i>
+                                        <div class="flex gap-3">
+                                            <div class="w-1/2 bg-slate-50 p-2 rounded-2xl border border-slate-100 flex items-center gap-2 hover:bg-white transition-colors group">
+                                                <div class="bg-white p-2 rounded-xl shadow-sm">
+                                                    <i data-lucide="calendar" class="text-blue-500 h-4 w-4"></i>
+                                                </div>
+                                                <input type="date" id="travel-date" class="bg-transparent w-full text-xs font-bold outline-none text-slate-700 cursor-pointer" required>
                                             </div>
-                                            <input type="date" id="travel-date" class="bg-transparent w-full text-sm font-bold outline-none text-gray-700 cursor-pointer" required>
+                                            <div class="w-1/2 bg-slate-50 p-2 rounded-2xl border border-slate-100 flex items-center gap-2 hover:bg-white transition-colors group">
+                                                <div class="bg-white p-2 rounded-xl shadow-sm">
+                                                    <i data-lucide="smartphone" class="text-blue-500 h-4 w-4"></i>
+                                                </div>
+                                                <input type="tel" id="mobile" placeholder="Mobile" class="bg-transparent w-full text-xs font-bold outline-none text-slate-700 placeholder-slate-400" required>
+                                            </div>
                                         </div>
-                                        <!-- Name Field (Added) -->
-                                        <div class="bg-gray-50 p-2 rounded-2xl border border-gray-100 flex items-center gap-3 hover:bg-white hover:border-blue-200 transition-colors group">
+                                        
+                                        <div class="bg-slate-50 p-2 rounded-2xl border border-slate-100 flex items-center gap-3 hover:bg-white transition-colors group">
                                             <div class="bg-white p-2 rounded-xl shadow-sm">
                                                 <i data-lucide="user" class="text-blue-500 h-5 w-5"></i>
                                             </div>
-                                            <input type="text" id="user-name" placeholder="Your Name" class="bg-transparent w-full text-sm font-bold outline-none text-gray-700 placeholder-gray-400" required>
-                                        </div>
-                                        <div class="bg-gray-50 p-2 rounded-2xl border border-gray-100 flex items-center gap-3 hover:bg-white hover:border-blue-200 transition-colors group">
-                                            <div class="bg-white p-2 rounded-xl shadow-sm">
-                                                <i data-lucide="smartphone" class="text-blue-500 h-5 w-5"></i>
-                                            </div>
-                                            <input type="tel" id="mobile" placeholder="Mobile Number" class="bg-transparent w-full text-sm font-bold outline-none text-gray-700 placeholder-gray-400" required>
+                                            <input type="text" id="user-name" placeholder="Passenger Name" class="bg-transparent w-full text-sm font-bold outline-none text-slate-700 placeholder-slate-400" required>
                                         </div>
                                         
-                                        <!-- Hidden Inputs toggle -->
+                                        <!-- Exact Location for Private Cab ONLY -->
                                         <div id="extra-address" class="hidden space-y-3 pt-2 animate-fade-in">
-                                            <input type="text" id="pickup-addr" placeholder="Pickup Address (House No, Street)" class="w-full bg-gray-50 border border-gray-100 p-3.5 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20">
-                                            <input type="text" id="drop-addr" placeholder="Drop Address (Landmark)" class="w-full bg-gray-50 border border-gray-100 p-3.5 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20">
+                                            <input type="text" id="pickup-addr" placeholder="Pickup Address (House No, Street)" class="w-full bg-slate-50 border border-slate-100 p-3.5 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20">
+                                            <input type="text" id="drop-addr" placeholder="Drop Address (Landmark)" class="w-full bg-slate-50 border border-slate-100 p-3.5 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20">
                                         </div>
-                                        <div class="text-center">
+                                        <div id="extra-address-link" class="text-center hidden">
                                             <button type="button" class="text-xs text-blue-600 font-bold hover:underline py-1" onclick="document.getElementById('extra-address').classList.toggle('hidden')">
                                                 + Add Exact Pickup/Drop Location
                                             </button>
@@ -370,26 +398,26 @@
                                     </div>
                                     
                                     <!-- Passengers Counter -->
-                                    <div id="passengers-container" class="bg-gray-50 rounded-2xl p-2 pr-4 flex items-center justify-between border border-gray-100">
+                                    <div id="passengers-container" class="bg-slate-50 rounded-2xl p-2 pr-4 flex items-center justify-between border border-slate-100">
                                         <div class="flex items-center gap-3">
                                             <div class="bg-white p-2 rounded-xl shadow-sm">
-                                                <i data-lucide="users" class="text-gray-400 h-5 w-5"></i>
+                                                <i data-lucide="users" class="text-slate-400 h-5 w-5"></i>
                                             </div>
-                                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Seats</span>
+                                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Seats</span>
                                         </div>
                                         <div class="flex items-center gap-4">
-                                            <button type="button" onclick="changePassengers(-1)" class="w-8 h-8 rounded-lg bg-white shadow-sm border border-gray-200 flex items-center justify-center text-lg font-bold text-blue-600 active:scale-90 transition">-</button>
-                                            <span id="passenger-count" class="text-lg font-bold text-gray-900 w-4 text-center">1</span>
-                                            <button type="button" onclick="changePassengers(1)" class="w-8 h-8 rounded-lg bg-white shadow-sm border border-gray-200 flex items-center justify-center text-lg font-bold text-blue-600 active:scale-90 transition">+</button>
+                                            <button type="button" onclick="changePassengers(-1)" class="w-8 h-8 rounded-lg bg-white shadow-sm border border-slate-200 flex items-center justify-center text-lg font-bold text-blue-600 active:scale-90 transition">-</button>
+                                            <span id="passenger-count" class="text-lg font-bold text-slate-900 w-4 text-center">1</span>
+                                            <button type="button" onclick="changePassengers(1)" class="w-8 h-8 rounded-lg bg-white shadow-sm border border-slate-200 flex items-center justify-center text-lg font-bold text-blue-600 active:scale-90 transition">+</button>
                                         </div>
                                     </div>
 
                                     <!-- Submit Area -->
                                     <div class="pt-4 mt-2">
                                         <div class="flex justify-between items-end mb-4 px-1">
-                                            <span class="text-gray-500 text-sm font-medium">Total Estimate</span>
+                                            <span class="text-slate-500 text-sm font-medium">Total Estimate</span>
                                             <div class="text-right">
-                                                <span class="text-3xl font-black text-gray-900 tracking-tight leading-none">₹<span id="total-price">400</span></span>
+                                                <span class="text-3xl font-black text-slate-900 tracking-tight leading-none">₹<span id="total-price">400</span></span>
                                             </div>
                                         </div>
                                         
@@ -401,51 +429,99 @@
                                 </form>
                             </div>
                         </div>
+
+                        <!-- 2. LIVE STATUS CARD -->
+                        <div id="live-status-card" class="hidden bg-white rounded-[2rem] shadow-2xl shadow-blue-900/10 border border-slate-100 overflow-hidden relative min-h-[500px] animate-fade-in">
+                            <div class="absolute top-0 left-0 w-full h-1.5 bg-slate-100">
+                                <div id="status-bar" class="h-full bg-blue-500 w-1/3 transition-all duration-1000 ease-in-out"></div>
+                            </div>
+
+                            <div class="p-8 text-center border-b border-slate-50">
+                                <div id="status-icon-container" class="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6 relative">
+                                    <i id="status-icon" data-lucide="loader-2" class="h-10 w-10 text-blue-600 animate-spin"></i>
+                                    <div id="pulse-ring" class="absolute inset-0 rounded-full animate-ring hidden"></div>
+                                </div>
+                                <h2 id="status-title" class="text-2xl font-black text-slate-900 tracking-tight">Finding Driver</h2>
+                                <p id="status-desc" class="text-slate-500 font-medium mt-2">Connecting you to nearby drivers...</p>
+                                <p class="text-xs text-slate-300 font-mono mt-4" id="booking-ref">ID: ---</p>
+                            </div>
+
+                            <!-- Driver Details (Revealed on Assignment) -->
+                            <div id="driver-details" class="hidden bg-slate-50/50 p-6 animate-fade-in flex-1">
+                                <div class="flex items-center gap-4 mb-6 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                                    <div class="w-14 h-14 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-slate-900/20">
+                                        <i data-lucide="user" class="h-7 w-7"></i>
+                                    </div>
+                                    <div>
+                                        <h3 id="driver-name" class="font-bold text-lg text-slate-900 leading-tight">Driver Name</h3>
+                                        <div class="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-wide mt-1">
+                                            <span id="driver-vehicle">Vehicle</span>
+                                            <span class="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                            <span id="driver-plate" class="text-slate-700 bg-slate-100 px-1 rounded">TS--</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3 mt-auto">
+                                    <a id="call-btn" href="#" class="flex items-center justify-center gap-2 bg-green-500 text-white py-4 rounded-xl font-bold shadow-lg shadow-green-500/20 hover:bg-green-600 transition active:scale-95">
+                                        <i data-lucide="phone" class="h-4 w-4"></i> Call
+                                    </a>
+                                    <button onclick="cancelBooking()" class="flex items-center justify-center gap-2 bg-white text-red-500 border border-red-100 py-4 rounded-xl font-bold hover:bg-red-50 transition active:scale-95">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="p-4 text-center">
+                                <button onclick="resetUI()" class="text-xs font-bold text-slate-400 hover:text-slate-600 uppercase tracking-widest">New Booking</button>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Services Section (Horizontal Cards) -->
-        <section id="services" class="py-10">
+        <!-- Services Cards -->
+        <section id="services" class="py-12">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <h2 class="text-xl font-bold text-gray-900 mb-6 px-2 flex items-center gap-2">
+                <h2 class="text-xl font-bold text-slate-900 mb-6 px-2 flex items-center gap-2">
                     <i data-lucide="tag" class="h-5 w-5 text-blue-600"></i>
                     Popular Plans
                 </h2>
                 
                 <div class="flex overflow-x-auto gap-5 pb-8 px-2 no-scrollbar snap-x snap-mandatory md:grid md:grid-cols-3">
-                    <!-- Card 1 -->
-                    <div class="min-w-[280px] p-6 rounded-[2rem] bg-white shadow-lg shadow-gray-100 border border-gray-100 snap-center hover:border-blue-200 transition-colors">
-                        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
+                    <div class="min-w-[280px] p-6 rounded-[2rem] bg-white shadow-lg shadow-slate-100 border border-slate-100 snap-center hover:border-blue-200 transition-colors group">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                             <i data-lucide="users" class="h-6 w-6"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900">Shared Seat</h3>
-                        <div class="text-2xl font-black text-gray-900 mt-2">₹350-400 <span class="text-sm font-semibold text-gray-400">/seat</span></div>
-                        <p class="text-gray-500 text-sm mt-3 font-medium leading-relaxed">Most popular choice. Daily service between Karimnagar & Hyderabad.</p>
+                        <h3 class="text-lg font-bold text-slate-900">7 Seater Shared</h3>
+                        <div class="text-2xl font-black text-slate-900 mt-2">₹350-400 <span class="text-sm font-semibold text-slate-400">/seat</span></div>
+                        <p class="text-slate-500 text-sm mt-3 font-medium leading-relaxed">Comfortable travel in Innova/Ertiga. AC & Non-AC available.</p>
                     </div>
 
-                    <!-- Card 2 -->
-                    <div class="min-w-[280px] p-6 rounded-[2rem] bg-white shadow-lg shadow-gray-100 border border-gray-100 snap-center hover:border-blue-200 transition-colors">
-                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
+                    <div class="min-w-[280px] p-6 rounded-[2rem] bg-white shadow-lg shadow-slate-100 border border-slate-100 snap-center hover:border-blue-200 transition-colors group">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                             <i data-lucide="car-front" class="h-6 w-6"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900">Private Cab</h3>
-                        <div class="text-2xl font-black text-gray-900 mt-2">₹3500 <span class="text-sm font-semibold text-gray-400">/trip</span></div>
-                        <p class="text-gray-500 text-sm mt-3 font-medium leading-relaxed">Book a full Swift Dzire or Etios. Door-to-door family comfort.</p>
+                        <h3 class="text-lg font-bold text-slate-900">Private Cab</h3>
+                        <div class="text-2xl font-black text-slate-900 mt-2">₹3500 <span class="text-sm font-semibold text-slate-400">sedan</span></div>
+                        <div class="mt-3 text-xs font-bold text-slate-500 flex justify-between">
+                            <span>Sedan: ₹3500</span>
+                            <span>SUV: ₹4500</span>
+                        </div>
                     </div>
 
-                    <!-- Card 3 -->
-                    <div class="min-w-[280px] p-6 rounded-[2rem] bg-white shadow-lg shadow-red-100 border border-red-100 snap-center relative overflow-hidden">
+                    <div class="min-w-[280px] p-6 rounded-[2rem] bg-white shadow-lg shadow-red-100 border border-red-100 snap-center relative overflow-hidden group">
                         <div class="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl">EMERGENCY</div>
-                        <div class="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mb-4">
+                        <div class="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                             <i data-lucide="ambulance" class="h-6 w-6"></i>
                         </div>
-                        <h3 class="text-lg font-bold text-gray-900">Ambulance</h3>
-                        <div class="text-2xl font-black text-gray-900 mt-2">₹4000 <span class="text-sm font-semibold text-gray-400">starts</span></div>
+                        <h3 class="text-lg font-bold text-slate-900">Ambulance</h3>
+                        <div class="text-2xl font-black text-slate-900 mt-2">₹4000 <span class="text-sm font-semibold text-slate-400">starts</span></div>
                         <div class="mt-3 space-y-1">
-                            <div class="flex justify-between text-xs font-bold text-gray-500"><span>Non-AC</span> <span>₹4000</span></div>
-                            <div class="flex justify-between text-xs font-bold text-gray-500"><span>Ventilator</span> <span>₹12000</span></div>
+                            <div class="flex justify-between text-xs font-bold text-slate-500"><span>Non-AC</span> <span>₹4000</span></div>
+                            <div class="flex justify-between text-xs font-bold text-slate-500"><span>Ventilator</span> <span>₹12000</span></div>
                         </div>
                     </div>
                 </div>
@@ -453,45 +529,41 @@
         </section>
 
         <!-- Features -->
-        <section id="ideas" class="py-12 bg-gray-900 text-white rounded-t-[3rem] mt-4">
+        <section id="ideas" class="py-12 bg-slate-900 text-white rounded-t-[3rem] mt-4">
             <div class="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8">
                 <div class="text-center mb-10">
-                    <span class="text-blue-400 font-bold tracking-widest text-xs uppercase">Coming Soon</span>
-                    <h2 class="text-2xl font-bold mt-2">Smart Features</h2>
+                    <h2 class="text-2xl font-bold mt-2">Why Choose Us?</h2>
                 </div>
-                
                 <div class="grid gap-6 md:grid-cols-3">
-                    <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700">
-                        <i data-lucide="message-circle" class="text-green-400 mb-3 h-8 w-8"></i>
-                        <h4 class="font-bold mb-1">WhatsApp Updates</h4>
-                        <p class="text-gray-400 text-sm">Get driver details and live location directly on WhatsApp.</p>
+                    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700">
+                        <i data-lucide="clock" class="text-green-400 mb-3 h-8 w-8"></i>
+                        <h4 class="font-bold mb-1">On Time, Every Time</h4>
+                        <p class="text-slate-400 text-sm">We value your time. Our fleet is always punctual.</p>
                     </div>
-                    <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700">
-                        <i data-lucide="map" class="text-blue-400 mb-3 h-8 w-8"></i>
-                        <h4 class="font-bold mb-1">Live Tracking</h4>
-                        <p class="text-gray-400 text-sm">Track your cab or ambulance in real-time on the map.</p>
+                    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700">
+                        <i data-lucide="shield-check" class="text-blue-400 mb-3 h-8 w-8"></i>
+                        <h4 class="font-bold mb-1">Safe Journey</h4>
+                        <p class="text-slate-400 text-sm">Sanitized vehicles and verified professional drivers.</p>
                     </div>
-                    <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700">
-                        <i data-lucide="shield-check" class="text-purple-400 mb-3 h-8 w-8"></i>
-                        <h4 class="font-bold mb-1">Verified Drivers</h4>
-                        <p class="text-gray-400 text-sm">All our pilots are verified and professionally trained.</p>
+                    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700">
+                        <i data-lucide="indian-rupee" class="text-purple-400 mb-3 h-8 w-8"></i>
+                        <h4 class="font-bold mb-1">Transparent Pricing</h4>
+                        <p class="text-slate-400 text-sm">Fixed rates. No hidden charges or surge pricing.</p>
                     </div>
                 </div>
             </div>
             
-            <!-- Restored Footer -->
-            <footer id="contact" class="text-center text-gray-400 text-sm mt-16 pb-24 md:pb-8 border-t border-gray-800 pt-12">
+            <footer id="contact" class="text-center text-slate-400 text-sm mt-16 pb-24 md:pb-8 border-t border-slate-800 pt-12">
                 <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 text-left">
                     <div>
                         <h3 class="text-white font-bold text-lg mb-4">Travel With Nandu</h3>
-                        <p>Safe and reliable daily commute services between Karimnagar and Hyderabad.</p>
+                        <p>Your trusted travel partner for Karimnagar - Hyderabad journeys.</p>
                     </div>
                     <div>
                         <h4 class="text-white font-bold mb-4">Quick Links</h4>
                         <ul class="space-y-2">
                             <li><a href="#booking" class="hover:text-blue-400">Book Now</a></li>
                             <li><a href="#services" class="hover:text-blue-400">Services</a></li>
-                            <li><a href="#" class="hover:text-blue-400">Driver Login</a></li>
                         </ul>
                     </div>
                     <div>
@@ -500,164 +572,177 @@
                         <p><i data-lucide="map-pin" class="inline w-4 h-4 mr-2"></i> Karimnagar, Telangana</p>
                     </div>
                 </div>
-                <p>&copy; 2025 Travel With Nandu. All rights reserved.</p>
+                <p>&copy; 2025 Travel With Nandu.</p>
             </footer>
         </section>
 
     </main>
 
+    <!-- Floating WhatsApp -->
+    <a href="https://wa.me/917842424201" target="_blank" class="whatsapp-float">
+        <i data-lucide="message-circle" class="h-8 w-8 fill-current"></i>
+    </a>
+
     <!-- Mobile Bottom Navigation -->
-    <div class="md:hidden fixed bottom-6 left-4 right-4 bg-white/90 backdrop-blur-lg border border-gray-200/50 rounded-2xl flex justify-around items-center p-2 z-50 shadow-2xl shadow-gray-200">
+    <div class="md:hidden fixed bottom-6 left-4 right-4 bg-white/90 backdrop-blur-lg border border-slate-200/50 rounded-2xl flex justify-around items-center p-2 z-50 shadow-2xl shadow-slate-200">
         <a href="#home" class="flex flex-col items-center gap-1 p-2 text-blue-600 transition hover:scale-110">
             <i data-lucide="home" class="h-6 w-6 stroke-[2.5]"></i>
             <span class="text-[10px] font-bold">Home</span>
         </a>
-        <a href="#booking" class="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-blue-600 transition">
-            <div class="bg-blue-600 rounded-full p-3.5 -mt-10 shadow-lg shadow-blue-500/40 border-[4px] border-[#F3F4F6] text-white transform active:scale-95 transition">
+        <a href="#booking" class="flex flex-col items-center gap-1 p-2 text-slate-400 hover:text-blue-600 transition">
+            <div class="bg-blue-600 rounded-full p-3.5 -mt-10 shadow-lg shadow-blue-500/40 border-[4px] border-[#F8FAFC] text-white transform active:scale-95 transition">
                 <i data-lucide="plus" class="h-6 w-6 stroke-[3]"></i>
             </div>
         </a>
-        <a href="#services" class="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-blue-600 transition hover:scale-110">
+        <a href="#services" class="flex flex-col items-center gap-1 p-2 text-slate-400 hover:text-blue-600 transition hover:scale-110">
             <i data-lucide="layout-grid" class="h-6 w-6 stroke-[2.5]"></i>
             <span class="text-[10px] font-bold">Plans</span>
         </a>
     </div>
 
-    <!-- Scripts -->
-    <script>
-        // --- Splash Screen Logic ---
+    <!-- MAIN LOGIC: UI + FIREBASE -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, doc, onSnapshot, updateDoc, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- 1. CONFIGURATION ---
+        let firebaseConfig;
+        
+        if (typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+        } else {
+            firebaseConfig = {
+                apiKey: "YOUR_API_KEY_HERE",
+                authDomain: "your-app.firebaseapp.com",
+                projectId: "your-app-id",
+                storageBucket: "your-app.appspot.com",
+                messagingSenderId: "123456789",
+                appId: "1:123456789:web:abcdef"
+            };
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        let currentUser = null;
+        let currentBookingUnsubscribe = null;
+
+        // --- AUTH & INIT ---
         window.addEventListener('load', () => {
             const splash = document.getElementById('splash-screen');
             setTimeout(() => {
                 splash.style.opacity = '0';
-                setTimeout(() => {
-                    splash.style.display = 'none';
-                }, 700);
+                setTimeout(() => { splash.style.display = 'none'; }, 700);
             }, 1500); 
+
+            initAuth();
+            
+            const savedName = localStorage.getItem('userName');
+            const savedMobile = localStorage.getItem('userMobile');
+            if(savedName) document.getElementById('user-name').value = savedName;
+            if(savedMobile) document.getElementById('mobile').value = savedMobile;
         });
 
-        // --- State Management ---
-        let state = {
-            bookingType: 'shared', 
-            service: 'ac',         
-            passengers: 1,
-            ambTripType: 'oneWay', 
-            ambVariant: 'ac'       
-        };
-
-        const PRICES = {
-            SHARED_NORMAL: 350,
-            SHARED_AC: 400,
-            FULL_CAB: 3500,
-            AMBULANCE: {
-                'non-ac': { oneWay: 4000, roundTrip: 6000 },
-                'ac': { oneWay: 4500, roundTrip: 6500 },
-                'ventilator': { oneWay: 12000, roundTrip: 20000 }
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
             }
         };
 
-        // Initialize Icons
-        lucide.createIcons();
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                const deskStatus = document.getElementById('auth-status');
+                if(deskStatus) {
+                    deskStatus.textContent = 'Connected';
+                    deskStatus.classList.replace('text-slate-400', 'text-green-600');
+                    deskStatus.classList.add('bg-green-50');
+                }
+                const mobStatus = document.getElementById('mobile-connection-status');
+                if(mobStatus) {
+                    mobStatus.classList.remove('bg-yellow-400', 'animate-pulse');
+                    mobStatus.classList.add('bg-green-500');
+                }
 
-        // Booking Type Switcher
-        function switchBookingType(type) {
+                const activeId = localStorage.getItem('activeBookingId');
+                if(activeId) trackBooking(activeId);
+            }
+        });
+
+        // --- STATE & UI LOGIC ---
+        let state = {
+            bookingType: 'shared', 
+            service: 'cab',         
+            passengers: 1,
+            ambTripType: 'oneWay', 
+            ambVariant: 'ac',      
+            cabVariant: 'sedan'    
+        };
+
+        const PRICES = {
+            SHARED: { SEATER_7: { 'non-ac': 350, 'ac': 400 }, SEATER_5: { 'non-ac': 450, 'ac': 500 } },
+            FULL_CAB: { SEDAN: 3500, SUV: 4500 },
+            AMBULANCE: { 'non-ac': { oneWay: 4000, roundTrip: 6000 }, 'ac': { oneWay: 4500, roundTrip: 6500 }, 'ventilator': { oneWay: 12000, roundTrip: 20000 } }
+        };
+
+        window.switchBookingType = (type) => {
             state.bookingType = type;
-            state.service = type === 'shared' ? 'ac' : 'cab';
             state.passengers = 1;
 
-            // UI Updates
             const tabShared = document.getElementById('tab-shared');
             const tabFull = document.getElementById('tab-full');
             const sharedOpts = document.getElementById('shared-options');
             const fullOpts = document.getElementById('full-options');
             const passengerContainer = document.getElementById('passengers-container');
+            const extraAddrLink = document.getElementById('extra-address-link');
 
             if (type === 'shared') {
                 tabShared.className = 'flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 bg-white text-blue-700 shadow-md transform scale-100';
-                tabFull.className = 'flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 text-gray-500 hover:text-gray-700';
-                
+                tabFull.className = 'flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 text-slate-500 hover:text-slate-700';
                 sharedOpts.classList.remove('hidden');
                 fullOpts.classList.add('hidden');
                 passengerContainer.classList.remove('hidden');
+                extraAddrLink.classList.add('hidden'); 
             } else {
                 tabFull.className = 'flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 bg-white text-blue-700 shadow-md transform scale-100';
-                tabShared.className = 'flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 text-gray-500 hover:text-gray-700';
-                
+                tabShared.className = 'flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 text-slate-500 hover:text-slate-700';
                 sharedOpts.classList.add('hidden');
                 fullOpts.classList.remove('hidden');
                 passengerContainer.classList.add('hidden');
             }
-
+            
             updateServiceSelectionUI();
             calculateEstimate();
         }
 
-        // Service Selection
-        function selectService(serviceName) {
+        window.selectService = (serviceName) => {
             state.service = serviceName;
             updateServiceSelectionUI();
             calculateEstimate();
         }
 
-        function setTripType(type) {
+        window.setTripType = (type) => {
             state.ambTripType = type;
             const btnOne = document.getElementById('trip-one');
             const btnRound = document.getElementById('trip-round');
             
             if(type === 'oneWay') {
                 btnOne.className = "flex-1 py-2 text-xs font-bold rounded-lg text-white bg-red-600 shadow-sm transition-all";
-                btnRound.className = "flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 hover:bg-gray-50 transition-all";
+                btnRound.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 hover:bg-slate-50 transition-all";
             } else {
-                btnOne.className = "flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 hover:bg-gray-50 transition-all";
+                btnOne.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-500 hover:bg-slate-50 transition-all";
                 btnRound.className = "flex-1 py-2 text-xs font-bold rounded-lg text-white bg-red-600 shadow-sm transition-all";
             }
             calculateEstimate();
         }
 
-        function updateServiceSelectionUI() {
-            document.querySelectorAll('.service-option').forEach(el => {
-                el.classList.remove('active', 'active-red', 'scale-[1.02]');
-                el.classList.add('border-transparent', 'bg-gray-50');
-            });
-
-            const activeId = `srv-${state.service === 'non-ac' ? 'normal' : state.service}`;
-            const el = document.getElementById(activeId);
-            
-            if (el) {
-                el.classList.remove('border-transparent', 'bg-gray-50');
-                el.classList.add('scale-[1.02]'); // subtle pop
-                if (state.service === 'ambulance') {
-                    el.classList.add('active-red');
-                } else {
-                    el.classList.add('active');
-                }
-            }
-
-            // Config Visibility
-            const ambConfig = document.getElementById('ambulance-config');
-            const widgetHeader = document.getElementById('widget-header');
-            const btn = document.getElementById('submit-btn');
-
-            if (state.service === 'ambulance') {
-                ambConfig.classList.remove('hidden');
-                widgetHeader.classList.remove('bg-blue-600');
-                widgetHeader.classList.add('bg-red-600');
-                
-                btn.innerHTML = '<span>Book Emergency</span><i data-lucide="siren" class="h-5 w-5 stroke-[3]"></i>';
-                btn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'shadow-blue-500/30');
-                btn.classList.add('bg-red-600', 'hover:bg-red-700', 'shadow-red-500/30');
-            } else {
-                ambConfig.classList.add('hidden');
-                widgetHeader.classList.remove('bg-red-600');
-                widgetHeader.classList.add('bg-blue-600');
-                
-                btn.innerHTML = '<span>Confirm Booking</span><i data-lucide="arrow-right" class="h-5 w-5 stroke-[3]"></i>';
-                btn.classList.remove('bg-red-600', 'hover:bg-red-700', 'shadow-red-500/30');
-                btn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'shadow-blue-500/30');
-            }
-        }
-
-        function changePassengers(delta) {
+        window.changePassengers = (delta) => {
             const newVal = state.passengers + delta;
             if (newVal >= 1 && newVal <= 6) {
                 state.passengers = newVal;
@@ -666,65 +751,308 @@
             }
         }
 
-        function calculateEstimate() {
+        function updateServiceSelectionUI() {
+            document.querySelectorAll('.service-option').forEach(el => {
+                el.classList.remove('active', 'active-red', 'scale-[1.02]');
+                el.classList.add('border-transparent', 'bg-slate-50');
+            });
+
+            if (state.bookingType === 'full') {
+                const activeId = `srv-${state.service}`;
+                const el = document.getElementById(activeId);
+                if (el) {
+                    el.classList.remove('border-transparent', 'bg-slate-50');
+                    el.classList.add('scale-[1.02]'); 
+                    if (state.service === 'ambulance') {
+                        el.classList.add('active-red');
+                    } else {
+                        el.classList.add('active');
+                    }
+                }
+            }
+
+            const ambConfig = document.getElementById('ambulance-config');
+            const cabConfig = document.getElementById('cab-type-selector');
+            const widgetHeader = document.getElementById('widget-header');
+            const btn = document.getElementById('submit-btn');
+            const extraAddrLink = document.getElementById('extra-address-link');
+
+            if (state.bookingType === 'full' && state.service === 'ambulance') {
+                ambConfig.classList.remove('hidden'); cabConfig.classList.add('hidden'); extraAddrLink.classList.add('hidden'); 
+                widgetHeader.classList.replace('bg-blue-600', 'bg-red-600');
+                btn.innerHTML = '<span>Book Emergency</span><i data-lucide="siren" class="h-5 w-5 stroke-[3]"></i>';
+                btn.className = "w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg shadow-red-500/30 hover:shadow-xl hover:shadow-red-500/40 transition-all transform active:scale-[0.98] bg-red-600 hover:bg-red-700 flex justify-center items-center gap-3";
+            } else if (state.bookingType === 'full' && state.service === 'cab') {
+                ambConfig.classList.add('hidden'); cabConfig.classList.remove('hidden'); extraAddrLink.classList.remove('hidden'); 
+                widgetHeader.classList.replace('bg-red-600', 'bg-blue-600');
+                btn.innerHTML = '<span>Confirm Booking</span><i data-lucide="arrow-right" class="h-5 w-5 stroke-[3]"></i>';
+                btn.className = "w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all transform active:scale-[0.98] bg-blue-600 hover:bg-blue-700 flex justify-center items-center gap-3";
+            } else {
+                ambConfig.classList.add('hidden'); cabConfig.classList.add('hidden'); extraAddrLink.classList.add('hidden');
+                widgetHeader.classList.replace('bg-red-600', 'bg-blue-600');
+                btn.innerHTML = '<span>Confirm Booking</span><i data-lucide="arrow-right" class="h-5 w-5 stroke-[3]"></i>';
+                btn.className = "w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all transform active:scale-[0.98] bg-blue-600 hover:bg-blue-700 flex justify-center items-center gap-3";
+            }
+        }
+
+        window.calculateEstimate = () => {
             let total = 0;
             if (state.bookingType === 'shared') {
-                const rate = state.service === 'ac' ? PRICES.SHARED_AC : PRICES.SHARED_NORMAL;
+                const seatType = document.querySelector('input[name="seat-type"]:checked').value;
+                const acType = document.querySelector('input[name="ac-type"]:checked').value;
+                const rate = PRICES.SHARED[`SEATER_${seatType}`][acType];
                 total = rate * state.passengers;
             } else {
                 if (state.service === 'ambulance') {
                     const selectedVariant = document.querySelector('input[name="amb-type"]:checked').value;
                     total = PRICES.AMBULANCE[selectedVariant][state.ambTripType];
-                } else {
-                    total = PRICES.FULL_CAB;
+                } else if (state.service === 'cab') {
+                    const cabVariant = document.querySelector('input[name="cab-variant"]:checked').value;
+                    total = cabVariant === 'suv' ? PRICES.FULL_CAB.SUV : PRICES.FULL_CAB.SEDAN;
                 }
             }
             document.getElementById('total-price').textContent = total.toLocaleString();
         }
 
-        function handleBookingSubmit(e) {
+        // --- NEW: MATCHING & ASSIGNMENT LOGIC (THE BRAIN) ---
+        window.handleBookingSubmit = async (e) => {
             e.preventDefault();
+            if(!currentUser) { alert("Please wait for connection..."); return; }
+
+            const btn = document.getElementById('submit-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin h-5 w-5"></i> Finding Best Driver...';
+            btn.disabled = true;
+
             const from = document.getElementById('from-loc').value;
             const to = document.getElementById('to-loc').value;
             const mobile = document.getElementById('mobile').value;
             const name = document.getElementById('user-name').value;
             const date = document.getElementById('travel-date').value;
             const price = document.getElementById('total-price').textContent;
-            
-            // Modal Data
-            document.getElementById('modal-from').textContent = from;
-            document.getElementById('modal-to').textContent = to;
-            document.getElementById('modal-name-display').textContent = name;
-            
-            if(date) {
-                const dateObj = new Date(date);
-                document.getElementById('modal-date').textContent = dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
-            } else {
-                document.getElementById('modal-date').textContent = "Date Pending";
-            }
-            
-            document.getElementById('modal-price').textContent = "₹" + price;
 
+            let displayFrom = from;
+            let displayTo = to;
             let serviceName = "";
-            if (state.service === 'ambulance') {
+            let requiredVehicle = 'ANY';
+
+            if (state.bookingType === 'shared') {
+                const seatType = document.querySelector('input[name="seat-type"]:checked').value;
+                const acType = document.querySelector('input[name="ac-type"]:checked').value;
+                serviceName = `${seatType} Seater (${acType.toUpperCase()}) - ${state.passengers} Seats`;
+                requiredVehicle = `SHARED_${seatType}`;
+            } else if (state.service === 'ambulance') {
                 const selectedVariant = document.querySelector('input[name="amb-type"]:checked').value;
                 const tripTypeStr = state.ambTripType === 'oneWay' ? "One Way" : "Round Trip";
                 serviceName = `Ambulance (${selectedVariant.toUpperCase()}) - ${tripTypeStr}`;
+                requiredVehicle = 'AMBULANCE';
+                
+                const ambPickup = document.getElementById('amb-pickup-addr').value;
+                const ambDrop = document.getElementById('amb-drop-addr').value;
+                if (ambPickup) displayFrom = ambPickup;
+                if (ambDrop) displayTo = ambDrop;
             } else {
-                const type = state.service === 'ac' ? 'AC' : (state.service === 'normal' ? 'Non-AC' : 'Private Cab');
-                const pass = state.bookingType === 'shared' ? `(${state.passengers} Seats)` : '';
-                serviceName = `${type} ${pass}`;
+                const cabVariant = document.querySelector('input[name="cab-variant"]:checked').value;
+                serviceName = `Private Cab (${cabVariant === 'suv' ? '7 Seater SUV' : '5 Seater Sedan'})`;
+                requiredVehicle = cabVariant === 'suv' ? 'CAB_7' : 'CAB_5';
+                
+                const optPickup = document.getElementById('pickup-addr').value;
+                const optDrop = document.getElementById('drop-addr').value;
+                if (optPickup) displayFrom = optPickup + ` (${from})`;
+                if (optDrop) displayTo = optDrop + ` (${to})`;
             }
-            document.getElementById('modal-service').textContent = serviceName;
 
-            // Show Modal
-            document.getElementById('success-modal').classList.remove('hidden');
+            localStorage.setItem('userName', name);
+            localStorage.setItem('userMobile', mobile);
+
+            // 1. Find the Best Driver
+            let assignedDriverId = null;
+
+            try {
+                // Fetch Online Drivers (Queue)
+                const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'active_drivers'), orderBy('queueTime'));
+                const querySnapshot = await getDocs(q);
+                
+                const candidates = [];
+                querySnapshot.forEach((doc) => {
+                    const d = doc.data();
+                    // FILTER Logic
+                    let isMatch = false;
+                    
+                    if (requiredVehicle === 'AMBULANCE') {
+                        if (d.vehicleType === 'Ambulance') isMatch = true;
+                    } 
+                    else if (state.bookingType === 'full') {
+                        // Full Cab: Needs specific type AND empty car
+                        if (d.filledSeats === 0) {
+                            if (requiredVehicle === 'CAB_7' && d.vehicleType.includes('7 Seater')) isMatch = true;
+                            if (requiredVehicle === 'CAB_5' && d.vehicleType.includes('5 Seater')) isMatch = true;
+                        }
+                    } 
+                    else {
+                        // Shared: Needs specific type AND enough seats
+                        const seatsNeeded = state.passengers;
+                        if (d.seatsAvailable >= seatsNeeded) {
+                            if (requiredVehicle === 'SHARED_7' && d.vehicleType.includes('7 Seater')) isMatch = true;
+                            // Note: 5 Seater usually doesn't do shared in this logic but if needed:
+                            if (requiredVehicle.includes('5') && d.vehicleType.includes('5 Seater')) isMatch = true;
+                        }
+                    }
+
+                    if (isMatch) candidates.push(d);
+                });
+
+                if (candidates.length > 0) {
+                    assignedDriverId = candidates[0].uid; // First Come First Serve (FCFS) due to queueTime sort
+                } else {
+                    alert("No available drivers found matching your request. Please try again later.");
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    return;
+                }
+
+                // 2. Create Booking with Offer
+                const bookingData = {
+                    userId: currentUser.uid,
+                    name, mobile, date, price, serviceName,
+                    from: displayFrom,
+                    to: displayTo,
+                    status: 'offered', // Not 'pending', but offered to specific person
+                    offeredTo: assignedDriverId,
+                    rejectedBy: [], // Track rejections
+                    requiredVehicle: requiredVehicle,
+                    passengers: state.passengers, // Store for logic
+                    timestamp: new Date().toISOString()
+                };
+
+                const docRef = await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'bookings'), bookingData);
+                
+                localStorage.setItem('activeBookingId', docRef.id);
+                trackBooking(docRef.id);
+                
+            } catch (error) {
+                console.error("Booking error:", error);
+                alert("Booking failed. Please try again.");
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        };
+
+        // --- TRACKING & RE-ASSIGNMENT LOOP ---
+        function trackBooking(bookingId) {
+            document.getElementById('booking-form-card').classList.add('hidden');
+            document.getElementById('live-status-card').classList.remove('hidden');
+            document.getElementById('booking-ref').textContent = `Ref: ${bookingId.slice(0,6).toUpperCase()}`;
+
+            currentBookingUnsubscribe = onSnapshot(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', bookingId), async (snap) => {
+                if(!snap.exists()) {
+                    alert("Booking ended.");
+                    resetUI();
+                    return;
+                }
+                const data = snap.data();
+                
+                // RE-ASSIGNMENT LOGIC: If OfferedTo becomes null (Driver Rejected)
+                if (data.status === 'offered' && data.offeredTo === null) {
+                    document.getElementById('status-title').textContent = "Looking for next driver...";
+                    
+                    // Client-side Loop to find next driver
+                    // (Ideally done on server, but serverless workaround)
+                    const rejectedList = data.rejectedBy || [];
+                    
+                    // Re-query drivers
+                    const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'active_drivers'), orderBy('queueTime'));
+                    const querySnapshot = await getDocs(q);
+                    
+                    let nextDriverId = null;
+                    
+                    querySnapshot.forEach((doc) => {
+                        const d = doc.data();
+                        if (rejectedList.includes(d.uid)) return; // Skip rejected
+                        
+                        // Same Filter Logic as before
+                        let isMatch = false;
+                         if (data.requiredVehicle === 'AMBULANCE') {
+                            if (d.vehicleType === 'Ambulance') isMatch = true;
+                        } else if (data.serviceName.includes('Private') || data.serviceName.includes('Full')) {
+                            if (d.filledSeats === 0) {
+                                if (data.requiredVehicle === 'CAB_7' && d.vehicleType.includes('7 Seater')) isMatch = true;
+                                if (data.requiredVehicle === 'CAB_5' && d.vehicleType.includes('5 Seater')) isMatch = true;
+                            }
+                        } else {
+                            if (d.seatsAvailable >= (data.passengers || 1)) {
+                                if (data.requiredVehicle === 'SHARED_7' && d.vehicleType.includes('7 Seater')) isMatch = true;
+                            }
+                        }
+
+                        if (isMatch && !nextDriverId) nextDriverId = d.uid;
+                    });
+
+                    if (nextDriverId) {
+                        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', bookingId), {
+                            offeredTo: nextDriverId
+                        });
+                    } else {
+                         // No more drivers
+                         document.getElementById('status-title').textContent = "Busy";
+                         document.getElementById('status-desc').textContent = "All nearby drivers are busy. Please wait or cancel.";
+                         document.getElementById('status-icon').classList.replace('text-blue-600', 'text-red-500');
+                    }
+                } else {
+                    updateStatusUI(data);
+                }
+            });
         }
 
-        function closeModal() {
-            document.getElementById('success-modal').classList.add('hidden');
+        function updateStatusUI(data) {
+            const title = document.getElementById('status-title');
+            const desc = document.getElementById('status-desc');
+            const bar = document.getElementById('status-bar');
+            const icon = document.getElementById('status-icon');
+            const details = document.getElementById('driver-details');
+            const pulse = document.getElementById('pulse-ring');
+
+            if (data.status === 'offered') {
+                title.textContent = "Waiting for Driver...";
+                desc.textContent = "Request sent to nearest driver. Waiting for acceptance...";
+                bar.className = "h-full bg-blue-500 w-2/3";
+                icon.setAttribute('data-lucide', 'clock');
+                icon.className = "h-10 w-10 text-blue-600 animate-bounce";
+                details.classList.add('hidden');
+                pulse.classList.add('hidden');
+            } 
+            else if (data.status === 'assigned') {
+                title.textContent = "Driver Found!";
+                desc.textContent = "Your ride is confirmed.";
+                bar.className = "h-full bg-green-500 w-full";
+                icon.setAttribute('data-lucide', 'check');
+                icon.className = "h-10 w-10 text-green-600";
+                pulse.classList.remove('hidden');
+                details.classList.remove('hidden');
+                document.getElementById('driver-name').textContent = data.driverName || "Nandu Driver";
+                document.getElementById('driver-vehicle').textContent = data.driverVehicle || "Vehicle";
+                document.getElementById('driver-plate').textContent = data.driverPlate || "";
+                document.getElementById('call-btn').href = `tel:917842424201`;
+            }
+            lucide.createIcons();
         }
 
+        window.cancelBooking = async () => {
+            if(!confirm("Are you sure you want to cancel?")) return;
+            const id = localStorage.getItem('activeBookingId');
+            if(id) {
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', id), { status: 'cancelled' });
+            }
+            resetUI();
+        };
+
+        window.resetUI = () => {
+            localStorage.removeItem('activeBookingId');
+            if(currentBookingUnsubscribe) currentBookingUnsubscribe();
+            location.reload();
+        };
+
+        lucide.createIcons();
         calculateEstimate();
     </script>
 </body>

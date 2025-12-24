@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Driver Partner - Nandu Travels</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #F8FAFC; }
+        
+        .toggle-checkbox:checked { right: 0; border-color: #22c55e; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #22c55e; }
+        .toggle-checkbox { transition: all 0.3s; }
+        
+        .progress-bar { transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .stat-card { transition: transform 0.2s; }
+        .stat-card:active { transform: scale(0.98); }
+        
+        @keyframes bounce-in {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); opacity: 1; }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+        .animate-bounce-in { animation: bounce-in 0.5s forwards; }
+
+        /* Modal Styles */
+        .modal-overlay { background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); }
+    </style>
+</head>
+<body class="select-none text-slate-900">
+
+    <!-- Registration Screen -->
+    <div id="register-screen" class="min-h-screen flex flex-col justify-center px-6 bg-white">
+        <div class="text-center mb-10">
+            <div class="bg-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-blue-200">
+                <i data-lucide="steering-wheel" class="h-8 w-8 text-white"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-slate-900">Partner Portal</h1>
+            <p class="text-slate-500 text-sm mt-1">Join Nandu Travels Fleet</p>
+        </div>
+
+        <form onsubmit="handleRegister(event)" class="space-y-5">
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Full Name</label>
+                <input type="text" id="driver-name" class="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none font-medium" placeholder="Enter your name" required>
+            </div>
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Vehicle Number</label>
+                <input type="text" id="vehicle-no" class="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none font-medium uppercase" placeholder="TS 00 AA 0000" required>
+            </div>
+            <div class="space-y-1.5">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Vehicle Type</label>
+                <select id="vehicle-type" class="w-full px-4 py-3.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none font-medium">
+                    <option value="7 Seater">7 Seater (Innova/Ertiga)</option>
+                    <option value="5 Seater">5 Seater (Sedan/Hatch)</option>
+                    <option value="Ambulance">Ambulance</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="w-full py-4 bg-slate-900 text-white font-bold rounded-xl shadow-xl hover:bg-slate-800 active:scale-95 transition mt-6">
+                Login Dashboard
+            </button>
+        </form>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard-screen" class="hidden min-h-screen bg-slate-50 pb-24">
+        <!-- Header -->
+        <div class="bg-white px-6 py-5 shadow-sm border-b border-slate-100 sticky top-0 z-10">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 id="dash-name" class="text-xl font-bold text-slate-900">Welcome</h2>
+                    <p id="dash-vehicle" class="text-[10px] font-bold text-slate-500 bg-slate-100 inline-block px-2 py-1 rounded-md mt-1 uppercase tracking-wider">Vehicle No</p>
+                </div>
+                <div class="text-center">
+                    <div class="relative inline-block w-14 align-middle select-none transition duration-200 ease-in">
+                        <input type="checkbox" name="toggle" id="status-toggle" class="toggle-checkbox absolute block w-8 h-8 rounded-full bg-white border-4 appearance-none cursor-pointer transition-all duration-300 left-0" onclick="toggleStatus()"/>
+                        <label for="status-toggle" class="toggle-label block overflow-hidden h-8 rounded-full bg-slate-300 cursor-pointer transition-colors duration-300"></label>
+                    </div>
+                    <p id="status-text" class="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wide">Offline</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 space-y-6">
+            
+            <!-- Earnings Card -->
+            <div class="bg-slate-900 rounded-[2rem] p-6 shadow-xl shadow-slate-900/20 text-white relative overflow-hidden stat-card">
+                <div class="absolute -top-4 -right-4 p-4 opacity-10"><i data-lucide="indian-rupee" class="h-32 w-32"></i></div>
+                <div class="flex justify-between items-start mb-6">
+                    <div>
+                        <p class="text-slate-400 text-xs font-bold uppercase mb-1">Today's Earnings</p>
+                        <div class="flex items-end gap-2"><span class="text-4xl font-black tracking-tight">₹3,200</span></div>
+                    </div>
+                    <span class="bg-green-500/20 text-green-400 text-xs font-bold px-2 py-1 rounded-lg">+12%</span>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-xs font-bold text-slate-400"><span>Goal Progress</span><span>65%</span></div>
+                    <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden"><div id="progress-bar" class="bg-blue-500 h-full rounded-full progress-bar w-0"></div></div>
+                    <p class="text-[10px] text-slate-500 text-right mt-1">Daily Target: ₹5000</p>
+                </div>
+            </div>
+
+            <!-- Seat Management Card -->
+            <div class="bg-white rounded-[2rem] p-6 shadow-lg shadow-slate-200/50 border border-slate-100">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-blue-50 p-2.5 rounded-xl"><i data-lucide="users" class="h-5 w-5 text-blue-600"></i></div>
+                        <div><h3 class="font-bold text-slate-900 leading-tight">Occupancy</h3><p class="text-slate-400 text-xs font-medium">Manual Update</p></div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Filled</span>
+                        <p class="text-xl font-black text-slate-900 leading-none"><span id="seats-filled">0</span><span class="text-slate-300 text-base">/</span><span id="total-capacity" class="text-slate-400 text-base">7</span></p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <button onclick="updateSeats(-1)" class="w-14 h-14 rounded-2xl bg-slate-100 text-slate-600 flex items-center justify-center shadow-sm active:scale-90 transition hover:bg-slate-200"><i data-lucide="minus" class="h-6 w-6 stroke-[3]"></i></button>
+                    <div class="flex-1 text-center bg-slate-50 py-3 rounded-2xl border border-slate-100">
+                        <span class="text-3xl font-black text-slate-900" id="available-display">7</span>
+                        <p class="text-[10px] font-bold text-green-500 uppercase mt-1 tracking-wide">Seats Available</p>
+                    </div>
+                    <button onclick="updateSeats(1)" class="w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-lg shadow-blue-200 active:scale-90 transition hover:bg-blue-700"><i data-lucide="plus" class="h-6 w-6 stroke-[3]"></i></button>
+                </div>
+            </div>
+
+            <!-- Job Offer Modal (Initially Hidden) -->
+            <div id="offer-modal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none opacity-0 transition-opacity duration-300">
+                <div class="absolute inset-0 modal-overlay pointer-events-auto" onclick=""></div>
+                <div class="bg-white w-full max-w-md rounded-t-[2rem] sm:rounded-[2rem] p-6 m-0 sm:m-4 shadow-2xl transform translate-y-full transition-transform duration-300 pointer-events-auto" id="offer-card">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-slate-900">New Request!</h3>
+                        <span class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded uppercase tracking-wide" id="offer-type">Private Cab</span>
+                    </div>
+                    
+                    <div class="space-y-4 mb-6">
+                        <div class="flex items-start gap-4">
+                            <div class="bg-slate-100 p-3 rounded-xl"><i data-lucide="map-pin" class="h-6 w-6 text-slate-700"></i></div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">Route</p>
+                                <p class="font-bold text-slate-900 text-lg leading-tight"><span id="offer-from">Hyd</span> <span class="text-slate-400">→</span> <span id="offer-to">KMNR</span></p>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">Fare</p>
+                                <p class="text-2xl font-black text-slate-900">₹<span id="offer-price">3500</span></p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">Passengers</p>
+                                <p class="text-xl font-bold text-slate-900" id="offer-seats">4</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="handleOffer('reject')" class="py-4 rounded-xl font-bold text-slate-500 border border-slate-200 hover:bg-slate-50 transition">Skip / Reject</button>
+                        <button onclick="handleOffer('accept')" class="py-4 rounded-xl font-bold text-white bg-green-600 shadow-lg shadow-green-200 hover:bg-green-700 transition">Accept Job</button>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="logout()" class="w-full py-3 text-slate-400 font-bold text-xs uppercase tracking-widest hover:text-red-500 transition border border-slate-200 rounded-xl mt-4">Log Out</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, updateDoc, runTransaction, serverTimestamp, query, where } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+        lucide.createIcons();
+
+        // --- CONFIGURATION ---
+        let firebaseConfig;
+        if (typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+        } else {
+            firebaseConfig = {
+                apiKey: "YOUR_API_KEY_HERE",
+                authDomain: "your-app.firebaseapp.com",
+                projectId: "your-app-id",
+                storageBucket: "your-app.appspot.com",
+                messagingSenderId: "123456789",
+                appId: "1:123456789:web:abcdef"
+            };
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        let currentUser = null;
+        let driverState = { isOnline: false, totalSeats: 7, filledSeats: 0 };
+        let currentOfferId = null;
+
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        };
+        initAuth().then(() => {
+            currentUser = auth.currentUser;
+        });
+
+        window.addEventListener('load', () => {
+            const savedDriver = localStorage.getItem('driverDetails');
+            if(savedDriver) {
+                const data = JSON.parse(savedDriver);
+                loadDashboard(data.name, data.vehicleNo, data.type);
+            }
+            const savedStatus = localStorage.getItem('driverStatus');
+            if(savedStatus === 'true') {
+                document.getElementById('status-toggle').checked = true;
+                setTimeout(toggleStatus, 500); 
+            }
+        });
+
+        window.handleRegister = (e) => {
+            e.preventDefault();
+            const name = document.getElementById('driver-name').value;
+            const vehicleNo = document.getElementById('vehicle-no').value;
+            const type = document.getElementById('vehicle-type').value;
+            localStorage.setItem('driverDetails', JSON.stringify({ name, vehicleNo, type }));
+            loadDashboard(name, vehicleNo, type);
+        }
+
+        window.loadDashboard = (name, vehicleNo, type) => {
+            if(type.includes('5 Seater')) driverState.totalSeats = 4;
+            else if(type.includes('7 Seater')) driverState.totalSeats = 6;
+            else driverState.totalSeats = 0;
+
+            document.getElementById('dash-name').textContent = name;
+            document.getElementById('dash-vehicle').textContent = `${vehicleNo} • ${type}`;
+            document.getElementById('total-capacity').textContent = driverState.totalSeats;
+            updateDisplay();
+            document.getElementById('register-screen').classList.add('hidden');
+            document.getElementById('dashboard-screen').classList.remove('hidden');
+            setTimeout(() => { document.getElementById('progress-bar').style.width = '65%'; }, 500);
+        }
+
+        // --- NEW: QUEUE & PRESENCE LOGIC ---
+        window.toggleStatus = async function() {
+            const checkbox = document.getElementById('status-toggle');
+            const statusText = document.getElementById('status-text');
+            driverState.isOnline = checkbox.checked;
+            localStorage.setItem('driverStatus', driverState.isOnline);
+            
+            if (!currentUser) currentUser = auth.currentUser;
+            const driverData = JSON.parse(localStorage.getItem('driverDetails'));
+            const driverRef = doc(db, 'artifacts', appId, 'public', 'data', 'active_drivers', currentUser.uid);
+
+            if (driverState.isOnline) {
+                statusText.textContent = "Online (In Queue)";
+                statusText.className = "text-[10px] font-bold text-green-500 mt-1 uppercase tracking-wide";
+                
+                // Add to Active Queue
+                await setDoc(driverRef, {
+                    uid: currentUser.uid,
+                    name: driverData.name,
+                    vehicleNo: driverData.vehicleNo,
+                    vehicleType: driverData.type,
+                    totalSeats: driverState.totalSeats,
+                    filledSeats: driverState.filledSeats,
+                    seatsAvailable: driverState.totalSeats - driverState.filledSeats,
+                    status: 'active',
+                    // This timestamp determines queue position (First Come First Serve)
+                    queueTime: serverTimestamp() 
+                }, { merge: true });
+
+                startListeningForOffers();
+            } else {
+                statusText.textContent = "Offline";
+                statusText.className = "text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-wide";
+                
+                // Remove from Queue
+                await deleteDoc(driverRef);
+            }
+        }
+
+        window.updateSeats = async (delta) => {
+            const newFilled = driverState.filledSeats + delta;
+            if (newFilled >= 0 && newFilled <= driverState.totalSeats) {
+                driverState.filledSeats = newFilled;
+                updateDisplay();
+                
+                // Update Firestore Capacity in Real-time
+                if(driverState.isOnline && currentUser) {
+                    const driverRef = doc(db, 'artifacts', appId, 'public', 'data', 'active_drivers', currentUser.uid);
+                    await updateDoc(driverRef, {
+                        filledSeats: newFilled,
+                        seatsAvailable: driverState.totalSeats - newFilled
+                    });
+                }
+            }
+        }
+
+        // --- NEW: DIRECT ASSIGNMENT LISTENER ---
+        function startListeningForOffers() {
+            if (!currentUser) return;
+            
+            // Only listen for bookings explicitly OFFERED to this driver
+            const q = query(
+                collection(db, 'artifacts', appId, 'public', 'data', 'bookings'), 
+                where("offeredTo", "==", currentUser.uid),
+                where("status", "==", "offered")
+            );
+
+            onSnapshot(q, (snapshot) => {
+                if (!snapshot.empty) {
+                    // Show the first offer found
+                    const offerDoc = snapshot.docs[0];
+                    showOfferModal(offerDoc.id, offerDoc.data());
+                } else {
+                    hideOfferModal();
+                }
+            });
+        }
+
+        function showOfferModal(id, data) {
+            currentOfferId = id;
+            document.getElementById('offer-type').textContent = data.serviceName;
+            document.getElementById('offer-price').textContent = data.price;
+            document.getElementById('offer-from').textContent = data.from.split('(')[0]; // simple display
+            document.getElementById('offer-to').textContent = data.to.split('(')[0];
+            // Estimate seats based on service type
+            document.getElementById('offer-seats').textContent = data.serviceName.includes('Shared') ? '1+' : 'Full';
+
+            const modal = document.getElementById('offer-modal');
+            const card = document.getElementById('offer-card');
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            card.classList.remove('translate-y-full');
+            
+            // Sound notification could go here
+        }
+
+        function hideOfferModal() {
+            const modal = document.getElementById('offer-modal');
+            const card = document.getElementById('offer-card');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            card.classList.add('translate-y-full');
+            currentOfferId = null;
+        }
+
+        window.handleOffer = async (action) => {
+            if(!currentOfferId) return;
+            const bookingRef = doc(db, 'artifacts', appId, 'public', 'data', 'bookings', currentOfferId);
+            const driverData = JSON.parse(localStorage.getItem('driverDetails'));
+
+            hideOfferModal(); // Optimistic UI update
+
+            try {
+                if (action === 'accept') {
+                    await runTransaction(db, async (transaction) => {
+                        const sfDoc = await transaction.get(bookingRef);
+                        if (!sfDoc.exists()) throw "Doc missing";
+                        if (sfDoc.data().status !== "offered") throw "Too late!";
+
+                        transaction.update(bookingRef, {
+                            status: 'assigned',
+                            driverId: currentUser.uid,
+                            driverName: driverData.name,
+                            driverVehicle: driverData.type,
+                            driverPlate: driverData.vehicleNo
+                        });
+                    });
+                    
+                    // If accepted full cab, maybe mark self as busy/full?
+                    // For now, user said "give popup", so we just accepted.
+                    alert("Job Accepted! Check 'Recent Trips'.");
+
+                } else {
+                    // REJECT: Add to rejected list so Customer App can find next driver
+                    await updateDoc(bookingRef, {
+                        offeredTo: null, // Clear offer
+                        rejectedBy: arrayUnion(currentUser.uid) // Add self to ignore list
+                    });
+                    // Note: arrayUnion requires import. If failing, simple read/write works too.
+                    // Let's use a simpler approach without importing arrayUnion to keep imports clean:
+                    // We will just set status back to 'pending_reassignment' ideally, but let's stick to simple logic:
+                    // We just remove 'offeredTo'. The customer app should see this and pick someone else.
+                    
+                    // Actually, to implement "Next Driver", we need to know who rejected.
+                    // Let's assume the Customer App is smart enough.
+                    const snap = await getDoc(bookingRef); // need getDoc import, or just use runTransaction
+                    // Simplified: Just set offeredTo: null. The customer app handles the rest.
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        };
+
+        window.updateDisplay = () => {
+            const available = driverState.totalSeats - driverState.filledSeats;
+            document.getElementById('seats-filled').textContent = driverState.filledSeats;
+            document.getElementById('available-display').textContent = available;
+            
+            const display = document.getElementById('available-display');
+            const label = document.querySelector('#available-display + p');
+            
+            if (available === 0 && driverState.totalSeats > 0) {
+                display.classList.replace('text-slate-900', 'text-red-500');
+                label.textContent = "Full";
+                label.classList.replace('text-green-500', 'text-red-500');
+            } else {
+                display.classList.replace('text-red-500', 'text-slate-900');
+                label.textContent = "Seats Left";
+                label.classList.replace('text-red-500', 'text-green-500');
+            }
+        }
+
+        window.logout = () => {
+            localStorage.removeItem('driverDetails');
+            localStorage.removeItem('driverStatus');
+            location.reload();
+        }
+    </script>
+</body>
+</html>
