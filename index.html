@@ -2,466 +2,570 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Travel With Nandu - Karimnagar to Hyderabad</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Travel With Nandu</title>
+    
+    <!-- PWA / Mobile App Meta Tags -->
+    <meta name="theme-color" content="#2563EB">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="application-name" content="Nandu Travels">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .service-option.active { border-color: #2563EB; background-color: #EFF6FF; ring: 1px solid #2563EB; }
-        .service-option.active-red { border-color: #DC2626; background-color: #FEF2F2; ring: 1px solid #DC2626; }
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            -webkit-tap-highlight-color: transparent;
+            /* Removed padding-bottom to eliminate extra space below footer */
+            background-color: #F3F4F6;
+        }
+        
+        /* Smooth Scrolling */
+        html { scroll-behavior: smooth; }
+
+        /* Custom Active States */
+        .service-option.active { 
+            border-color: #3B82F6; 
+            background-color: #EFF6FF; 
+            color: #1D4ED8;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
+        }
+        .service-option.active-red { 
+            border-color: #EF4444; 
+            background-color: #FEF2F2; 
+            color: #B91C1C;
+            box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.1);
+        }
+        
+        /* Custom radio button styling */
+        .amb-radio:checked + div {
+            border-color: #EF4444;
+            background-color: #FEF2F2;
+            color: #B91C1C;
+            box-shadow: 0 0 0 2px #EF4444;
+            transform: translateY(-2px);
+        }
+
+        /* Hide Scrollbar */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Safe area */
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+        
+        @keyframes popupBounce {
+            0% { transform: scale(0.9); opacity: 0; }
+            60% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-popup { animation: popupBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        /* Glassmorphism for Desktop Booking Widget */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-900">
+<body class="bg-gray-50 text-gray-900 select-none">
 
-    <!-- Navbar -->
-    <nav class="bg-white shadow-md fixed w-full z-50">
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="fixed inset-0 bg-blue-600 z-[100] flex flex-col items-center justify-center transition-opacity duration-700">
+        <div class="bg-white p-5 rounded-3xl shadow-2xl mb-6 animate-bounce">
+            <i data-lucide="car" class="h-14 w-14 text-blue-600"></i>
+        </div>
+        <h1 class="text-white text-3xl font-extrabold tracking-tight">Travel With Nandu</h1>
+        <p class="text-blue-200 font-medium mt-2 tracking-wide">Premium & Safe Travel</p>
+    </div>
+
+    <!-- SUCCESS POPUP MODAL -->
+    <div id="success-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center px-4">
+        <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="closeModal()"></div>
+        
+        <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm relative z-10 overflow-hidden transform animate-popup">
+            <div class="bg-gradient-to-br from-green-400 to-green-600 p-8 text-center relative overflow-hidden">
+                <div class="absolute inset-0 bg-white/10 opacity-30 pattern-dots"></div>
+                <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-xl ring-4 ring-green-400/30">
+                    <i data-lucide="check" class="h-10 w-10 text-green-600 stroke-[3]"></i>
+                </div>
+                <h3 class="text-white text-2xl font-bold mb-1">Booking Received!</h3>
+                <p class="text-green-50 font-medium text-sm opacity-90">Thank you, <span id="modal-name-display" class="font-bold">User</span>!</p>
+            </div>
+            
+            <div class="p-6 space-y-5">
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center pb-3 border-b border-gray-100">
+                        <span class="text-gray-400 text-xs font-bold uppercase tracking-wider">Service</span>
+                        <span id="modal-service" class="font-bold text-gray-800 text-right">Shared Cab</span>
+                    </div>
+                    <div class="flex justify-between items-start pb-3 border-b border-gray-100">
+                        <span class="text-gray-400 text-xs font-bold uppercase tracking-wider mt-1">Route</span>
+                        <div class="text-right">
+                            <span id="modal-from" class="font-bold text-gray-800">Karimnagar</span>
+                            <i data-lucide="arrow-right" class="inline h-3 w-3 text-gray-400 mx-1"></i>
+                            <span id="modal-to" class="font-bold text-gray-800">Hyderabad</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center pb-3 border-b border-gray-100">
+                        <span class="text-gray-400 text-xs font-bold uppercase tracking-wider">Date</span>
+                        <span id="modal-date" class="font-bold text-gray-800">Dec 24, 2025</span>
+                    </div>
+                </div>
+
+                <div class="bg-blue-50 rounded-2xl p-4 flex justify-between items-center ring-1 ring-blue-100">
+                    <span class="text-blue-600 text-xs font-bold uppercase tracking-wide">Estimated Cost</span>
+                    <span id="modal-price" class="text-2xl font-black text-gray-900">₹400</span>
+                </div>
+
+                <button onclick="closeModal()" class="w-full py-4 bg-gray-900 text-white font-bold rounded-2xl shadow-xl hover:bg-gray-800 hover:shadow-2xl transition-all transform active:scale-[0.98]">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop Navbar -->
+    <nav class="hidden md:block bg-white/80 backdrop-blur-md shadow-sm fixed w-full z-50 top-0 border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16 items-center">
-                <div class="flex-shrink-0 flex items-center gap-2">
-                    <div class="bg-blue-600 p-2 rounded-lg">
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex-shrink-0 flex items-center gap-3">
+                    <div class="bg-gradient-to-tr from-blue-600 to-blue-500 p-2.5 rounded-xl shadow-lg shadow-blue-200">
                         <i data-lucide="car" class="h-6 w-6 text-white"></i>
                     </div>
-                    <span class="font-bold text-2xl text-gray-800">Travel With <span class="text-blue-600">Nandu</span></span>
+                    <span class="font-extrabold text-2xl text-gray-900 tracking-tight">Travel With <span class="text-blue-600">Nandu</span></span>
                 </div>
-                <div class="hidden md:flex space-x-8 items-center">
-                    <a href="#home" class="text-gray-600 hover:text-blue-600 font-medium transition">Home</a>
-                    <a href="#booking" class="text-gray-600 hover:text-blue-600 font-medium transition">Book Now</a>
-                    <a href="#services" class="text-gray-600 hover:text-blue-600 font-medium transition">Services</a>
-                    <a href="#ideas" class="text-gray-600 hover:text-blue-600 font-medium transition">Business Features</a>
-                    <button class="bg-blue-600 text-white px-5 py-2 rounded-full font-medium hover:bg-blue-700 transition flex items-center gap-2">
+                <div class="flex space-x-10 items-center">
+                    <a href="#home" class="text-gray-600 hover:text-blue-600 font-semibold transition">Home</a>
+                    <a href="#booking" class="text-gray-600 hover:text-blue-600 font-semibold transition">Book Now</a>
+                    <a href="#services" class="text-gray-600 hover:text-blue-600 font-semibold transition">Tariffs</a>
+                    <a href="#ideas" class="text-gray-600 hover:text-blue-600 font-semibold transition">Features</a>
+                    <button class="bg-gray-900 text-white px-6 py-2.5 rounded-full font-bold hover:bg-gray-800 transition shadow-lg flex items-center gap-2">
                         <i data-lucide="phone-call" class="h-4 w-4"></i>
                         +91 78424 24201
                     </button>
                 </div>
-                <div class="md:hidden flex items-center">
-                    <button id="mobile-menu-btn" class="text-gray-600 hover:text-gray-900 focus:outline-none">
-                        <i data-lucide="menu" class="h-6 w-6"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
-            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-                <a href="#home" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Home</a>
-                <a href="#booking" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Book Now</a>
-                <a href="#services" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Services</a>
-                <a href="#ideas" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-blue-600 hover:bg-gray-50">Business Features</a>
             </div>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <section id="home" class="relative pt-24 pb-12 lg:pt-32 lg:pb-24 overflow-hidden">
-        <div class="absolute inset-0 z-0 opacity-10 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:16px_16px]"></div>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div class="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
-                <div class="flex-1 text-center lg:text-left">
-                    <div class="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 text-sm font-bold mb-6">
-                        <span class="w-2 h-2 rounded-full bg-blue-600 mr-2 animate-pulse"></span>
-                        Running Daily: Karimnagar ⇄ Hyderabad
-                    </div>
-                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-tight mb-6">
-                        Safe Journey. <br/>
-                        <span class="text-blue-600">Affordable Prices.</span>
-                    </h1>
-                    <p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto lg:mx-0">
-                        Whether you need a quick shared seat, a private family car, or an emergency ambulance, Travel With Nandu gets you there safely.
-                    </p>
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                        <a href="#booking" class="px-8 py-4 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-200 text-center">
-                            Book a Ride
-                        </a>
-                        <a href="#contact" class="px-8 py-4 bg-white text-gray-700 border border-gray-300 rounded-xl font-bold hover:bg-gray-50 transition text-center">
-                            Call Driver
-                        </a>
-                    </div>
+    <!-- Mobile Top Bar -->
+    <div class="md:hidden fixed top-0 w-full bg-white/90 backdrop-blur-sm z-40 shadow-sm px-5 py-4 flex justify-between items-center pb-safe border-b border-gray-100">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-blue-600 to-blue-500 p-2 rounded-xl shadow-md">
+                <i data-lucide="car" class="h-5 w-5 text-white"></i>
+            </div>
+            <span class="font-extrabold text-lg text-gray-900 tracking-tight">Nandu<span class="text-blue-600">Travels</span></span>
+        </div>
+        <a href="tel:+917842424201" class="bg-green-100 text-green-600 p-2.5 rounded-full shadow-sm active:scale-95 transition">
+            <i data-lucide="phone" class="h-5 w-5 fill-current"></i>
+        </a>
+    </div>
+
+    <!-- Main Content -->
+    <main class="pt-20 md:pt-24">
+        
+        <!-- Hero Section -->
+        <section id="home" class="relative pb-10 overflow-hidden">
+            <!-- Decorative Background Elements -->
+            <div class="absolute top-0 left-0 w-full h-[500px] bg-gradient-to-b from-blue-50 to-transparent -z-10"></div>
+            <div class="hidden md:block absolute right-0 top-0 w-1/3 h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-100/50 to-transparent -z-10"></div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                <div class="flex flex-col lg:flex-row items-start gap-8 lg:gap-16">
                     
-                    <div class="mt-10 flex items-center justify-center lg:justify-start gap-8">
-                        <div>
-                            <p class="text-2xl font-bold text-gray-900">15+</p>
-                            <p class="text-sm text-gray-500">Years Experience</p>
+                    <!-- Text Content -->
+                    <div class="flex-1 lg:pt-12 px-2">
+                        <div class="inline-flex items-center px-4 py-1.5 rounded-full bg-blue-100/80 border border-blue-200 text-blue-700 text-xs font-bold mb-6 shadow-sm backdrop-blur-sm">
+                            <span class="w-2 h-2 rounded-full bg-blue-600 mr-2 animate-pulse"></span>
+                            Running Daily: Karimnagar ⇄ Hyderabad
                         </div>
-                        <div class="h-10 w-px bg-gray-200"></div>
-                        <div>
-                            <p class="text-2xl font-bold text-gray-900">24/7</p>
-                            <p class="text-sm text-gray-500">Service Available</p>
-                        </div>
-                        <div class="h-10 w-px bg-gray-200"></div>
-                        <div>
-                            <p class="text-2xl font-bold text-gray-900">5000+</p>
-                            <p class="text-sm text-gray-500">Happy Riders</p>
+                        <h1 class="text-4xl md:text-6xl font-black tracking-tight text-gray-900 leading-[1.1] mb-6">
+                            Reliable Travel.<br/>
+                            <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Every Single Day.</span>
+                        </h1>
+                        <p class="text-lg text-gray-600 mb-8 max-w-xl font-medium leading-relaxed">
+                            Experience premium comfort at affordable rates. Choose from shared seats, private family cabs, or 24/7 emergency ambulances.
+                        </p>
+                        
+                        <!-- Trust Indicators (Desktop) -->
+                        <div class="hidden lg:flex gap-8 border-t border-gray-200 pt-8">
+                            <div>
+                                <p class="text-3xl font-bold text-gray-900">15+</p>
+                                <p class="text-sm font-semibold text-gray-500">Years Exp.</p>
+                            </div>
+                            <div>
+                                <p class="text-3xl font-bold text-gray-900">24/7</p>
+                                <p class="text-sm font-semibold text-gray-500">Support</p>
+                            </div>
+                            <div>
+                                <p class="text-3xl font-bold text-gray-900">5k+</p>
+                                <p class="text-sm font-semibold text-gray-500">Happy Riders</p>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <!-- Booking Widget -->
-                <div id="booking" class="w-full lg:w-5/12">
-                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-                        <div class="bg-blue-600 p-6 text-white">
-                            <h3 class="text-2xl font-bold flex items-center gap-2">
-                                <i data-lucide="calendar" class="h-6 w-6"></i>
-                                Book Your Ride
-                            </h3>
-                            <p class="text-blue-100 mt-1">Karimnagar to Hyderabad Daily Services</p>
-                        </div>
-                        
-                        <div class="p-6 md:p-8">
-                            <!-- Toggle Booking Type -->
-                            <div class="flex bg-gray-100 p-1 rounded-lg mb-8">
-                                <button id="tab-shared" class="flex-1 py-2.5 text-sm font-semibold rounded-md transition-all flex justify-center items-center gap-2 bg-white text-blue-600 shadow-sm" onclick="switchBookingType('shared')">
-                                    <i data-lucide="users" class="h-4 w-4"></i> Shared Seat
-                                </button>
-                                <button id="tab-full" class="flex-1 py-2.5 text-sm font-semibold rounded-md transition-all flex justify-center items-center gap-2 text-gray-500 hover:text-gray-700" onclick="switchBookingType('full')">
-                                    <i data-lucide="car" class="h-4 w-4"></i> Full Vehicle / Emergency
-                                </button>
+                    <!-- Booking Widget -->
+                    <div id="booking" class="w-full lg:w-[480px] px-2 md:px-0">
+                        <div class="bg-white rounded-[2rem] shadow-xl shadow-gray-200/50 overflow-hidden border border-gray-100 relative">
+                            <!-- Dynamic Header -->
+                            <div id="widget-header" class="bg-blue-600 p-6 text-white transition-colors duration-300 relative overflow-hidden">
+                                <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+                                <h3 class="text-xl md:text-2xl font-bold flex items-center gap-3 relative z-10">
+                                    <div class="bg-white/20 p-2 rounded-lg backdrop-blur-md">
+                                        <i data-lucide="calendar-days" class="h-6 w-6 text-white"></i>
+                                    </div>
+                                    Book Your Ride
+                                </h3>
                             </div>
-
-                            <form onsubmit="handleBookingSubmit(event)" class="space-y-6">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div class="space-y-2">
-                                        <label class="text-sm font-medium text-gray-700 flex items-center gap-1"><i data-lucide="map-pin" class="h-3.5 w-3.5"></i> From City</label>
-                                        <select id="from-loc" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                                            <option value="Karimnagar">Karimnagar</option>
-                                            <option value="Hyderabad">Hyderabad</option>
-                                            <option value="Sircilla">Sircilla</option>
-                                            <option value="Siddipet">Siddipet</option>
-                                        </select>
-                                    </div>
-                                    <div class="space-y-2">
-                                        <label class="text-sm font-medium text-gray-700 flex items-center gap-1"><i data-lucide="map-pin" class="h-3.5 w-3.5"></i> To City</label>
-                                        <select id="to-loc" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
-                                            <option value="Hyderabad">Hyderabad</option>
-                                            <option value="Karimnagar">Karimnagar</option>
-                                            <option value="JBS">JBS (Jubilee Bus Station)</option>
-                                            <option value="Airport">RGIA Airport</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <!-- Exact Location Fields (Added) -->
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-                                    <div class="space-y-2">
-                                        <label class="text-sm font-bold text-gray-700">Exact Pickup Address</label>
-                                        <input type="text" id="pickup-addr" placeholder="H.No, Street, Landmark" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
-                                    </div>
-                                    <div class="space-y-2">
-                                        <label class="text-sm font-bold text-gray-700">Exact Drop Address</label>
-                                        <input type="text" id="drop-addr" placeholder="Hospital Name, Colony" class="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-white">
-                                    </div>
-                                </div>
-
-                                <div class="space-y-2">
-                                    <label class="text-sm font-medium text-gray-700">Service Class</label>
-                                    
-                                    <!-- Shared Options -->
-                                    <div id="shared-options" class="grid grid-cols-2 gap-3">
-                                        <div id="srv-normal" onclick="selectService('normal')" class="service-option cursor-pointer border border-gray-200 rounded-lg p-3 flex flex-col items-center justify-center transition hover:bg-gray-50">
-                                            <span class="font-bold text-gray-800">Normal</span>
-                                            <span class="text-sm text-gray-500">₹350/seat</span>
-                                        </div>
-                                        <div id="srv-ac" onclick="selectService('ac')" class="service-option active cursor-pointer border border-gray-200 rounded-lg p-3 flex flex-col items-center justify-center transition hover:bg-gray-50">
-                                            <span class="font-bold text-gray-800">AC</span>
-                                            <span class="text-sm text-gray-500">₹400/seat</span>
-                                        </div>
-                                    </div>
-
-                                    <!-- Full Options -->
-                                    <div id="full-options" class="grid grid-cols-2 gap-3 hidden">
-                                        <div id="srv-cab" onclick="selectService('cab')" class="service-option cursor-pointer border border-gray-200 rounded-lg p-3 flex flex-col items-center justify-center transition hover:bg-gray-50">
-                                            <span class="font-bold text-gray-800">Private Cab</span>
-                                            <span class="text-sm text-gray-500">Etios/Dzire</span>
-                                        </div>
-                                        <div id="srv-ambulance" onclick="selectService('ambulance')" class="service-option cursor-pointer border border-gray-200 rounded-lg p-3 flex flex-col items-center justify-center transition hover:bg-gray-50">
-                                            <span class="font-bold text-gray-800">Ambulance</span>
-                                            <span class="text-sm text-red-500">₹18/km</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Ambulance Distance Calculation (Added) -->
-                                <div id="distance-container" class="hidden space-y-2 bg-red-50 p-4 rounded-lg border border-red-200">
-                                    <div class="flex justify-between items-center">
-                                        <label class="text-sm font-bold text-red-700">Calculated Distance (KM)</label>
-                                        <span class="text-xs text-red-600 bg-white px-2 py-1 rounded border border-red-100">Adjust for Exact Cost</span>
-                                    </div>
-                                    <div class="flex items-center gap-3">
-                                        <div class="relative flex-1">
-                                            <input type="number" id="distance-km" value="160" min="1" oninput="calculateEstimate()" class="w-full pl-4 pr-12 py-3 rounded-lg border border-red-300 focus:ring-2 focus:ring-red-500 outline-none text-xl font-bold text-gray-900">
-                                            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">KM</span>
-                                        </div>
-                                        <div class="text-right">
-                                            <div class="text-xs text-gray-500">Rate</div>
-                                            <div class="font-bold text-gray-900">₹18/km</div>
-                                        </div>
-                                    </div>
-                                    <p class="text-xs text-red-500 mt-1">Enter the exact distance from pickup to drop location to see the final price.</p>
-                                </div>
-
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div class="space-y-2">
-                                        <label class="text-sm font-medium text-gray-700">Date of Travel</label>
-                                        <input type="date" id="travel-date" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none" required>
-                                    </div>
-                                    <div class="space-y-2">
-                                        <label class="text-sm font-medium text-gray-700">Mobile Number</label>
-                                        <input type="tel" id="mobile" placeholder="99999 99999" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none" required>
-                                    </div>
-                                </div>
-                                
-                                <div id="passengers-container" class="space-y-2">
-                                    <label class="text-sm font-medium text-gray-700">Number of Seats</label>
-                                    <div class="flex items-center gap-4">
-                                        <button type="button" onclick="changePassengers(-1)" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-lg font-bold hover:bg-gray-200">-</button>
-                                        <span id="passenger-count" class="text-xl font-bold w-8 text-center">1</span>
-                                        <button type="button" onclick="changePassengers(1)" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-lg font-bold hover:bg-gray-200">+</button>
-                                    </div>
-                                </div>
-
-                                <div class="pt-4 border-t border-gray-100">
-                                    <div class="flex justify-between items-center mb-4">
-                                        <span class="text-gray-600">Estimated Total</span>
-                                        <span class="text-3xl font-bold text-gray-900">₹<span id="total-price">400</span><span id="asterisk" class="text-sm font-normal text-gray-500 hidden">*</span></span>
-                                    </div>
-                                    <p id="ambulance-note" class="text-xs text-red-500 mb-4 hidden">*Base estimate. Update KM above for exact price.</p>
-                                    
-                                    <button type="submit" id="submit-btn" class="w-full py-4 rounded-xl text-white font-bold text-lg shadow-lg hover:shadow-xl transition transform active:scale-95 bg-blue-600 hover:bg-blue-700">
-                                        Confirm Booking
+                            
+                            <div class="p-5 md:p-8">
+                                <!-- Tabs -->
+                                <div class="flex bg-gray-100/80 p-1.5 rounded-2xl mb-6 relative">
+                                    <button id="tab-shared" class="flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 bg-white text-blue-700 shadow-md transform scale-100" onclick="switchBookingType('shared')">
+                                        <i data-lucide="users" class="h-4 w-4"></i> Shared
+                                    </button>
+                                    <button id="tab-full" class="flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 text-gray-500 hover:text-gray-700" onclick="switchBookingType('full')">
+                                        <i data-lucide="car-front" class="h-4 w-4"></i> Private/Amb
                                     </button>
                                 </div>
-                            </form>
+
+                                <form onsubmit="handleBookingSubmit(event)" class="space-y-5">
+                                    <!-- Locations -->
+                                    <div class="flex gap-3">
+                                        <div class="w-1/2 space-y-1.5">
+                                            <label class="text-[11px] font-bold text-gray-400 uppercase tracking-widest pl-1">From</label>
+                                            <div class="relative group">
+                                                <i data-lucide="map-pin" class="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400 group-focus-within:text-blue-500 transition-colors"></i>
+                                                <select id="from-loc" class="w-full pl-10 pr-3 py-3.5 rounded-2xl bg-gray-50 border border-gray-100 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm font-bold appearance-none transition-all cursor-pointer text-gray-800">
+                                                    <option value="Karimnagar">Karimnagar</option>
+                                                    <option value="Hyderabad">Hyderabad</option>
+                                                    <option value="Sircilla">Sircilla</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="w-1/2 space-y-1.5">
+                                            <label class="text-[11px] font-bold text-gray-400 uppercase tracking-widest pl-1">To</label>
+                                            <div class="relative group">
+                                                <i data-lucide="map-pin" class="absolute left-3.5 top-3.5 h-4 w-4 text-gray-400 group-focus-within:text-blue-500 transition-colors"></i>
+                                                <select id="to-loc" class="w-full pl-10 pr-3 py-3.5 rounded-2xl bg-gray-50 border border-gray-100 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm font-bold appearance-none transition-all cursor-pointer text-gray-800">
+                                                    <option value="Hyderabad">Hyderabad</option>
+                                                    <option value="Karimnagar">Karimnagar</option>
+                                                    <option value="JBS">JBS</option>
+                                                    <option value="Airport">RGIA Airport</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Service Grid -->
+                                    <div class="space-y-2">
+                                        <label class="text-[11px] font-bold text-gray-400 uppercase tracking-widest pl-1">Vehicle Type</label>
+                                        
+                                        <!-- Shared Options -->
+                                        <div id="shared-options" class="grid grid-cols-2 gap-3">
+                                            <div id="srv-normal" onclick="selectService('normal')" class="service-option cursor-pointer border-2 border-transparent bg-gray-50 rounded-2xl p-3 flex flex-col items-center justify-center transition-all active:scale-[0.98]">
+                                                <span class="font-bold text-gray-800">Normal</span>
+                                                <span class="text-xs font-semibold text-gray-500 mt-1">₹350</span>
+                                            </div>
+                                            <div id="srv-ac" onclick="selectService('ac')" class="service-option active cursor-pointer border-2 border-transparent bg-gray-50 rounded-2xl p-3 flex flex-col items-center justify-center transition-all active:scale-[0.98]">
+                                                <span class="font-bold text-gray-800">AC</span>
+                                                <span class="text-xs font-semibold text-gray-500 mt-1">₹400</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Full Options -->
+                                        <div id="full-options" class="grid grid-cols-2 gap-3 hidden">
+                                            <div id="srv-cab" onclick="selectService('cab')" class="service-option cursor-pointer border-2 border-transparent bg-gray-50 rounded-2xl p-3 flex flex-col items-center justify-center transition-all active:scale-[0.98]">
+                                                <span class="font-bold text-gray-800">Private Cab</span>
+                                                <span class="text-xs font-semibold text-gray-500 mt-1">Sedan</span>
+                                            </div>
+                                            <div id="srv-ambulance" onclick="selectService('ambulance')" class="service-option cursor-pointer border-2 border-transparent bg-gray-50 rounded-2xl p-3 flex flex-col items-center justify-center transition-all active:scale-[0.98]">
+                                                <span class="font-bold text-gray-800">Ambulance</span>
+                                                <span class="text-xs text-red-500 font-bold mt-1">Emergency</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- AMBULANCE SPECIFIC CONTROLS -->
+                                    <div id="ambulance-config" class="hidden bg-red-50 p-4 rounded-2xl border border-red-100 space-y-4 animate-fade-in">
+                                        <div class="space-y-1.5">
+                                            <label class="text-[10px] font-bold text-red-600 uppercase tracking-wider">Equipment Level</label>
+                                            <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                                                <label class="cursor-pointer min-w-[85px] flex-1">
+                                                    <input type="radio" name="amb-type" value="non-ac" class="hidden amb-radio" onclick="calculateEstimate()">
+                                                    <div class="border border-red-200 bg-white rounded-xl p-2.5 text-center h-full flex flex-col justify-center transition-all">
+                                                        <span class="text-xs font-bold block text-gray-900">Basic</span>
+                                                        <span class="text-[9px] font-semibold text-gray-400">Non-AC</span>
+                                                    </div>
+                                                </label>
+                                                <label class="cursor-pointer min-w-[85px] flex-1">
+                                                    <input type="radio" name="amb-type" value="ac" class="hidden amb-radio" checked onclick="calculateEstimate()">
+                                                    <div class="border border-red-200 bg-white rounded-xl p-2.5 text-center h-full flex flex-col justify-center transition-all">
+                                                        <span class="text-xs font-bold block text-gray-900">Standard</span>
+                                                        <span class="text-[9px] font-semibold text-gray-400">AC + O2</span>
+                                                    </div>
+                                                </label>
+                                                <label class="cursor-pointer min-w-[85px] flex-1">
+                                                    <input type="radio" name="amb-type" value="ventilator" class="hidden amb-radio" onclick="calculateEstimate()">
+                                                    <div class="border border-red-200 bg-white rounded-xl p-2.5 text-center h-full flex flex-col justify-center transition-all">
+                                                        <span class="text-xs font-bold block text-gray-900">ICU</span>
+                                                        <span class="text-[9px] font-semibold text-gray-400">Ventilator</span>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="space-y-1.5">
+                                            <label class="text-[10px] font-bold text-red-600 uppercase tracking-wider">Trip Type</label>
+                                            <div class="flex bg-white rounded-xl border border-red-200 p-1">
+                                                <button type="button" id="trip-one" class="flex-1 py-2 text-xs font-bold rounded-lg text-white bg-red-600 shadow-sm transition-all" onclick="setTripType('oneWay')">One Way</button>
+                                                <button type="button" id="trip-round" class="flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 hover:bg-gray-50 transition-all" onclick="setTripType('roundTrip')">Round Trip</button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Date & Personal Info -->
+                                    <div class="space-y-3">
+                                        <div class="bg-gray-50 p-2 rounded-2xl border border-gray-100 flex items-center gap-3 hover:bg-white hover:border-blue-200 transition-colors group">
+                                            <div class="bg-white p-2 rounded-xl shadow-sm">
+                                                <i data-lucide="calendar" class="text-blue-500 h-5 w-5"></i>
+                                            </div>
+                                            <input type="date" id="travel-date" class="bg-transparent w-full text-sm font-bold outline-none text-gray-700 cursor-pointer" required>
+                                        </div>
+                                        <!-- Name Field (Added) -->
+                                        <div class="bg-gray-50 p-2 rounded-2xl border border-gray-100 flex items-center gap-3 hover:bg-white hover:border-blue-200 transition-colors group">
+                                            <div class="bg-white p-2 rounded-xl shadow-sm">
+                                                <i data-lucide="user" class="text-blue-500 h-5 w-5"></i>
+                                            </div>
+                                            <input type="text" id="user-name" placeholder="Your Name" class="bg-transparent w-full text-sm font-bold outline-none text-gray-700 placeholder-gray-400" required>
+                                        </div>
+                                        <div class="bg-gray-50 p-2 rounded-2xl border border-gray-100 flex items-center gap-3 hover:bg-white hover:border-blue-200 transition-colors group">
+                                            <div class="bg-white p-2 rounded-xl shadow-sm">
+                                                <i data-lucide="smartphone" class="text-blue-500 h-5 w-5"></i>
+                                            </div>
+                                            <input type="tel" id="mobile" placeholder="Mobile Number" class="bg-transparent w-full text-sm font-bold outline-none text-gray-700 placeholder-gray-400" required>
+                                        </div>
+                                        
+                                        <!-- Hidden Inputs toggle -->
+                                        <div id="extra-address" class="hidden space-y-3 pt-2 animate-fade-in">
+                                            <input type="text" id="pickup-addr" placeholder="Pickup Address (House No, Street)" class="w-full bg-gray-50 border border-gray-100 p-3.5 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20">
+                                            <input type="text" id="drop-addr" placeholder="Drop Address (Landmark)" class="w-full bg-gray-50 border border-gray-100 p-3.5 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-blue-500/20">
+                                        </div>
+                                        <div class="text-center">
+                                            <button type="button" class="text-xs text-blue-600 font-bold hover:underline py-1" onclick="document.getElementById('extra-address').classList.toggle('hidden')">
+                                                + Add Exact Pickup/Drop Location
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Passengers Counter -->
+                                    <div id="passengers-container" class="bg-gray-50 rounded-2xl p-2 pr-4 flex items-center justify-between border border-gray-100">
+                                        <div class="flex items-center gap-3">
+                                            <div class="bg-white p-2 rounded-xl shadow-sm">
+                                                <i data-lucide="users" class="text-gray-400 h-5 w-5"></i>
+                                            </div>
+                                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Seats</span>
+                                        </div>
+                                        <div class="flex items-center gap-4">
+                                            <button type="button" onclick="changePassengers(-1)" class="w-8 h-8 rounded-lg bg-white shadow-sm border border-gray-200 flex items-center justify-center text-lg font-bold text-blue-600 active:scale-90 transition">-</button>
+                                            <span id="passenger-count" class="text-lg font-bold text-gray-900 w-4 text-center">1</span>
+                                            <button type="button" onclick="changePassengers(1)" class="w-8 h-8 rounded-lg bg-white shadow-sm border border-gray-200 flex items-center justify-center text-lg font-bold text-blue-600 active:scale-90 transition">+</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Submit Area -->
+                                    <div class="pt-4 mt-2">
+                                        <div class="flex justify-between items-end mb-4 px-1">
+                                            <span class="text-gray-500 text-sm font-medium">Total Estimate</span>
+                                            <div class="text-right">
+                                                <span class="text-3xl font-black text-gray-900 tracking-tight leading-none">₹<span id="total-price">400</span></span>
+                                            </div>
+                                        </div>
+                                        
+                                        <button type="submit" id="submit-btn" class="w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all transform active:scale-[0.98] bg-blue-600 hover:bg-blue-700 flex justify-center items-center gap-3">
+                                            <span>Confirm Booking</span>
+                                            <i data-lucide="arrow-right" class="h-5 w-5 stroke-[3]"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Services Section -->
-    <section id="services" class="py-20 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold text-gray-900 sm:text-4xl">Our Tariff Plans</h2>
-                <p class="mt-4 text-gray-600 max-w-2xl mx-auto">Transparent pricing with no hidden charges. Choose the vehicle that fits your need.</p>
+        <!-- Services Section (Horizontal Cards) -->
+        <section id="services" class="py-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-xl font-bold text-gray-900 mb-6 px-2 flex items-center gap-2">
+                    <i data-lucide="tag" class="h-5 w-5 text-blue-600"></i>
+                    Popular Plans
+                </h2>
+                
+                <div class="flex overflow-x-auto gap-5 pb-8 px-2 no-scrollbar snap-x snap-mandatory md:grid md:grid-cols-3">
+                    <!-- Card 1 -->
+                    <div class="min-w-[280px] p-6 rounded-[2rem] bg-white shadow-lg shadow-gray-100 border border-gray-100 snap-center hover:border-blue-200 transition-colors">
+                        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
+                            <i data-lucide="users" class="h-6 w-6"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900">Shared Seat</h3>
+                        <div class="text-2xl font-black text-gray-900 mt-2">₹350-400 <span class="text-sm font-semibold text-gray-400">/seat</span></div>
+                        <p class="text-gray-500 text-sm mt-3 font-medium leading-relaxed">Most popular choice. Daily service between Karimnagar & Hyderabad.</p>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div class="min-w-[280px] p-6 rounded-[2rem] bg-white shadow-lg shadow-gray-100 border border-gray-100 snap-center hover:border-blue-200 transition-colors">
+                        <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
+                            <i data-lucide="car-front" class="h-6 w-6"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900">Private Cab</h3>
+                        <div class="text-2xl font-black text-gray-900 mt-2">₹3500 <span class="text-sm font-semibold text-gray-400">/trip</span></div>
+                        <p class="text-gray-500 text-sm mt-3 font-medium leading-relaxed">Book a full Swift Dzire or Etios. Door-to-door family comfort.</p>
+                    </div>
+
+                    <!-- Card 3 -->
+                    <div class="min-w-[280px] p-6 rounded-[2rem] bg-white shadow-lg shadow-red-100 border border-red-100 snap-center relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl">EMERGENCY</div>
+                        <div class="w-12 h-12 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mb-4">
+                            <i data-lucide="ambulance" class="h-6 w-6"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-gray-900">Ambulance</h3>
+                        <div class="text-2xl font-black text-gray-900 mt-2">₹4000 <span class="text-sm font-semibold text-gray-400">starts</span></div>
+                        <div class="mt-3 space-y-1">
+                            <div class="flex justify-between text-xs font-bold text-gray-500"><span>Non-AC</span> <span>₹4000</span></div>
+                            <div class="flex justify-between text-xs font-bold text-gray-500"><span>Ventilator</span> <span>₹12000</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features -->
+        <section id="ideas" class="py-12 bg-gray-900 text-white rounded-t-[3rem] mt-4">
+            <div class="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8">
+                <div class="text-center mb-10">
+                    <span class="text-blue-400 font-bold tracking-widest text-xs uppercase">Coming Soon</span>
+                    <h2 class="text-2xl font-bold mt-2">Smart Features</h2>
+                </div>
+                
+                <div class="grid gap-6 md:grid-cols-3">
+                    <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700">
+                        <i data-lucide="message-circle" class="text-green-400 mb-3 h-8 w-8"></i>
+                        <h4 class="font-bold mb-1">WhatsApp Updates</h4>
+                        <p class="text-gray-400 text-sm">Get driver details and live location directly on WhatsApp.</p>
+                    </div>
+                    <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700">
+                        <i data-lucide="map" class="text-blue-400 mb-3 h-8 w-8"></i>
+                        <h4 class="font-bold mb-1">Live Tracking</h4>
+                        <p class="text-gray-400 text-sm">Track your cab or ambulance in real-time on the map.</p>
+                    </div>
+                    <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700">
+                        <i data-lucide="shield-check" class="text-purple-400 mb-3 h-8 w-8"></i>
+                        <h4 class="font-bold mb-1">Verified Drivers</h4>
+                        <p class="text-gray-400 text-sm">All our pilots are verified and professionally trained.</p>
+                    </div>
+                </div>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Card 1 -->
-                <div class="p-6 rounded-2xl border border-gray-200 bg-white hover:border-blue-200 transition-all duration-300 hover:shadow-xl">
-                    <div class="w-14 h-14 rounded-full bg-gray-100 text-blue-600 flex items-center justify-center mb-4">
-                        <i data-lucide="users" class="h-7 w-7"></i>
+            <!-- Restored Footer -->
+            <footer id="contact" class="text-center text-gray-400 text-sm mt-16 pb-24 md:pb-8 border-t border-gray-800 pt-12">
+                <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8 mb-8 text-left">
+                    <div>
+                        <h3 class="text-white font-bold text-lg mb-4">Travel With Nandu</h3>
+                        <p>Safe and reliable daily commute services between Karimnagar and Hyderabad.</p>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Shared Normal</h3>
-                    <div class="flex items-baseline mb-4">
-                        <span class="text-3xl font-extrabold text-gray-900">₹350</span>
-                        <span class="text-gray-500 ml-1 text-sm font-medium">/seat</span>
+                    <div>
+                        <h4 class="text-white font-bold mb-4">Quick Links</h4>
+                        <ul class="space-y-2">
+                            <li><a href="#booking" class="hover:text-blue-400">Book Now</a></li>
+                            <li><a href="#services" class="hover:text-blue-400">Services</a></li>
+                            <li><a href="#" class="hover:text-blue-400">Driver Login</a></li>
+                        </ul>
                     </div>
-                    <p class="text-gray-600 text-sm leading-relaxed">Budget-friendly travel in a shared cab. Clean seats, verified drivers, and timely departures from bus stand.</p>
-                    <ul class="mt-4 space-y-2">
-                        <li class="flex items-center text-sm text-gray-600"><i data-lucide="check-circle" class="h-4 w-4 text-green-500 mr-2"></i> Reliable Service</li>
-                        <li class="flex items-center text-sm text-gray-600"><i data-lucide="check-circle" class="h-4 w-4 text-green-500 mr-2"></i> Professional Drivers</li>
-                    </ul>
+                    <div>
+                        <h4 class="text-white font-bold mb-4">Contact Us</h4>
+                        <p class="mb-2"><i data-lucide="phone" class="inline w-4 h-4 mr-2"></i> +91 78424 24201</p>
+                        <p><i data-lucide="map-pin" class="inline w-4 h-4 mr-2"></i> Karimnagar, Telangana</p>
+                    </div>
                 </div>
+                <p>&copy; 2025 Travel With Nandu. All rights reserved.</p>
+            </footer>
+        </section>
 
-                <!-- Card 2 (Highlighted) -->
-                <div class="p-6 rounded-2xl border border-blue-500 bg-blue-50 shadow-md ring-1 ring-blue-500 transition-all duration-300 hover:shadow-xl">
-                    <div class="w-14 h-14 rounded-full bg-blue-600 text-white flex items-center justify-center mb-4">
-                        <i data-lucide="car" class="h-7 w-7"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Shared AC</h3>
-                    <div class="flex items-baseline mb-4">
-                        <span class="text-3xl font-extrabold text-gray-900">₹400</span>
-                        <span class="text-gray-500 ml-1 text-sm font-medium">/seat</span>
-                    </div>
-                    <p class="text-gray-600 text-sm leading-relaxed">Premium comfort with Air Conditioning. Cool and relaxing journey for just a little extra.</p>
-                    <ul class="mt-4 space-y-2">
-                        <li class="flex items-center text-sm text-gray-600"><i data-lucide="check-circle" class="h-4 w-4 text-green-500 mr-2"></i> Reliable Service</li>
-                        <li class="flex items-center text-sm text-gray-600"><i data-lucide="check-circle" class="h-4 w-4 text-green-500 mr-2"></i> Professional Drivers</li>
-                    </ul>
-                </div>
+    </main>
 
-                <!-- Card 3 -->
-                <div class="p-6 rounded-2xl border border-gray-200 bg-white hover:border-blue-200 transition-all duration-300 hover:shadow-xl">
-                    <div class="w-14 h-14 rounded-full bg-gray-100 text-blue-600 flex items-center justify-center mb-4">
-                        <i data-lucide="ambulance" class="h-7 w-7"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-2">Ambulance</h3>
-                    <div class="flex items-baseline mb-4">
-                        <span class="text-3xl font-extrabold text-gray-900">₹18</span>
-                        <span class="text-gray-500 ml-1 text-sm font-medium">/km</span>
-                    </div>
-                    <p class="text-gray-600 text-sm leading-relaxed">Emergency medical transport with oxygen and basic life support. Available 24/7 for patient transfer.</p>
-                    <ul class="mt-4 space-y-2">
-                        <li class="flex items-center text-sm text-gray-600"><i data-lucide="check-circle" class="h-4 w-4 text-green-500 mr-2"></i> 24/7 Support</li>
-                        <li class="flex items-center text-sm text-gray-600"><i data-lucide="check-circle" class="h-4 w-4 text-green-500 mr-2"></i> Oxygen Available</li>
-                    </ul>
-                </div>
+    <!-- Mobile Bottom Navigation -->
+    <div class="md:hidden fixed bottom-6 left-4 right-4 bg-white/90 backdrop-blur-lg border border-gray-200/50 rounded-2xl flex justify-around items-center p-2 z-50 shadow-2xl shadow-gray-200">
+        <a href="#home" class="flex flex-col items-center gap-1 p-2 text-blue-600 transition hover:scale-110">
+            <i data-lucide="home" class="h-6 w-6 stroke-[2.5]"></i>
+            <span class="text-[10px] font-bold">Home</span>
+        </a>
+        <a href="#booking" class="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-blue-600 transition">
+            <div class="bg-blue-600 rounded-full p-3.5 -mt-10 shadow-lg shadow-blue-500/40 border-[4px] border-[#F3F4F6] text-white transform active:scale-95 transition">
+                <i data-lucide="plus" class="h-6 w-6 stroke-[3]"></i>
             </div>
-        </div>
-    </section>
+        </a>
+        <a href="#services" class="flex flex-col items-center gap-1 p-2 text-gray-400 hover:text-blue-600 transition hover:scale-110">
+            <i data-lucide="layout-grid" class="h-6 w-6 stroke-[2.5]"></i>
+            <span class="text-[10px] font-bold">Plans</span>
+        </a>
+    </div>
 
-    <!-- Ideas Section -->
-    <section id="ideas" class="py-20 bg-gray-900 text-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-                <div>
-                    <div class="inline-block bg-blue-900 text-blue-300 font-bold px-4 py-2 rounded-lg text-sm mb-6">
-                        Developer Insights
-                    </div>
-                    <h2 class="text-3xl font-bold mb-6">Ideas to Grow "Travel With Nandu"</h2>
-                    <p class="text-gray-400 mb-8 text-lg">
-                        As a developer with 15 years of experience, here are the technical features we can add to scale your business beyond just a website.
-                    </p>
-                    
-                    <div class="space-y-6">
-                        <div class="flex gap-4">
-                            <div class="flex-shrink-0 w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center">
-                                <i data-lucide="phone" class="text-white h-6 w-6"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-xl font-bold mb-2">WhatsApp Automation</h4>
-                                <p class="text-gray-400">Instead of just a form, we can connect this directly to WhatsApp Business API. When a customer books, you get a message instantly.</p>
-                            </div>
-                        </div>
-                        
-                        <div class="flex gap-4">
-                            <div class="flex-shrink-0 w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center">
-                                <i data-lucide="map-pin" class="text-white h-6 w-6"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-xl font-bold mb-2">Live Driver Tracking</h4>
-                                <p class="text-gray-400">Share a live link with customers (like Uber) so they can see exactly where their ambulance or cab is reaching.</p>
-                            </div>
-                        </div>
-
-                        <div class="flex gap-4">
-                            <div class="flex-shrink-0 w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center">
-                                <i data-lucide="shield" class="text-white h-6 w-6"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-xl font-bold mb-2">Digital Ambulance Network</h4>
-                                <p class="text-gray-400">Partner with local hospitals. Give them a dedicated "Hospital Login" to book ambulances for patients with one click.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="bg-gray-800 rounded-3xl p-8 border border-gray-700">
-                    <h3 class="text-2xl font-bold mb-6">Admin Dashboard Concept</h3>
-                    <div class="space-y-4">
-                        <div class="bg-gray-700 p-4 rounded-xl flex justify-between items-center">
-                            <div class="flex items-center gap-3">
-                                <div class="w-2 h-2 bg-green-500 rounded-full"></div>
-                                <span>Active Drivers</span>
-                            </div>
-                            <span class="font-mono font-bold">12</span>
-                        </div>
-                        <div class="bg-gray-700 p-4 rounded-xl flex justify-between items-center">
-                            <div class="flex items-center gap-3">
-                                <div class="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                                <span>Pending Requests</span>
-                            </div>
-                            <span class="font-mono font-bold">5</span>
-                        </div>
-                        <div class="bg-gray-700 p-4 rounded-xl flex justify-between items-center">
-                            <div class="flex items-center gap-3">
-                                <div class="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                <span>Today's Earnings</span>
-                            </div>
-                            <span class="font-mono font-bold">₹15,400</span>
-                        </div>
-                        <div class="mt-6 pt-6 border-t border-gray-600 text-center">
-                            <p class="text-sm text-gray-400">This is how you will manage your fleet efficiently.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer -->
-    <footer id="contact" class="bg-gray-900 text-gray-300 py-12 border-t border-gray-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div class="col-span-1 md:col-span-2">
-                    <div class="flex items-center gap-2 mb-4">
-                        <i data-lucide="car" class="h-8 w-8 text-blue-500"></i>
-                        <span class="font-bold text-2xl text-white">Travel With <span class="text-blue-500">Nandu</span></span>
-                    </div>
-                    <p class="text-gray-400 max-w-sm">
-                        Your trusted partner for daily commute between Karimnagar and Hyderabad. Emergency ambulance services available 24/7.
-                    </p>
-                </div>
-                
-                <div>
-                    <h4 class="text-white font-bold mb-4">Quick Links</h4>
-                    <ul class="space-y-2">
-                        <li><a href="#" class="hover:text-white transition">Book a Cab</a></li>
-                        <li><a href="#" class="hover:text-white transition">Ambulance</a></li>
-                        <li><a href="#" class="hover:text-white transition">Driver Login</a></li>
-                        <li><a href="#" class="hover:text-white transition">Contact Us</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h4 class="text-white font-bold mb-4">Contact</h4>
-                    <ul class="space-y-3">
-                        <li class="flex items-start gap-3">
-                            <i data-lucide="map-pin" class="h-5 w-5 text-blue-500 mt-1"></i>
-                            <span>raghavendra hospitals, doctors street,<br/>Karimnagar, Telangana</span>
-                        </li>
-                        <li class="flex items-center gap-3">
-                            <i data-lucide="phone" class="h-5 w-5 text-blue-500"></i>
-                            <span>+91 78424 24201</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-            <div class="border-t border-gray-800 mt-12 pt-8 text-center text-sm text-gray-500">
-                &copy; 2024 Travel With Nandu. All rights reserved. Designed by Mani, Shashi, Sumith.
-            </div>
-        </div>
-    </footer>
-
+    <!-- Scripts -->
     <script>
+        // --- Splash Screen Logic ---
+        window.addEventListener('load', () => {
+            const splash = document.getElementById('splash-screen');
+            setTimeout(() => {
+                splash.style.opacity = '0';
+                setTimeout(() => {
+                    splash.style.display = 'none';
+                }, 700);
+            }, 1500); 
+        });
+
         // --- State Management ---
         let state = {
-            bookingType: 'shared', // 'shared' or 'full'
-            service: 'ac',         // 'normal', 'ac', 'cab', 'ambulance'
-            passengers: 1
+            bookingType: 'shared', 
+            service: 'ac',         
+            passengers: 1,
+            ambTripType: 'oneWay', 
+            ambVariant: 'ac'       
         };
 
-        const CONSTANTS = {
-            // Default distance is kept for init, but now we use input value
-            DEFAULT_DISTANCE_KM: 160, 
-            AMBULANCE_RATE: 18,
-            BASE_CAB_RATE: 3500,
+        const PRICES = {
             SHARED_NORMAL: 350,
-            SHARED_AC: 400
+            SHARED_AC: 400,
+            FULL_CAB: 3500,
+            AMBULANCE: {
+                'non-ac': { oneWay: 4000, roundTrip: 6000 },
+                'ac': { oneWay: 4500, roundTrip: 6500 },
+                'ventilator': { oneWay: 12000, roundTrip: 20000 }
+            }
         };
-
-        // --- Functions ---
 
         // Initialize Icons
         lucide.createIcons();
 
-        // Navbar Toggle
-        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-
-        mobileMenuBtn.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
-
         // Booking Type Switcher
         function switchBookingType(type) {
             state.bookingType = type;
-            state.service = type === 'shared' ? 'ac' : 'cab'; // Reset service on switch
+            state.service = type === 'shared' ? 'ac' : 'cab';
             state.passengers = 1;
 
-            // UI Updates for Tabs
+            // UI Updates
             const tabShared = document.getElementById('tab-shared');
             const tabFull = document.getElementById('tab-full');
             const sharedOpts = document.getElementById('shared-options');
@@ -469,20 +573,16 @@
             const passengerContainer = document.getElementById('passengers-container');
 
             if (type === 'shared') {
-                // Style Tabs
-                tabShared.className = 'flex-1 py-2.5 text-sm font-semibold rounded-md transition-all flex justify-center items-center gap-2 bg-white text-blue-600 shadow-sm';
-                tabFull.className = 'flex-1 py-2.5 text-sm font-semibold rounded-md transition-all flex justify-center items-center gap-2 text-gray-500 hover:text-gray-700';
+                tabShared.className = 'flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 bg-white text-blue-700 shadow-md transform scale-100';
+                tabFull.className = 'flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 text-gray-500 hover:text-gray-700';
                 
-                // Show/Hide Sections
                 sharedOpts.classList.remove('hidden');
                 fullOpts.classList.add('hidden');
                 passengerContainer.classList.remove('hidden');
             } else {
-                // Style Tabs
-                tabFull.className = 'flex-1 py-2.5 text-sm font-semibold rounded-md transition-all flex justify-center items-center gap-2 bg-white text-blue-600 shadow-sm';
-                tabShared.className = 'flex-1 py-2.5 text-sm font-semibold rounded-md transition-all flex justify-center items-center gap-2 text-gray-500 hover:text-gray-700';
+                tabFull.className = 'flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 bg-white text-blue-700 shadow-md transform scale-100';
+                tabShared.className = 'flex-1 py-3 text-sm font-bold rounded-xl transition-all flex justify-center items-center gap-2 text-gray-500 hover:text-gray-700';
                 
-                // Show/Hide Sections
                 sharedOpts.classList.add('hidden');
                 fullOpts.classList.remove('hidden');
                 passengerContainer.classList.add('hidden');
@@ -499,19 +599,33 @@
             calculateEstimate();
         }
 
+        function setTripType(type) {
+            state.ambTripType = type;
+            const btnOne = document.getElementById('trip-one');
+            const btnRound = document.getElementById('trip-round');
+            
+            if(type === 'oneWay') {
+                btnOne.className = "flex-1 py-2 text-xs font-bold rounded-lg text-white bg-red-600 shadow-sm transition-all";
+                btnRound.className = "flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 hover:bg-gray-50 transition-all";
+            } else {
+                btnOne.className = "flex-1 py-2 text-xs font-bold rounded-lg text-gray-500 hover:bg-gray-50 transition-all";
+                btnRound.className = "flex-1 py-2 text-xs font-bold rounded-lg text-white bg-red-600 shadow-sm transition-all";
+            }
+            calculateEstimate();
+        }
+
         function updateServiceSelectionUI() {
-            // Reset all active classes
             document.querySelectorAll('.service-option').forEach(el => {
-                el.classList.remove('active', 'active-red', 'ring-1', 'border-blue-500', 'border-red-500', 'bg-blue-50', 'bg-red-50');
-                el.classList.add('border-gray-200');
+                el.classList.remove('active', 'active-red', 'scale-[1.02]');
+                el.classList.add('border-transparent', 'bg-gray-50');
             });
 
-            // Add active class to selected
             const activeId = `srv-${state.service === 'non-ac' ? 'normal' : state.service}`;
             const el = document.getElementById(activeId);
             
             if (el) {
-                el.classList.remove('border-gray-200');
+                el.classList.remove('border-transparent', 'bg-gray-50');
+                el.classList.add('scale-[1.02]'); // subtle pop
                 if (state.service === 'ambulance') {
                     el.classList.add('active-red');
                 } else {
@@ -519,28 +633,30 @@
                 }
             }
 
-            // Handle Distance Input Visibility (Especially for Ambulance)
-            const distContainer = document.getElementById('distance-container');
-            if (state.service === 'ambulance') {
-                distContainer.classList.remove('hidden');
-            } else {
-                distContainer.classList.add('hidden');
-            }
-
-            // Update Submit Button Text/Style
+            // Config Visibility
+            const ambConfig = document.getElementById('ambulance-config');
+            const widgetHeader = document.getElementById('widget-header');
             const btn = document.getElementById('submit-btn');
+
             if (state.service === 'ambulance') {
-                btn.textContent = 'Book Emergency Ambulance';
-                btn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
-                btn.classList.add('bg-red-600', 'hover:bg-red-700');
+                ambConfig.classList.remove('hidden');
+                widgetHeader.classList.remove('bg-blue-600');
+                widgetHeader.classList.add('bg-red-600');
+                
+                btn.innerHTML = '<span>Book Emergency</span><i data-lucide="siren" class="h-5 w-5 stroke-[3]"></i>';
+                btn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'shadow-blue-500/30');
+                btn.classList.add('bg-red-600', 'hover:bg-red-700', 'shadow-red-500/30');
             } else {
-                btn.textContent = 'Confirm Booking';
-                btn.classList.remove('bg-red-600', 'hover:bg-red-700');
-                btn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                ambConfig.classList.add('hidden');
+                widgetHeader.classList.remove('bg-red-600');
+                widgetHeader.classList.add('bg-blue-600');
+                
+                btn.innerHTML = '<span>Confirm Booking</span><i data-lucide="arrow-right" class="h-5 w-5 stroke-[3]"></i>';
+                btn.classList.remove('bg-red-600', 'hover:bg-red-700', 'shadow-red-500/30');
+                btn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'shadow-blue-500/30');
             }
         }
 
-        // Passenger Logic
         function changePassengers(delta) {
             const newVal = state.passengers + delta;
             if (newVal >= 1 && newVal <= 6) {
@@ -550,63 +666,66 @@
             }
         }
 
-        // Calculation Logic
         function calculateEstimate() {
             let total = 0;
-            const ambulanceNote = document.getElementById('ambulance-note');
-            const asterisk = document.getElementById('asterisk');
-            
-            // Get exact distance from input, fallback to default 160
-            const distInput = document.getElementById('distance-km');
-            const distance = distInput ? parseFloat(distInput.value) || 160 : 160;
-
             if (state.bookingType === 'shared') {
-                const rate = state.service === 'ac' ? CONSTANTS.SHARED_AC : CONSTANTS.SHARED_NORMAL;
+                const rate = state.service === 'ac' ? PRICES.SHARED_AC : PRICES.SHARED_NORMAL;
                 total = rate * state.passengers;
-                ambulanceNote.classList.add('hidden');
-                asterisk.classList.add('hidden');
             } else {
                 if (state.service === 'ambulance') {
-                    total = distance * CONSTANTS.AMBULANCE_RATE;
-                    ambulanceNote.classList.remove('hidden');
-                    asterisk.classList.remove('hidden');
+                    const selectedVariant = document.querySelector('input[name="amb-type"]:checked').value;
+                    total = PRICES.AMBULANCE[selectedVariant][state.ambTripType];
                 } else {
-                    total = CONSTANTS.BASE_CAB_RATE;
-                    ambulanceNote.classList.add('hidden');
-                    asterisk.classList.add('hidden');
+                    total = PRICES.FULL_CAB;
                 }
             }
-
-            // Animate number change (simple)
-            document.getElementById('total-price').textContent = Math.round(total);
+            document.getElementById('total-price').textContent = total.toLocaleString();
         }
 
-        // Form Submit
         function handleBookingSubmit(e) {
             e.preventDefault();
             const from = document.getElementById('from-loc').value;
             const to = document.getElementById('to-loc').value;
-            const pickupAddr = document.getElementById('pickup-addr').value;
-            const dropAddr = document.getElementById('drop-addr').value;
-            const date = document.getElementById('travel-date').value;
             const mobile = document.getElementById('mobile').value;
+            const name = document.getElementById('user-name').value;
+            const date = document.getElementById('travel-date').value;
             const price = document.getElementById('total-price').textContent;
             
-            // Determine KM text for alert
-            let kmText = "";
-            if (state.service === 'ambulance') {
-                const dist = document.getElementById('distance-km').value;
-                kmText = `\nDistance: ${dist} KM`;
-            }
-
-            const msg = `Booking Request:\nService: ${state.service.toUpperCase()}\n\nFrom: ${from}\nTo: ${to}\nExact Pickup: ${pickupAddr || 'Not specified'}\nExact Drop: ${dropAddr || 'Not specified'}${kmText}\n\nPassengers: ${state.bookingType === 'shared' ? state.passengers : 'Full Vehicle'}\nEst. Cost: ₹${price}`;
+            // Modal Data
+            document.getElementById('modal-from').textContent = from;
+            document.getElementById('modal-to').textContent = to;
+            document.getElementById('modal-name-display').textContent = name;
             
-            alert(msg);
+            if(date) {
+                const dateObj = new Date(date);
+                document.getElementById('modal-date').textContent = dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+            } else {
+                document.getElementById('modal-date').textContent = "Date Pending";
+            }
+            
+            document.getElementById('modal-price').textContent = "₹" + price;
+
+            let serviceName = "";
+            if (state.service === 'ambulance') {
+                const selectedVariant = document.querySelector('input[name="amb-type"]:checked').value;
+                const tripTypeStr = state.ambTripType === 'oneWay' ? "One Way" : "Round Trip";
+                serviceName = `Ambulance (${selectedVariant.toUpperCase()}) - ${tripTypeStr}`;
+            } else {
+                const type = state.service === 'ac' ? 'AC' : (state.service === 'normal' ? 'Non-AC' : 'Private Cab');
+                const pass = state.bookingType === 'shared' ? `(${state.passengers} Seats)` : '';
+                serviceName = `${type} ${pass}`;
+            }
+            document.getElementById('modal-service').textContent = serviceName;
+
+            // Show Modal
+            document.getElementById('success-modal').classList.remove('hidden');
         }
 
-        // Initial run
+        function closeModal() {
+            document.getElementById('success-modal').classList.add('hidden');
+        }
+
         calculateEstimate();
     </script>
 </body>
-
 </html>
