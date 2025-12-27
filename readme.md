@@ -1,4 +1,4 @@
-# **🚀 Nandu Travels Platform (v3.2)**
+# **🚀 Nandu Travels Platform (v1.1.0)**
 
 ⚠️ Release Status: Pre-Release / Beta  
 🛑 Testing Status: Partially Tested  
