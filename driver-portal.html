@@ -13,7 +13,27 @@
                 extend: {
                     fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
                     colors: {
-                        slate: { 850: '#151F32', 950: '#020617' } // Custom dark shades
+                        slate: { 850: '#151F32', 900: '#0F172A', 950: '#020617' },
+                        brand: { 500: '#3B82F6', 600: '#2563EB', 700: '#1D4ED8' }
+                    },
+                    animation: {
+                        'slide-up': 'slideUp 0.3s ease-out forwards',
+                        'fade-in': 'fadeIn 0.2s ease-out forwards',
+                        'zoom-in': 'zoomIn 0.2s ease-out forwards'
+                    },
+                    keyframes: {
+                        slideUp: {
+                            'from': { transform: 'translateY(20px)', opacity: '0' },
+                            'to': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        fadeIn: {
+                            'from': { opacity: '0' },
+                            'to': { opacity: '1' }
+                        },
+                        zoomIn: {
+                            'from': { transform: 'scale(0.95)', opacity: '0' },
+                            'to': { transform: 'scale(1)', opacity: '1' }
+                        }
                     }
                 }
             }
@@ -22,828 +42,1711 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        
-        /* Smooth Toggle */
-        .toggle-checkbox:checked { right: 0; border-color: #22c55e; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #22c55e; }
-        .toggle-checkbox { transition: all 0.3s; }
-        
-        /* Custom Scrollbar */
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* Animations */
-        @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .modal-enter { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        
-        @keyframes pulse-ring { 0% { transform: scale(0.8); opacity: 0.5; } 100% { transform: scale(2); opacity: 0; } }
-        .sos-ping { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid #ef4444; animation: pulse-ring 1.5s infinite; }
-
-        /* Dark Mode Transitions */
-        body, .glass-card, .nav-bar { transition: background-color 0.3s, border-color 0.3s, color 0.3s; }
+        .glass { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+        .dark .glass { background: rgba(15, 23, 42, 0.95); }
+        .loader { width: 20px; height: 20px; border: 3px solid #FFF; border-bottom-color: transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        /* OTP Input Styling */
+        .otp-input { width: 3rem; height: 3.5rem; text-align: center; font-size: 1.5rem; border-radius: 0.75rem; border: 2px solid #e2e8f0; background: #f8fafc; transition: all 0.2s; }
+        .otp-input:focus { border-color: #3B82F6; background: #fff; outline: none; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        .dark .otp-input { background: #0f172a; border-color: #1e293b; color: white; }
+        .dark .otp-input:focus { border-color: #3B82F6; background: #1e293b; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 pb-24 transition-colors duration-300">
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 transition-colors duration-300">
 
-    <!-- Notification Sound -->
+    <!-- Loading Overlay -->
+    <div id="loading-screen" class="fixed inset-0 z-[100] bg-white dark:bg-slate-950 flex flex-col items-center justify-center">
+        <div class="relative">
+            <div class="h-12 w-12 border-4 border-brand-200 dark:border-brand-900 rounded-full"></div>
+            <div class="absolute top-0 left-0 h-12 w-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+        <p class="text-xs font-bold text-slate-400 mt-4 animate-pulse">STARTING ENGINE...</p>
+    </div>
+
+    <!-- Audio for Alerts -->
     <audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.m4a" preload="auto"></audio>
 
-    <!-- SOS Button (Floating) -->
-    <button onclick="triggerSOS()" class="fixed bottom-24 right-4 z-50 bg-red-600 text-white p-4 rounded-full shadow-xl shadow-red-500/30 active:scale-90 transition-transform flex items-center justify-center group">
-        <div class="sos-ping hidden group-hover:block"></div>
-        <i data-lucide="shield-alert" class="h-6 w-6"></i>
-    </button>
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="fixed top-4 left-4 right-4 z-[90] pointer-events-none flex flex-col gap-2"></div>
 
-    <!-- Toast Container -->
-    <div id="toast-container" class="fixed top-4 left-4 right-4 z-[70] pointer-events-none flex flex-col gap-2"></div>
-
-    <!-- OTP Modal -->
-    <div id="otp-modal" class="fixed inset-0 bg-black/80 z-[80] hidden flex items-end sm:items-center justify-center backdrop-blur-sm">
-        <div class="bg-white dark:bg-slate-900 w-full max-w-sm sm:rounded-3xl rounded-t-3xl p-6 modal-enter relative">
-            <button onclick="closeOtpModal()" class="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i data-lucide="x" class="h-5 w-5"></i></button>
+    <!-- Job Accept Modal (New) -->
+    <div id="accept-modal" class="fixed inset-0 z-[85] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up relative">
             <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i data-lucide="key-round" class="h-8 w-8"></i>
+                <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                    <i data-lucide="bell-ring" class="h-8 w-8"></i>
                 </div>
-                <h3 class="text-xl font-bold dark:text-white">Verify Ride</h3>
-                <p class="text-sm text-slate-500 dark:text-slate-400">Ask passenger for the 4-digit OTP</p>
+                <h3 class="text-xl font-bold dark:text-white">New Request</h3>
+                <p class="text-sm text-slate-500 mt-2">Do you want to accept this trip?</p>
             </div>
-            <div class="flex justify-center gap-3 mb-6">
-                <input type="text" id="otp-input" maxlength="4" placeholder="0000" class="w-32 text-center text-3xl font-black tracking-[0.5em] py-3 border-b-2 border-slate-200 dark:border-slate-700 bg-transparent focus:border-blue-600 outline-none transition-colors dark:text-white" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+            
+            <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-xs font-bold text-slate-400 uppercase">Fare</span>
+                    <span class="text-lg font-black text-slate-900 dark:text-white" id="accept-modal-price">₹0</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-400 uppercase">Vehicle</span>
+                    <span class="text-sm font-bold text-slate-900 dark:text-white" id="accept-modal-type">...</span>
+                </div>
             </div>
-            <button onclick="verifyAndStartTrip()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-95">Verify & Start Trip</button>
+
+            <div class="grid grid-cols-2 gap-3">
+                 <button onclick="closeAcceptModal()" class="py-3.5 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold rounded-xl hover:bg-red-100 dark:hover:bg-red-900/40 transition">Reject</button>
+                 <button onclick="confirmAcceptJob()" class="py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-lg shadow-brand-500/30">Allow / Accept</button>
+            </div>
         </div>
     </div>
 
-    <!-- Register Screen -->
-    <div id="register-screen" class="min-h-screen flex flex-col justify-center px-6 hidden relative z-10 max-w-md mx-auto">
-        <div class="text-center mb-8">
-            <div class="bg-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200">
-                <i data-lucide="steering-wheel" class="h-8 w-8 text-white"></i>
+    <!-- OTP Verification Modal -->
+    <div id="otp-modal" class="fixed inset-0 z-[85] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up relative">
+            <button onclick="closeOtpModal()" class="absolute top-4 right-4 p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:rotate-90 transition-transform">
+                <i data-lucide="x" class="h-4 w-4 text-slate-500"></i>
+            </button>
+            <div class="text-center mb-6">
+                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                    <i data-lucide="shield-check" class="h-6 w-6"></i>
+                </div>
+                <h3 class="text-lg font-bold dark:text-white">Verify Customer</h3>
+                <p class="text-xs text-slate-500 mt-1">Ask passenger for the 4-digit PIN</p>
+            </div>
+            
+            <div class="flex justify-center gap-3 mb-6" id="otp-inputs">
+                <input type="tel" maxlength="1" class="otp-input font-bold" data-index="0">
+                <input type="tel" maxlength="1" class="otp-input font-bold" data-index="1">
+                <input type="tel" maxlength="1" class="otp-input font-bold" data-index="2">
+                <input type="tel" maxlength="1" class="otp-input font-bold" data-index="3">
+            </div>
+
+            <button onclick="submitOtp()" id="btn-verify-submit" class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-lg shadow-brand-500/30 active:scale-95 transition">
+                Verify PIN
+            </button>
+        </div>
+    </div>
+
+    <!-- Start Ride Confirmation Modal -->
+    <div id="start-confirm-modal" class="fixed inset-0 z-[85] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-zoom-in relative">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                    <i data-lucide="play-circle" class="h-8 w-8"></i>
+                </div>
+                <h3 class="text-xl font-bold dark:text-white">Start Trip?</h3>
+                <p class="text-sm text-slate-500 mt-2">Confirm that passengers are seated and you are ready to move.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                 <button onclick="document.getElementById('start-confirm-modal').classList.add('hidden')" class="py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl">Cancel</button>
+                 <button onclick="confirmStartRide()" class="py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg shadow-green-500/30">Yes, Start</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Collection / Complete Trip Modal -->
+    <div id="payment-modal" class="fixed inset-0 z-[85] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up relative flex flex-col max-h-[80vh]">
+            <div class="text-center mb-4">
+                <div class="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i data-lucide="indian-rupee" class="h-8 w-8"></i>
+                </div>
+                <h3 class="text-xl font-bold dark:text-white">Collect Payment</h3>
+                <p class="text-xs text-slate-500 mt-1">Collect cash from passengers to complete ride.</p>
+            </div>
+            
+            <div id="payment-list" class="flex-1 overflow-y-auto space-y-2 mb-4 pr-1">
+                <!-- Injected via JS -->
+            </div>
+
+            <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl mb-4 border border-slate-100 dark:border-slate-700">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-bold text-slate-500 uppercase">Total Cash</span>
+                    <span class="text-2xl font-black text-slate-900 dark:text-white" id="payment-total">₹0</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                 <button onclick="document.getElementById('payment-modal').classList.add('hidden')" class="py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl">Cancel</button>
+                 <button onclick="confirmCompleteRide()" class="py-3 bg-slate-900 dark:bg-green-600 text-white font-bold rounded-xl shadow-lg">Collected & End</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Driver Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 z-[85] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up relative">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold dark:text-white">Ride Preferences</h3>
+                <button onclick="closeSettingsModal()" class="p-2 bg-slate-100 dark:bg-slate-800 rounded-full">
+                    <i data-lucide="x" class="h-4 w-4 text-slate-500"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-6">
+                <!-- AC Toggle -->
+                <div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg text-blue-600">
+                            <i data-lucide="snowflake" class="h-5 w-5"></i>
+                        </div>
+                        <div>
+                            <p class="font-bold text-sm dark:text-white">AC Vehicle</p>
+                            <p class="text-[10px] text-slate-400">Strict Match Only</p>
+                        </div>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="setting-ac" class="sr-only peer">
+                        <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand-600"></div>
+                    </label>
+                </div>
+
+                <!-- Location/Route -->
+                <div class="space-y-2">
+                    <label class="text-xs font-bold text-slate-500 uppercase ml-1">Current Hub (Start Location)</label>
+                    <div class="grid grid-cols-1 gap-2">
+                        <label class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-brand-500 transition-colors">
+                            <input type="radio" name="route_pref" value="Karimnagar" class="w-5 h-5 text-brand-600 focus:ring-brand-500">
+                            <div>
+                                <span class="block font-bold text-sm dark:text-white">Karimnagar</span>
+                                <span class="text-[10px] text-slate-400">Main Hub</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-brand-500 transition-colors">
+                            <input type="radio" name="route_pref" value="RGI Airport" class="w-5 h-5 text-brand-600 focus:ring-brand-500">
+                            <div>
+                                <span class="block font-bold text-sm dark:text-white">RGI Airport</span>
+                                <span class="text-[10px] text-slate-400">Shamshabad</span>
+                            </div>
+                        </label>
+                         <label class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-brand-500 transition-colors">
+                            <input type="radio" name="route_pref" value="JBS" class="w-5 h-5 text-brand-600 focus:ring-brand-500">
+                            <div>
+                                <span class="block font-bold text-sm dark:text-white">JBS</span>
+                                <span class="text-[10px] text-slate-400">Secunderabad</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center gap-3 p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 cursor-pointer hover:border-brand-500 transition-colors">
+                            <input type="radio" name="route_pref" value="Hyderabad" class="w-5 h-5 text-brand-600 focus:ring-brand-500">
+                            <div>
+                                <span class="block font-bold text-sm dark:text-white">Hyderabad City</span>
+                                <span class="text-[10px] text-slate-400">General Pickup</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <button onclick="saveSettings()" class="w-full py-3.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl shadow-lg active:scale-95 transition">
+                    Save Preferences
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trip Details Modal (History) -->
+    <div id="trip-details-modal" class="fixed inset-0 z-[85] bg-black/60 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-slate-50 dark:bg-slate-950 w-full max-w-md h-[90vh] sm:h-auto sm:rounded-3xl rounded-t-3xl shadow-2xl animate-slide-up flex flex-col overflow-hidden">
+            <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900">
+                <h3 class="font-bold text-lg dark:text-white">Trip Details</h3>
+                <button onclick="closeTripModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                    <i data-lucide="x" class="h-4 w-4 text-slate-500"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-5 space-y-5" id="trip-modal-content">
+                <!-- Content Injected -->
+            </div>
+            <div class="p-5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+                <button onclick="closeTripModal()" class="w-full py-3 bg-slate-900 dark:bg-slate-800 text-white font-bold rounded-xl">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Seat Editor Modal -->
+    <div id="seat-modal" class="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 w-full max-w-xs animate-slide-up">
+            <h3 class="text-lg font-bold mb-4 dark:text-white">Manage Seats</h3>
+            <div class="flex items-center justify-between bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl mb-6">
+                <button onclick="adjustManualSeats(-1)" class="w-10 h-10 bg-white dark:bg-slate-700 rounded-xl shadow font-bold text-xl hover:scale-105 transition">-</button>
+                <div class="text-center">
+                    <span id="manual-seat-count" class="block text-2xl font-black dark:text-white">0</span>
+                    <span class="text-[10px] text-slate-500 uppercase font-bold">Filled Manually</span>
+                </div>
+                <button onclick="adjustManualSeats(1)" class="w-10 h-10 bg-white dark:bg-slate-700 rounded-xl shadow font-bold text-xl hover:scale-105 transition">+</button>
+            </div>
+            <button onclick="saveManualSeats()" class="w-full py-3 bg-brand-600 text-white font-bold rounded-xl shadow-lg">Update Availability</button>
+            <button onclick="document.getElementById('seat-modal').classList.add('hidden')" class="w-full py-3 mt-2 text-slate-500 font-bold text-xs">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Login/Register Screen -->
+    <div id="login-screen" class="min-h-screen flex flex-col justify-center px-6 hidden relative z-10 max-w-md mx-auto animate-slide-up overflow-y-auto pb-20">
+        <div class="text-center mb-8 mt-10">
+            <div class="bg-gradient-to-tr from-brand-500 to-brand-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-brand-500/30">
+                <i data-lucide="car-taxi-front" class="h-8 w-8 text-white"></i>
             </div>
             <h1 class="text-2xl font-bold text-slate-900 dark:text-white">Partner Portal</h1>
-            <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Login to access your dashboard</p>
+            <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Driver Login</p>
         </div>
-        <form onsubmit="handleRegister(event)" class="space-y-4 bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-700">
-            <div>
-                <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Driver Name</label>
-                <input type="text" id="reg-name" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 dark:text-white focus:border-blue-500 outline-none font-medium mt-1" required>
+        
+        <div class="max-w-sm mx-auto w-full">
+            <!-- Step 1: Mobile -->
+            <div id="auth-step-1" class="bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-800">
+                <label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Mobile Number</label>
+                <div class="flex mt-1 mb-4 group">
+                    <span class="inline-flex items-center px-4 rounded-l-xl border border-r-0 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-500 font-bold text-sm">+91</span>
+                    <input type="tel" id="auth-mobile" class="flex-1 w-full px-4 py-3.5 rounded-r-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 dark:text-white focus:border-brand-500 outline-none font-medium text-lg tracking-wide transition-colors" placeholder="9876543210" maxlength="10">
+                </div>
+                <div id="recaptcha-container" class="mb-4 flex justify-center"></div>
+                <button type="button" onclick="sendOtp()" id="btn-send-otp" class="w-full py-4 bg-brand-600 text-white font-bold rounded-xl shadow-lg active:scale-95 transition flex justify-center items-center gap-2 hover:bg-brand-700">
+                    Send OTP <i data-lucide="arrow-right" class="h-4 w-4"></i>
+                </button>
             </div>
-            <div>
-                <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Mobile Number</label>
-                <input type="tel" id="reg-phone" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 dark:text-white focus:border-blue-500 outline-none font-medium mt-1" required>
+
+            <!-- Step 2: OTP -->
+            <div id="auth-step-2" class="hidden bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-800 animate-fade-in">
+                <div class="text-center mb-6">
+                    <p class="text-sm text-slate-500">Code sent to <span id="display-auth-mobile" class="font-bold text-slate-900 dark:text-white"></span></p>
+                    <button onclick="resetAuth()" class="text-xs text-brand-500 font-bold mt-2 hover:underline">Change Number</button>
+                </div>
+                <div class="space-y-4">
+                    <input type="tel" id="otp-input" class="w-full px-4 py-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 dark:text-white focus:border-brand-500 outline-none font-bold text-2xl tracking-[0.5em] text-center" maxlength="6" placeholder="------">
+                    <button type="button" onclick="verifyOtp()" id="btn-verify-otp" class="w-full py-4 bg-green-600 text-white font-bold rounded-xl shadow-xl hover:bg-green-700 active:scale-95 transition">
+                        Verify Code
+                    </button>
+                </div>
             </div>
-            <div>
-                <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Vehicle Number</label>
-                <input type="text" id="reg-plate" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 dark:text-white focus:border-blue-500 outline-none font-medium mt-1 uppercase" placeholder="TS 00 AA 0000" required>
+
+            <!-- Step 3: Registration -->
+            <div id="auth-step-3" class="hidden space-y-4 animate-fade-in bg-white dark:bg-slate-900 p-6 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-800">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2">Driver Registration</h3>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Full Name</label>
+                        <input type="text" id="reg-name" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 dark:text-white focus:border-brand-500 outline-none font-medium mt-1">
+                    </div>
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Mobile Number</label>
+                        <input type="tel" id="reg-mobile" class="w-full px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 dark:text-slate-400 font-medium mt-1 outline-none cursor-not-allowed" readonly>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Vehicle No.</label>
+                            <input type="text" id="reg-plate" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 dark:text-white focus:border-brand-500 outline-none font-medium mt-1 uppercase" placeholder="TS 00 AA 0000">
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 uppercase tracking-wide">Type</label>
+                            <select id="reg-type" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 dark:text-white focus:border-brand-500 outline-none font-medium mt-1">
+                                <option value="5 Seater">5 Seater (4 Pax)</option>
+                                <option value="7 Seater">7 Seater (6 Pax)</option>
+                                <option value="Ambulance">Ambulance</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" onclick="completeRegistration()" id="btn-final-reg" class="w-full py-4 mt-2 bg-brand-600 text-white font-bold rounded-xl shadow-lg active:scale-95 transition">
+                    Submit & Login
+                </button>
             </div>
-            <div>
-                <label class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Vehicle Type</label>
-                <select id="reg-type" class="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 dark:text-white focus:border-blue-500 outline-none font-medium mt-1">
-                    <option value="7 Seater">7 Seater (Innova/Ertiga)</option>
-                    <option value="5 Seater">5 Seater (Sedan/Dzire)</option>
-                    <option value="Ambulance">Ambulance</option>
-                </select>
-            </div>
-            <button type="submit" class="w-full py-3.5 bg-slate-900 dark:bg-blue-600 text-white font-bold rounded-xl shadow-lg mt-2">Login</button>
-        </form>
+        </div>
     </div>
 
-    <!-- Main App Content -->
-    <div id="app-content" class="hidden max-w-lg mx-auto min-h-screen flex flex-col">
+    <!-- Main Dashboard -->
+    <div id="app-content" class="hidden max-w-lg mx-auto min-h-screen flex flex-col pb-24">
         
         <!-- Header -->
-        <header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 px-5 py-4 flex justify-between items-center">
+        <header class="glass sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 px-5 py-3 flex justify-between items-center transition-all duration-300">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-200 dark:border-slate-700">
-                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" id="header-avatar" class="w-full h-full object-cover">
+                <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <i data-lucide="user" class="h-5 w-5 text-slate-500 dark:text-slate-400"></i>
                 </div>
                 <div>
-                    <h2 id="header-name" class="font-bold text-sm leading-tight dark:text-white">Driver</h2>
-                    <p id="header-plate" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Loading...</p>
+                    <h2 id="header-name" class="font-bold text-sm leading-tight dark:text-white truncate max-w-[120px]">...</h2>
+                    <div class="flex items-center gap-1.5">
+                        <span id="header-plate" class="text-[10px] font-bold text-slate-500 uppercase bg-slate-100 dark:bg-slate-800 px-1.5 rounded border border-slate-200 dark:border-slate-700">...</span>
+                        <span id="header-type" class="text-[10px] text-slate-400">...</span>
+                    </div>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                 <!-- Status Toggle -->
-                 <div class="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-full pr-3 border border-slate-200 dark:border-slate-700">
-                    <div class="relative inline-block w-10 h-6">
-                        <input type="checkbox" id="status-toggle" class="peer sr-only" onchange="toggleOnlineStatus()">
-                        <label for="status-toggle" class="block h-6 bg-slate-300 dark:bg-slate-600 rounded-full cursor-pointer transition-colors peer-checked:bg-green-500"></label>
-                        <span class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-4 shadow-sm"></span>
-                    </div>
-                    <span id="status-label" class="text-[10px] font-bold text-slate-500 dark:text-slate-400">OFF</span>
-                 </div>
+            <!-- Online Toggle -->
+            <div class="flex items-center gap-2 cursor-pointer group" onclick="document.getElementById('status-toggle').click()">
+                <span id="status-label" class="text-[10px] font-bold text-slate-400 uppercase transition-colors">Offline</span>
+                <div class="relative inline-block w-11 h-6">
+                    <input type="checkbox" id="status-toggle" class="peer sr-only" onchange="toggleOnlineStatus(this)">
+                    <div class="w-11 h-6 bg-slate-200 dark:bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500 shadow-inner"></div>
+                </div>
             </div>
         </header>
 
-        <!-- TABS CONTENT -->
-        <main class="flex-1 p-5 space-y-6">
+        <!-- Main Content Area -->
+        <main class="flex-1 p-4 space-y-5">
 
-            <!-- TAB: HOME -->
-            <div id="view-home" class="space-y-5 animate-slide-in">
-                <!-- Location Alert -->
-                <div id="loc-permission-alert" class="hidden bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 p-3 rounded-xl flex items-start gap-3">
-                    <i data-lucide="map-pin-off" class="h-5 w-5 text-yellow-600 dark:text-yellow-400 shrink-0"></i>
-                    <div>
-                        <p class="text-xs font-bold text-yellow-800 dark:text-yellow-300">Location Access Needed</p>
-                        <p class="text-[10px] text-yellow-600 dark:text-yellow-400 mt-0.5">Please enable location for ride matching.</p>
-                    </div>
-                </div>
-
-                <!-- Stats Row -->
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-white dark:bg-slate-850 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase">Today's Earnings</p>
-                        <h3 class="text-2xl font-black text-slate-900 dark:text-white mt-1">₹<span id="stat-earnings">0</span></h3>
-                    </div>
-                    <div class="bg-white dark:bg-slate-850 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase">Trips Done</p>
-                        <h3 class="text-2xl font-black text-slate-900 dark:text-white mt-1"><span id="stat-trips">0</span></h3>
-                    </div>
-                </div>
-
-                <!-- Occupancy Bar -->
-                <div class="bg-slate-900 dark:bg-slate-800 text-white p-4 rounded-2xl shadow-lg relative overflow-hidden">
-                    <div class="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-white/10 to-transparent"></div>
-                    <div class="flex justify-between items-end mb-2 relative z-10">
-                        <div>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase">Vehicle Occupancy</p>
-                            <h3 class="text-xl font-bold flex items-baseline gap-1"><span id="stat-filled">0</span><span class="text-sm font-medium text-slate-500">/ <span id="stat-total">7</span> Seats</span></h3>
-                        </div>
-                        <i data-lucide="users" class="h-6 w-6 text-slate-400"></i>
-                    </div>
-                    <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
-                        <div id="occupancy-bar" class="bg-blue-500 h-full rounded-full w-0 transition-all duration-500"></div>
-                    </div>
-                </div>
-
-                <!-- Job Lists -->
-                <div>
-                    <div class="flex items-center gap-4 border-b border-slate-200 dark:border-slate-800 mb-4">
-                        <button onclick="setHomeTab('requests')" id="htab-requests" class="pb-2 text-sm font-bold border-b-2 border-slate-900 dark:border-white text-slate-900 dark:text-white">Requests <span id="badge-requests" class="ml-1 px-1.5 py-0.5 bg-red-500 text-white text-[10px] rounded-full hidden">0</span></button>
-                        <button onclick="setHomeTab('active')" id="htab-active" class="pb-2 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600">Active Rides</button>
-                    </div>
-                    
-                    <div id="home-list-container" class="space-y-3 min-h-[200px]">
-                        <!-- Populated via JS -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- TAB: HISTORY -->
-            <div id="view-history" class="hidden space-y-5 animate-slide-in">
-                <h2 class="text-xl font-bold dark:text-white">Ride History</h2>
+            <!-- HOME TAB -->
+            <div id="view-home" class="space-y-4 animate-slide-up">
                 
-                <!-- Filters -->
-                <div class="flex gap-2 bg-white dark:bg-slate-850 p-2 rounded-xl border border-slate-100 dark:border-slate-800 overflow-x-auto no-scrollbar">
-                    <select id="hist-filter-date" class="bg-slate-50 dark:bg-slate-700 dark:text-white text-xs font-bold px-3 py-2 rounded-lg border-none outline-none" onchange="renderHistory()">
-                        <option value="all">All Time</option>
-                        <option value="today">Today</option>
-                        <option value="week">This Week</option>
-                    </select>
-                    <select id="hist-filter-status" class="bg-slate-50 dark:bg-slate-700 dark:text-white text-xs font-bold px-3 py-2 rounded-lg border-none outline-none" onchange="renderHistory()">
-                        <option value="all">All Status</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
+                <!-- Preferences Bar (NEW) -->
+                <div class="bg-white dark:bg-slate-900 rounded-xl p-3 flex justify-between items-center shadow-sm border border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center gap-3">
+                         <div class="bg-indigo-100 dark:bg-indigo-900/30 p-2 rounded-lg text-indigo-600 dark:text-indigo-400">
+                            <i data-lucide="settings-2" class="h-4 w-4"></i>
+                         </div>
+                         <div>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Current Settings</p>
+                            <div class="flex items-center gap-2">
+                                <span id="home-pref-route" class="font-bold text-sm dark:text-white">...</span>
+                                <span class="text-slate-300">•</span>
+                                <span id="home-pref-ac" class="text-xs font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">...</span>
+                            </div>
+                         </div>
+                    </div>
+                    <button onclick="openSettingsModal()" class="text-xs font-bold text-brand-600 bg-brand-50 dark:bg-brand-900/20 px-3 py-1.5 rounded-lg border border-brand-100 dark:border-brand-800 hover:bg-brand-100 dark:hover:bg-brand-900/40 transition">
+                        Edit
+                    </button>
                 </div>
 
-                <div id="history-list" class="space-y-3 pb-20">
-                    <!-- History Items -->
+                <!-- Seat Status Card -->
+                <div id="trip-status-card" class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-2xl p-5 text-white shadow-xl shadow-slate-500/10 hidden relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                        <i data-lucide="armchair" class="w-24 h-24 text-white"></i>
+                    </div>
+                    <div class="flex justify-between items-center mb-3 relative z-10">
+                        <span class="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1"><i data-lucide="users" class="w-3 h-3"></i> Occupancy</span>
+                        <button onclick="openSeatModal()" class="text-[10px] font-bold bg-white/10 px-3 py-1.5 rounded-lg hover:bg-white/20 border border-white/10 transition-colors">Manage Seats</button>
+                    </div>
+                    <div class="flex items-baseline gap-2 relative z-10">
+                        <span id="seats-filled-display" class="text-5xl font-black tracking-tighter">0</span>
+                        <span class="text-sm font-medium text-slate-400">/ <span id="seats-total-display">0</span> Filled</span>
+                    </div>
+                    <div class="w-full bg-slate-700/50 h-2.5 rounded-full mt-4 overflow-hidden relative z-10">
+                        <div id="seat-progress-bar" class="bg-brand-500 h-full w-0 transition-all duration-700 ease-out shadow-[0_0_10px_rgba(59,130,246,0.5)]"></div>
+                    </div>
+                </div>
+
+                <!-- Job Filters -->
+                <div class="bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl flex sticky top-20 z-30 shadow-sm border border-slate-200 dark:border-slate-700">
+                    <button onclick="setHomeTab('new')" id="htab-new" class="flex-1 py-2.5 rounded-lg text-xs font-bold text-center transition-all bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white">
+                        New <span id="badge-new" class="ml-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full hidden text-[10px]">0</span>
+                    </button>
+                    <button onclick="setHomeTab('active')" id="htab-active" class="flex-1 py-2.5 rounded-lg text-xs font-bold text-center transition-all text-slate-500 hover:text-slate-700 dark:text-slate-400">
+                        Active Trip <span id="badge-active" class="ml-1 px-1.5 py-0.5 bg-red-500 text-white rounded-full hidden text-[10px]">0</span>
+                    </button>
+                </div>
+
+                <!-- Bulk Action Bar (For Group Start/Complete) -->
+                <div id="bulk-action-bar" class="hidden animate-slide-up sticky top-36 z-30">
+                    <button id="btn-bulk-action" class="w-full bg-brand-600 hover:bg-brand-700 text-white p-4 rounded-2xl shadow-lg shadow-brand-500/20 flex items-center justify-between group transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="bg-white/20 p-2 rounded-full">
+                                <i data-lucide="play" class="h-5 w-5 fill-current"></i>
+                            </div>
+                            <div class="text-left">
+                                <p class="text-sm font-bold" id="bulk-action-title">Start Trip</p>
+                                <p class="text-[10px] text-brand-100 opacity-80" id="bulk-action-subtitle">For all verified passengers</p>
+                            </div>
+                        </div>
+                        <i data-lucide="chevron-right" class="h-5 w-5 group-hover:translate-x-1 transition-transform"></i>
+                    </button>
+                </div>
+
+                <!-- Job List -->
+                <div id="job-list-container" class="space-y-4 pb-20 min-h-[300px]">
+                    <!-- Injected via JS -->
                 </div>
             </div>
 
-            <!-- TAB: WALLET -->
-            <div id="view-wallet" class="hidden space-y-5 animate-slide-in">
-                <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-6 text-white shadow-xl shadow-blue-500/20">
-                    <p class="text-xs font-medium text-blue-100 mb-1">Total Net Balance</p>
-                    <h2 class="text-4xl font-black mb-6">₹<span id="wallet-balance">0</span></h2>
-                    <div class="flex gap-3">
-                        <button class="flex-1 bg-white/20 hover:bg-white/30 backdrop-blur-sm py-2 rounded-xl text-xs font-bold transition">Withdraw</button>
-                        <button onclick="document.getElementById('expense-form').classList.remove('hidden')" class="flex-1 bg-white text-blue-600 py-2 rounded-xl text-xs font-bold shadow-sm">Add Expense</button>
+            <!-- WALLET TAB -->
+            <div id="view-wallet" class="hidden space-y-5 animate-slide-up">
+                <div class="bg-gradient-to-br from-brand-600 to-indigo-800 rounded-3xl p-6 text-white shadow-xl shadow-brand-500/20 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start mb-2">
+                             <p class="text-xs font-medium text-blue-100 flex items-center gap-2"><i data-lucide="wallet" class="w-3 h-3"></i> Total Earnings</p>
+                             <select id="wallet-filter" onchange="updateWalletView()" class="bg-white/20 text-xs font-bold border-none rounded-lg px-2 py-1 outline-none cursor-pointer hover:bg-white/30 text-white">
+                                <option value="all" class="text-slate-900">All Time</option>
+                                <option value="week" class="text-slate-900">This Week</option>
+                                <option value="month" class="text-slate-900">This Month</option>
+                             </select>
+                        </div>
+                        <h2 class="text-5xl font-black mb-6 tracking-tight">₹<span id="wallet-balance">0</span></h2>
+                        <button onclick="toggleExpenseForm()" class="w-full bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/20 text-white py-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+                            <i data-lucide="plus-circle" class="w-4 h-4"></i> Add Expense
+                        </button>
                     </div>
                 </div>
 
-                <!-- Expense Logger -->
-                <div id="expense-form" class="hidden bg-white dark:bg-slate-850 p-4 rounded-2xl border border-slate-100 dark:border-slate-800">
+                <!-- Add Expense Form -->
+                <div id="expense-form" class="hidden bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 animate-slide-up shadow-sm">
                     <h3 class="font-bold text-sm mb-3 dark:text-white">Log Expense</h3>
-                    <div class="flex gap-2 mb-3">
-                        <input type="text" id="exp-name" placeholder="Fuel, Toll, etc." class="flex-[2] bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-bold outline-none dark:text-white">
-                        <input type="number" id="exp-amount" placeholder="₹ Amount" class="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs font-bold outline-none dark:text-white">
+                    <div class="grid grid-cols-3 gap-2 mb-3">
+                        <input type="text" id="exp-desc" placeholder="Fuel, Toll..." class="col-span-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-3 text-sm outline-none dark:text-white focus:border-brand-500 transition-colors">
+                        <input type="number" id="exp-amt" placeholder="₹" class="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-3 text-sm outline-none dark:text-white focus:border-brand-500 transition-colors">
                     </div>
-                    <div class="flex gap-2">
-                         <button onclick="addExpense()" class="flex-1 bg-slate-900 dark:bg-blue-600 text-white py-2 rounded-lg text-xs font-bold">Save</button>
-                         <button onclick="document.getElementById('expense-form').classList.add('hidden')" class="px-4 py-2 text-slate-500 text-xs font-bold">Cancel</button>
-                    </div>
+                    <button onclick="saveExpense()" class="w-full bg-slate-900 dark:bg-brand-600 text-white py-3 rounded-xl font-bold text-xs shadow-lg hover:shadow-xl transition-shadow">Save Record</button>
                 </div>
 
                 <div class="space-y-3">
-                    <h3 class="font-bold text-sm text-slate-500 uppercase tracking-wide">Recent Transactions</h3>
+                    <h3 class="font-bold text-sm text-slate-500 uppercase tracking-wide ml-1">Reports</h3>
                     <div id="wallet-list" class="space-y-3"></div>
                 </div>
             </div>
 
-            <!-- TAB: PROFILE -->
-            <div id="view-profile" class="hidden space-y-6 animate-slide-in">
-                
-                <!-- Profile Card -->
-                <div class="bg-white dark:bg-slate-850 p-5 rounded-3xl border border-slate-100 dark:border-slate-800 flex items-center gap-4">
-                    <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-700 overflow-hidden">
-                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="w-full h-full object-cover">
+            <!-- HISTORY TAB (New) -->
+            <div id="view-history" class="hidden space-y-4 animate-slide-up">
+                 <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center justify-between shadow-sm sticky top-20 z-20">
+                    <div>
+                        <h3 class="font-bold text-lg dark:text-white">Trip History</h3>
+                        <p class="text-xs text-slate-500">Past completed rides</p>
                     </div>
-                    <div class="flex-1">
-                        <h3 id="prof-name" class="font-bold text-lg dark:text-white">Driver Name</h3>
-                        <p id="prof-phone" class="text-xs text-slate-500 dark:text-slate-400">+91 98765 43210</p>
-                        <div class="flex gap-2 mt-2">
-                             <span class="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 text-[10px] font-bold rounded">4.8 ★</span>
-                             <span class="px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 text-[10px] font-bold rounded">Verified</span>
-                        </div>
+                    <div class="bg-brand-100 dark:bg-brand-900/30 text-brand-600 dark:text-brand-400 p-2 rounded-xl">
+                        <i data-lucide="history" class="h-6 w-6"></i>
                     </div>
-                    <button class="p-2 text-slate-400 hover:text-blue-600"><i data-lucide="edit-3" class="h-4 w-4"></i></button>
+                 </div>
+                 <div id="history-list" class="space-y-4 pb-20">
+                     <!-- Injected JS -->
+                 </div>
+            </div>
+
+            <!-- PROFILE TAB -->
+            <div id="view-profile" class="hidden space-y-6 animate-slide-up">
+                <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm relative">
+                    <div class="w-24 h-24 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 border-4 border-white dark:border-slate-700 shadow-lg">
+                        <i data-lucide="user" class="h-10 w-10 text-slate-400"></i>
+                    </div>
+                    <h3 id="prof-name" class="font-bold text-xl dark:text-white">Driver</h3>
+                    <p id="prof-details" class="text-sm text-slate-500 dark:text-slate-400 mt-1">...</p>
+                    <div class="mt-4 flex gap-2">
+                        <span class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold rounded-full border border-green-200 dark:border-green-900">Verified Partner</span>
+                        <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold rounded-full border border-blue-200 dark:border-blue-900" id="prof-type">Type</span>
+                    </div>
                 </div>
 
-                <!-- Settings -->
-                <div class="bg-white dark:bg-slate-850 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden">
-                    <div class="p-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800">
+                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
+                    <label class="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
                         <div class="flex items-center gap-3">
-                            <div class="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg text-slate-600 dark:text-slate-300"><i data-lucide="moon" class="h-4 w-4"></i></div>
+                            <i data-lucide="moon" class="h-4 w-4 text-slate-500"></i>
                             <span class="text-sm font-bold dark:text-white">Dark Mode</span>
                         </div>
-                        <div class="relative inline-block w-10 h-6">
-                            <input type="checkbox" id="dark-toggle" class="peer sr-only" onchange="toggleDarkMode()">
-                            <label for="dark-toggle" class="block h-6 bg-slate-200 dark:bg-slate-700 rounded-full cursor-pointer transition-colors peer-checked:bg-indigo-500"></label>
-                            <span class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-4 shadow-sm"></span>
-                        </div>
-                    </div>
-                    <div class="p-4 flex items-center justify-between">
-                         <div class="flex items-center gap-3">
-                            <div class="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg text-slate-600 dark:text-slate-300"><i data-lucide="bell" class="h-4 w-4"></i></div>
-                            <span class="text-sm font-bold dark:text-white">Sound Alerts</span>
-                        </div>
-                         <div class="relative inline-block w-10 h-6">
-                            <input type="checkbox" id="sound-toggle" class="peer sr-only" checked>
-                            <label for="sound-toggle" class="block h-6 bg-slate-200 dark:bg-slate-700 rounded-full cursor-pointer transition-colors peer-checked:bg-indigo-500"></label>
-                            <span class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform peer-checked:translate-x-4 shadow-sm"></span>
-                        </div>
-                    </div>
+                        <input type="checkbox" id="dark-toggle" class="accent-brand-600 w-5 h-5" onchange="toggleTheme()">
+                    </label>
+                    <button onclick="logout()" class="w-full flex items-center gap-3 p-4 text-red-500 text-sm font-bold hover:bg-red-50 dark:hover:bg-red-900/10 transition">
+                        <i data-lucide="log-out" class="h-4 w-4"></i>
+                        Log Out
+                    </button>
                 </div>
-
-                <!-- Documents -->
-                <h3 class="text-sm font-bold text-slate-500 uppercase tracking-wide px-2">Documents</h3>
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-white dark:bg-slate-850 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-center hover:border-blue-500 transition cursor-pointer border-dashed">
-                        <i data-lucide="file-check" class="h-6 w-6 mx-auto mb-2 text-green-500"></i>
-                        <p class="text-xs font-bold dark:text-white">Driving License</p>
-                        <p class="text-[10px] text-slate-400">Exp: 2026</p>
-                    </div>
-                    <div class="bg-white dark:bg-slate-850 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-center hover:border-blue-500 transition cursor-pointer border-dashed">
-                        <i data-lucide="shield" class="h-6 w-6 mx-auto mb-2 text-blue-500"></i>
-                        <p class="text-xs font-bold dark:text-white">Insurance</p>
-                        <p class="text-[10px] text-slate-400">Exp: Dec 2025</p>
-                    </div>
-                    <div class="bg-white dark:bg-slate-850 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-center hover:border-blue-500 transition cursor-pointer border-dashed">
-                        <i data-lucide="file-text" class="h-6 w-6 mx-auto mb-2 text-slate-300"></i>
-                        <p class="text-xs font-bold dark:text-white">RC Book</p>
-                        <p class="text-[10px] text-red-400">Upload Pending</p>
-                    </div>
-                    <div class="bg-white dark:bg-slate-850 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-center hover:border-blue-500 transition cursor-pointer border-dashed">
-                        <i data-lucide="cloud" class="h-6 w-6 mx-auto mb-2 text-slate-300"></i>
-                        <p class="text-xs font-bold dark:text-white">Pollution</p>
-                        <p class="text-[10px] text-red-400">Expired</p>
-                    </div>
-                </div>
-
-                <button onclick="logout()" class="w-full py-3 rounded-xl border border-red-100 text-red-500 bg-red-50 dark:bg-red-900/10 dark:border-red-900 font-bold text-sm">Log Out</button>
+                
+                <p class="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">Nandu Travels v2.3</p>
             </div>
 
         </main>
 
-        <!-- Bottom Nav -->
-        <nav class="fixed bottom-0 w-full max-w-lg bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 flex justify-around py-3 px-2 z-40 pb-safe">
-            <button onclick="switchView('home')" id="nav-home" class="flex flex-col items-center gap-1 p-2 text-blue-600 dark:text-blue-500 transition">
-                <i data-lucide="home" class="h-6 w-6 stroke-[2.5]"></i>
-                <span class="text-[10px] font-bold">Home</span>
+        <!-- Navigation Bar -->
+        <nav class="fixed bottom-0 w-full max-w-lg bg-white/90 dark:bg-slate-950/90 backdrop-blur-lg border-t border-slate-200 dark:border-slate-800 flex justify-around py-3 px-2 z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
+            <button onclick="switchView('home')" id="nav-home" class="flex flex-col items-center gap-1 p-2 text-brand-600 dark:text-brand-500 transition-colors">
+                <i data-lucide="layout-grid" class="h-6 w-6"></i>
+                <span class="text-[10px] font-bold">Jobs</span>
             </button>
-            <button onclick="switchView('history')" id="nav-history" class="flex flex-col items-center gap-1 p-2 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition">
-                <i data-lucide="clock" class="h-6 w-6 stroke-[2.5]"></i>
+             <button onclick="switchView('history')" id="nav-history" class="flex flex-col items-center gap-1 p-2 text-slate-400 transition-colors">
+                <i data-lucide="history" class="h-6 w-6"></i>
                 <span class="text-[10px] font-bold">History</span>
             </button>
-            <button onclick="switchView('wallet')" id="nav-wallet" class="flex flex-col items-center gap-1 p-2 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition">
-                <i data-lucide="wallet" class="h-6 w-6 stroke-[2.5]"></i>
+            <button onclick="switchView('wallet')" id="nav-wallet" class="flex flex-col items-center gap-1 p-2 text-slate-400 transition-colors">
+                <i data-lucide="wallet" class="h-6 w-6"></i>
                 <span class="text-[10px] font-bold">Wallet</span>
             </button>
-            <button onclick="switchView('profile')" id="nav-profile" class="flex flex-col items-center gap-1 p-2 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition">
-                <i data-lucide="user" class="h-6 w-6 stroke-[2.5]"></i>
+            <button onclick="switchView('profile')" id="nav-profile" class="flex flex-col items-center gap-1 p-2 text-slate-400 transition-colors">
+                <i data-lucide="user-circle" class="h-6 w-6"></i>
                 <span class="text-[10px] font-bold">Profile</span>
             </button>
         </nav>
 
     </div>
 
-    <!-- SCRIPT -->
+    <!-- FIREBASE LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, updateDoc, onSnapshot, query, where, arrayUnion, orderBy, serverTimestamp, writeBatch, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp, orderBy, addDoc, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- INIT ---
+        // CONFIG
         let firebaseConfig;
-        try { firebaseConfig = JSON.parse(__firebase_config); } catch(e) { 
-            firebaseConfig = { apiKey: "AIzaSyArnKRnUQDwaXsoKGG3PHDKTNmCKF5qpxg", authDomain: "travel-with-nandu.firebaseapp.com", projectId: "travel-with-nandu", storageBucket: "travel-with-nandu.firebasestorage.app", messagingSenderId: "323442917828", appId: "1:323442917828:web:4185f668ca435903622491" }; 
-        }
+        try { if (typeof __firebase_config !== 'undefined') firebaseConfig = JSON.parse(__firebase_config); } catch(e) { console.error("Config Parse Error", e); }
+        if (!firebaseConfig) { firebaseConfig = { apiKey: "AIzaSyArnKRnUQDwaXsoKGG3PHDKTNmCKF5qpxg", authDomain: "travel-with-nandu.firebaseapp.com", projectId: "travel-with-nandu", storageBucket: "travel-with-nandu.firebasestorage.app", messagingSenderId: "323442917828", appId: "1:323442917828:web:4185f668ca435903622491" }; if(window.firebaseConfig) firebaseConfig = window.firebaseConfig; }
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'travel-nandu-v1';
-
-        // --- STATE ---
-        let currentUser = null;
-        let driverData = null;
-        let currentView = 'home';
-        let homeTab = 'requests'; // or 'active'
+        const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'travel-nandu-v1';
+        auth.languageCode = 'en';
+        
+        // --- GLOBAL STATE ---
+        let driverProfile = null;
+        let driverId = null; 
+        let currentTab = 'new';
         let allJobs = [];
-        let locationInterval = null;
-        let pendingVerificationId = null;
+        let historyJobs = [];
+        let expenseList = []; // New state for wallet
+        let jobsSubscription = null;
+        let historySubscription = null;
+        let walletSubscription = null;
+        let confirmationResult = null;
+        let manualSeats = 0;
+        let pendingVerifyJobId = null;
+        let pendingAcceptJobId = null; // New for acceptance modal
+        let pendingStartMode = null; // 'all' or specific ID
 
-        // --- AUTH & BOOTSTRAP ---
-        signInAnonymously(auth);
-        onAuthStateChanged(auth, user => {
-            if(user) {
-                currentUser = user;
-                checkRegistration();
-            }
-        });
-
-        function checkRegistration() {
-            const stored = localStorage.getItem('driver_profile');
-            if(stored) {
-                driverData = JSON.parse(stored);
-                initDashboard();
-            } else {
-                document.getElementById('register-screen').classList.remove('hidden');
-            }
-        }
-
-        window.handleRegister = (e) => {
-            e.preventDefault();
-            driverData = {
-                uid: currentUser.uid,
-                name: document.getElementById('reg-name').value,
-                phone: document.getElementById('reg-phone').value,
-                vehicleNo: document.getElementById('reg-plate').value.toUpperCase(),
-                vehicleType: document.getElementById('reg-type').value
-            };
-            localStorage.setItem('driver_profile', JSON.stringify(driverData));
-            // Save to Firestore users collection
-            setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'profile', 'driver_data'), driverData, {merge:true});
-            initDashboard();
-        }
-
-        function initDashboard() {
-            document.getElementById('register-screen').classList.add('hidden');
-            document.getElementById('app-content').classList.remove('hidden');
-            
-            // Header Info
-            document.getElementById('header-name').textContent = driverData.name;
-            document.getElementById('header-plate').textContent = driverData.vehicleNo;
-            document.getElementById('prof-name').textContent = driverData.name;
-            document.getElementById('prof-phone').textContent = driverData.phone;
-            
-            // Stats
-            const isAmbulance = driverData.vehicleType === 'Ambulance';
-            const isSeven = driverData.vehicleType.includes('7');
-            const totalSeats = isAmbulance ? 1 : (isSeven ? 7 : 5);
-            document.getElementById('stat-total').textContent = totalSeats;
-
-            // Listeners
-            listenToJobs();
-            
-            // Restore Dark Mode
-            if(localStorage.getItem('theme') === 'dark') {
+        // --- INIT ---
+        function init() {
+            if(localStorage.getItem('nandu_theme') === 'dark') {
                 document.documentElement.classList.add('dark');
                 document.getElementById('dark-toggle').checked = true;
             }
-            
-            // Request Permissions
-            if ("Notification" in window && Notification.permission !== "granted") {
-                Notification.requestPermission();
-            }
-        }
 
-        // --- NAVIGATION ---
-        window.switchView = (view) => {
-            currentView = view;
-            ['home', 'history', 'wallet', 'profile'].forEach(v => {
-                document.getElementById(`view-${v}`).classList.add('hidden');
-                document.getElementById(`nav-${v}`).classList.remove('text-blue-600', 'dark:text-blue-500');
-                document.getElementById(`nav-${v}`).classList.add('text-slate-400');
-            });
-            document.getElementById(`view-${view}`).classList.remove('hidden');
-            document.getElementById(`nav-${view}`).classList.add('text-blue-600', 'dark:text-blue-500');
-            document.getElementById(`nav-${view}`).classList.remove('text-slate-400');
-            
-            if(view === 'history') renderHistory();
-            if(view === 'wallet') renderWallet();
-        }
+            // OTP Input Focus Logic
+            setupOtpInputs();
 
-        window.setHomeTab = (tab) => {
-            homeTab = tab;
-            const tReq = document.getElementById('htab-requests');
-            const tAct = document.getElementById('htab-active');
-            
-            if(tab === 'requests') {
-                tReq.className = "pb-2 text-sm font-bold border-b-2 border-slate-900 dark:border-white text-slate-900 dark:text-white";
-                tAct.className = "pb-2 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600";
-            } else {
-                tAct.className = "pb-2 text-sm font-bold border-b-2 border-slate-900 dark:border-white text-slate-900 dark:text-white";
-                tReq.className = "pb-2 text-sm font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600";
-            }
-            renderHomeList();
-        }
-
-        // --- FIRESTORE LISTENERS ---
-        function listenToJobs() {
-            // My Assigned Jobs
-            const q1 = query(collection(db, 'artifacts', appId, 'public', 'data', 'bookings'), where("driverId", "==", currentUser.uid));
-            // Jobs Offered to Me (or Public Pool if logic allowed, here targeted)
-            const q2 = query(collection(db, 'artifacts', appId, 'public', 'data', 'bookings'), where("offeredTo", "==", currentUser.uid));
-            
-            // Combine logic: just listen to all changes relevant to me
-            // Simplified: we'll attach two listeners or one complex one.
-            // For this demo, let's grab everything related to this driver
-            
-            onSnapshot(q1, handleSnapshot);
-            onSnapshot(q2, handleSnapshot);
-        }
-
-        function handleSnapshot(snap) {
-            let hasNewOffer = false;
-            
-            snap.docChanges().forEach(change => {
-                const data = { id: change.doc.id, ...change.doc.data() };
-                if(change.type === 'added' || change.type === 'modified') {
-                    // Update Local
-                    const idx = allJobs.findIndex(j => j.id === data.id);
-                    if(idx > -1) allJobs[idx] = data; else allJobs.push(data);
+            // Auth State Listener
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    const mobile = user.phoneNumber;
+                    const profile = await fetchProfile(mobile);
+                    if(profile) {
+                        driverProfile = profile;
+                        driverId = mobile;
+                        loadDashboard();
+                    } else {
+                        document.getElementById('auth-step-1').classList.add('hidden');
+                        document.getElementById('auth-step-2').classList.add('hidden');
+                        document.getElementById('auth-step-3').classList.remove('hidden');
+                        const mobInput = document.getElementById('reg-mobile');
+                        if (mobInput) mobInput.value = mobile;
+                        document.getElementById('login-screen').classList.remove('hidden');
+                        document.getElementById('loading-screen').classList.add('hidden');
+                    }
+                } else {
+                    document.getElementById('loading-screen').classList.add('hidden');
+                    document.getElementById('login-screen').classList.remove('hidden');
                     
-                    // Notification Logic
-                    if(change.type === 'added' && data.status === 'offered' && data.offeredTo === currentUser.uid) {
-                        playAlert();
-                        hasNewOffer = true;
+                    if(!window.recaptchaVerifier) {
+                        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                            'size': 'normal',
+                            'callback': (response) => {}
+                        });
+                        window.recaptchaVerifier.render();
                     }
                 }
-                if(change.type === 'removed') {
-                    allJobs = allJobs.filter(j => j.id !== data.id);
-                }
             });
-
-            if(hasNewOffer) showToast("New Ride Request!", "success");
-            
-            updateStats();
-            renderHomeList();
         }
 
-        function updateStats() {
-            // Calc Earnings (Completed Today)
-            const today = new Date().toISOString().split('T')[0];
-            const todayJobs = allJobs.filter(j => j.status === 'completed' && (!j.completedAt || j.completedAt.toDate().toISOString().startsWith(today)));
-            const earnings = todayJobs.reduce((acc, j) => acc + parseInt(j.price.replace(/,/g,'')||0), 0);
-            
-            document.getElementById('stat-earnings').textContent = earnings.toLocaleString();
-            document.getElementById('stat-trips').textContent = todayJobs.length;
-            
-            // Calc Occupancy
-            const active = allJobs.filter(j => ['assigned', 'started'].includes(j.status));
-            const filled = active.reduce((acc, j) => acc + (parseInt(j.passengers)||1), 0);
-            const total = parseInt(document.getElementById('stat-total').textContent);
-            
-            document.getElementById('stat-filled').textContent = filled;
-            document.getElementById('occupancy-bar').style.width = `${Math.min((filled/total)*100, 100)}%`;
-            
-            // Badge
-            const offers = allJobs.filter(j => j.status === 'offered').length;
-            const badge = document.getElementById('badge-requests');
-            badge.textContent = offers;
-            badge.classList.toggle('hidden', offers === 0);
+        async function fetchProfile(mobile) {
+            if(!mobile) return null;
+            try {
+                const docRef = doc(db, 'artifacts', APP_ID, 'drivers', mobile);
+                const docSnap = await getDoc(docRef);
+                return docSnap.exists() ? docSnap.data() : null;
+            } catch(e) { console.error("Profile Fetch Error:", e); return null; }
         }
 
-        function renderHomeList() {
-            const container = document.getElementById('home-list-container');
-            let items = [];
+        function setupOtpInputs() {
+            const inputs = document.querySelectorAll('.otp-input');
+            inputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1) {
+                        if (index < inputs.length - 1) inputs[index + 1].focus();
+                    }
+                });
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && e.target.value === '') {
+                        if (index > 0) inputs[index - 1].focus();
+                    }
+                });
+            });
+        }
+
+        // --- AUTH FLOW ---
+        window.sendOtp = async () => {
+            const mobileInput = document.getElementById('auth-mobile').value.trim();
+            if(!mobileInput || mobileInput.length !== 10) { alert("Invalid Mobile Number"); return; }
+            const phoneNumber = "+91" + mobileInput;
             
-            if(homeTab === 'requests') {
-                items = allJobs.filter(j => j.status === 'offered');
-            } else {
-                items = allJobs.filter(j => ['assigned', 'started'].includes(j.status));
+            const btn = document.getElementById('btn-send-otp');
+            btn.innerHTML = '<span class="loader border-white w-4 h-4"></span> Sending...';
+            btn.disabled = true;
+
+            try {
+                confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier);
+                document.getElementById('auth-step-1').classList.add('hidden');
+                document.getElementById('auth-step-2').classList.remove('hidden');
+                document.getElementById('display-auth-mobile').textContent = phoneNumber;
+                window.recaptchaVerifier.clear();
+            } catch (error) {
+                console.error("SMS Error:", error);
+                alert("Error sending OTP. Check console.");
+                btn.innerHTML = 'Send OTP <i data-lucide="arrow-right" class="h-4 w-4"></i>';
+                btn.disabled = false;
+                window.recaptchaVerifier.reset();
+            }
+        };
+
+        window.verifyOtp = async () => {
+            const code = document.getElementById('otp-input').value.trim();
+            if(code.length !== 6) { alert("Please enter 6-digit code"); return; }
+            const btn = document.getElementById('btn-verify-otp');
+            btn.innerHTML = "Verifying...";
+            btn.disabled = true;
+
+            try {
+                const result = await confirmationResult.confirm(code);
+                const user = result.user;
+                const mobile = user.phoneNumber;
+                const docRef = doc(db, 'artifacts', APP_ID, 'drivers', mobile);
+                const docSnap = await getDoc(docRef);
+
+                if (docSnap.exists()) {
+                    document.getElementById('login-screen').classList.add('hidden');
+                    loadDashboard();
+                } else {
+                    document.getElementById('auth-step-2').classList.add('hidden');
+                    document.getElementById('auth-step-3').classList.remove('hidden');
+                    document.getElementById('reg-mobile').value = mobile;
+                }
+            } catch (error) {
+                console.error("Verify Error:", error);
+                alert("Invalid OTP");
+                btn.innerText = "Verify & Login";
+                btn.disabled = false;
+            }
+        };
+
+        window.completeRegistration = async () => {
+            let mobile = document.getElementById('reg-mobile').value;
+            const user = auth.currentUser;
+            if(!mobile && user) mobile = user.phoneNumber;
+            if(!mobile) { alert("Error: Mobile number missing."); location.reload(); return; }
+
+            const name = document.getElementById('reg-name').value;
+            let plate = document.getElementById('reg-plate').value;
+            const type = document.getElementById('reg-type').value;
+            if(!name || !plate) { alert("Please fill all details"); return; }
+            plate = plate.toUpperCase().replace(/\s/g, '');
+
+            const btn = document.getElementById('btn-final-reg');
+            btn.innerHTML = "Creating Account...";
+            btn.disabled = true;
+
+            try {
+                const data = {
+                    name, phone: mobile, vehicleNo: plate, vehicleType: type,
+                    createdAt: serverTimestamp(),
+                    status: 'offline',
+                    manualFilledSeats: 0,
+                    uid: mobile,
+                    // Default Settings
+                    prefAc: false,
+                    prefRoute: 'Karimnagar' 
+                };
+                await setDoc(doc(db, 'artifacts', APP_ID, 'drivers', mobile), data);
+                driverProfile = data;
+                driverId = mobile; 
+                document.getElementById('login-screen').classList.add('hidden');
+                loadDashboard();
+            } catch(err) {
+                alert("Registration failed: " + err.message);
+                btn.innerHTML = "Submit & Login";
+                btn.disabled = false;
+            }
+        };
+
+        window.resetAuth = () => {
+            document.getElementById('auth-step-2').classList.add('hidden');
+            document.getElementById('auth-step-1').classList.remove('hidden');
+            document.getElementById('btn-send-otp').disabled = false;
+            document.getElementById('btn-send-otp').innerHTML = 'Send OTP <i data-lucide="arrow-right" class="h-4 w-4"></i>';
+            window.recaptchaVerifier.render();
+        }
+
+        // --- DASHBOARD LOGIC ---
+        function loadDashboard() {
+            document.getElementById('loading-screen').classList.add('hidden');
+            document.getElementById('app-content').classList.remove('hidden');
+            
+            document.getElementById('header-name').textContent = driverProfile.name;
+            document.getElementById('header-plate').textContent = driverProfile.vehicleNo;
+            document.getElementById('header-type').textContent = driverProfile.vehicleType;
+            document.getElementById('prof-name').textContent = driverProfile.name;
+            document.getElementById('prof-details').textContent = `${driverProfile.phone} • ${driverProfile.vehicleNo}`;
+            document.getElementById('prof-type').textContent = driverProfile.vehicleType;
+
+            // Load Settings to UI
+            document.getElementById('setting-ac').checked = driverProfile.prefAc || false;
+            const routes = document.getElementsByName('route_pref');
+            routes.forEach(r => {
+                if(r.value === driverProfile.prefRoute) r.checked = true;
+            });
+            
+            // Update UI elements for preferences (Home Tab + Profile)
+            updatePreferenceUI();
+
+            manualSeats = driverProfile.manualFilledSeats || 0;
+            updateSeatUI();
+
+            if(driverProfile.status === 'online') {
+                document.getElementById('status-toggle').checked = true;
+                document.getElementById('status-label').textContent = 'Online';
+                document.getElementById('status-label').className = "text-[10px] font-bold text-green-500 uppercase";
+                document.getElementById('trip-status-card').classList.remove('hidden');
             }
 
-            if(items.length === 0) {
-                container.innerHTML = `<div class="text-center py-10 opacity-50 dark:opacity-30"><i data-lucide="inbox" class="h-10 w-10 mx-auto mb-2 text-slate-400"></i><p class="text-sm font-bold text-slate-500">No ${homeTab} found.</p></div>`;
+            listenToJobs();
+            listenToHistory();
+            listenToWallet();
+        }
+
+        function updatePreferenceUI() {
+             const acText = driverProfile.prefAc ? "AC CAR" : "NON-AC";
+             const routeText = (driverProfile.prefRoute || "ANY ROUTE").toUpperCase();
+             // Home Tab
+             document.getElementById('home-pref-ac').textContent = acText;
+             document.getElementById('home-pref-route').textContent = routeText;
+        }
+
+        // --- HELPER: VEHICLE DISPLAY TEXT ---
+        function getVehicleDisplayText(job) {
+            // Check for Shared explicitly
+            const sName = (job.serviceName || '').toLowerCase();
+            const sType = (job.serviceType || '').toLowerCase();
+            const vType = (job.vehicleType || '').toLowerCase();
+            const rVehicle = (job.requiredVehicle || '').toUpperCase();
+
+            // Fix: Check matches more broadly including requiredVehicle
+            if (sName.includes('shared') || sType.includes('shared') || vType.includes('shared') || rVehicle.includes('SHARED')) {
+                return `Shared: ${job.passengers || 1}`;
+            }
+            if (vType.includes('ambulance') || rVehicle === 'AMBULANCE') return "Ambulance";
+            
+            // Fallback
+            return "Full Vehicle";
+        }
+
+        // --- HELPER: SAFE PRICE PARSE ---
+        function parsePrice(p) {
+            if (!p) return 0;
+            const clean = String(p).replace(/[^0-9]/g, '');
+            return parseInt(clean, 10) || 0;
+        }
+
+        // --- SEAT MANAGEMENT ---
+        function getTotalCapacity() { return driverProfile.vehicleType.includes('7') ? 6 : 4; }
+
+        window.openSeatModal = () => {
+            document.getElementById('seat-modal').classList.remove('hidden');
+            document.getElementById('manual-seat-count').textContent = manualSeats;
+        }
+
+        window.adjustManualSeats = (delta) => {
+            const capacity = getTotalCapacity();
+            let newVal = manualSeats + delta;
+            if (newVal < 0) newVal = 0;
+            if (newVal > capacity) newVal = capacity;
+            manualSeats = newVal;
+            document.getElementById('manual-seat-count').textContent = manualSeats;
+        }
+
+        window.saveManualSeats = async () => {
+            document.getElementById('seat-modal').classList.add('hidden');
+            driverProfile.manualFilledSeats = manualSeats;
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), { manualFilledSeats: manualSeats });
+            if(document.getElementById('status-toggle').checked) await syncActivePool();
+            updateSeatUI();
+        }
+
+        function updateSeatUI() {
+            const capacity = getTotalCapacity();
+            const bookedSeats = allJobs.filter(j => (j.status === 'assigned' || j.status === 'verified' || j.status === 'started') && j.driverId === driverId).reduce((sum, j) => sum + (j.passengers || 1), 0);
+            const totalFilled = manualSeats + bookedSeats;
+            document.getElementById('seats-filled-display').textContent = totalFilled;
+            document.getElementById('seats-total-display').textContent = capacity;
+            const pct = (totalFilled / capacity) * 100;
+            document.getElementById('seat-progress-bar').style.width = `${pct}%`;
+        }
+
+        async function syncActivePool() {
+            const capacity = getTotalCapacity();
+            const bookedSeats = allJobs.filter(j => (j.status === 'assigned' || j.status === 'verified' || j.status === 'started') && j.driverId === driverId).reduce((sum, j) => sum + (j.passengers || 1), 0);
+            const totalFilled = manualSeats + bookedSeats;
+            const seatsAvailable = Math.max(0, capacity - totalFilled);
+
+            const activeRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'active_drivers', driverId);
+            await setDoc(activeRef, {
+                uid: driverId,
+                name: driverProfile.name,
+                phone: driverProfile.phone,
+                vehicleType: driverProfile.vehicleType,
+                vehicleNo: driverProfile.vehicleNo,
+                seatsAvailable: seatsAvailable,
+                filledSeats: totalFilled,
+                prefAc: driverProfile.prefAc || false,
+                prefRoute: driverProfile.prefRoute || 'Karimnagar',
+                queueTime: serverTimestamp()
+            });
+        }
+
+        // --- JOB LISTENER (STRICT MATCHING IMPLEMENTED) ---
+        function listenToJobs() {
+            if(!driverId) return;
+            if(jobsSubscription) jobsSubscription();
+            
+            const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'bookings'), orderBy("createdAt", "desc"), limit(50));
+
+            jobsSubscription = onSnapshot(q, (snapshot) => {
+                const newJobs = [];
+                let hasNewRequest = false;
+
+                // Pre-calc driver details for matching loop
+                const driverType = (driverProfile.vehicleType || '').toLowerCase();
+                const driverRoute = (driverProfile.prefRoute || '').toLowerCase().trim();
+                const driverCapacity = driverType.includes('7') ? 6 : 4;
+
+                snapshot.forEach(doc => {
+                    const job = { id: doc.id, ...doc.data() };
+                    let relevant = false;
+
+                    if (job.driverId === driverId) {
+                        // Always show my assignments
+                        if (['assigned', 'verified', 'started'].includes(job.status)) relevant = true;
+                    } 
+                    else if (job.status === 'pending' && !job.driverId) {
+                        
+                        const jobType = (job.vehicleType || '').toLowerCase();
+                        const jobFrom = (job.from || '').toLowerCase().trim();
+                        // Shared Check: Look at all potential indicators including requiredVehicle
+                        const rVehicle = (job.requiredVehicle || '').toUpperCase();
+                        const isJobShared = (job.serviceName || '').toLowerCase().includes('shared') || (job.serviceType || '').toLowerCase().includes('shared') || jobType.includes('shared') || rVehicle.includes('SHARED');
+                        
+                        // --- STRICT MATCHING LOGIC ---
+                        
+                        // 1. AC/Non-AC Strict Match
+                        let acMatch = true;
+                        const isJobAc = (job.serviceName && job.serviceName.includes('AC')) || (job.vehicleType && job.vehicleType.includes('AC'));
+                        if (isJobAc && !driverProfile.prefAc) acMatch = false; 
+                        
+                        // 2. Location/Route Match (Exact Hub)
+                        let routeMatch = false; 
+                        
+                        // FIX: Strict Start Location Match
+                        // Only show jobs that START in the driver's current hub location
+                        if (driverRoute === 'karimnagar') {
+                            if (jobFrom.includes('karimnagar')) routeMatch = true;
+                        } else if (driverRoute === 'rgi airport') {
+                            if (jobFrom.includes('airport') || jobFrom.includes('rgi') || jobFrom.includes('shamshabad')) routeMatch = true;
+                        } else if (driverRoute === 'jbs') {
+                            if (jobFrom.includes('jbs') || jobFrom.includes('secunderabad') || jobFrom.includes('jubilee')) routeMatch = true;
+                        } else if (driverRoute === 'hyderabad') {
+                             // Hyderabad driver (general) picks up from Hyderabad areas, but NOT Karimnagar
+                             if (!jobFrom.includes('karimnagar')) routeMatch = true;
+                        }
+
+                        if (acMatch && routeMatch) {
+                            if (isJobShared) {
+                                // Shared: Check Capacity
+                                const currentBooked = allJobs.filter(j => (j.status === 'assigned' || j.status === 'verified' || j.status === 'started') && j.driverId === driverId).reduce((s,j)=>s+(parseInt(j.passengers)||1),0);
+                                const available = driverCapacity - (manualSeats + currentBooked);
+                                const jobPax = parseInt(job.passengers) || 1;
+                                
+                                if (available >= jobPax) relevant = true;
+                            } else {
+                                // Private / Full Vehicle: Strict Type Match
+                                const cleanDriverType = driverType.replace(/[^a-z0-9]/g, ''); // "5seater"
+                                const cleanJobType = jobType.replace(/[^a-z0-9]/g, ''); // "5seater"
+
+                                if (driverType.includes('ambulance')) {
+                                    if (jobType.includes('ambulance')) relevant = true;
+                                } else {
+                                    // Car Driver
+                                    if (!jobType.includes('ambulance')) {
+                                        // If job specifies a type (e.g., 7 Seater), driver must match exactly
+                                        // If job is "Any", match.
+                                        if (jobType === 'any' || !jobType || cleanJobType === cleanDriverType) relevant = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (relevant) {
+                        newJobs.push(job);
+                        const exists = allJobs.find(j => j.id === job.id);
+                        if (!exists && job.status === 'pending' && !job.driverId) hasNewRequest = true;
+                    }
+                });
+
+                allJobs = newJobs;
+                if(hasNewRequest) playSound();
+                updateSeatUI();
+                if(document.getElementById('status-toggle').checked) syncActivePool();
+                renderJobs();
+            });
+        }
+
+        // --- HISTORY LISTENER ---
+        function listenToHistory() {
+             if(historySubscription) historySubscription();
+             const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'bookings'), where('driverId', '==', driverId));
+             
+             historySubscription = onSnapshot(q, (snap) => {
+                 historyJobs = [];
+                 snap.forEach(d => {
+                     const data = d.data();
+                     if(data.status === 'completed') {
+                         historyJobs.push({id: d.id, ...data});
+                     }
+                 });
+                 historyJobs.sort((a,b) => (b.endTime?.seconds || 0) - (a.endTime?.seconds || 0));
+                 renderHistory();
+                 updateWalletView(); // Recalculate earnings when history updates
+             }, (error) => {
+                 console.error("History Error", error);
+             });
+        }
+
+        // --- RENDERING ---
+        window.setHomeTab = (tab) => {
+            currentTab = tab;
+            const tabs = { new: 'htab-new', active: 'htab-active' };
+            Object.keys(tabs).forEach(k => {
+                const el = document.getElementById(tabs[k]);
+                if (k === tab) el.className = "flex-1 py-2.5 rounded-lg text-xs font-bold text-center transition-all bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white border border-slate-200 dark:border-slate-600";
+                else el.className = "flex-1 py-2.5 rounded-lg text-xs font-bold text-center transition-all text-slate-500 hover:text-slate-700 dark:text-slate-400";
+            });
+            renderJobs();
+        }
+
+        function renderJobs() {
+            const container = document.getElementById('job-list-container');
+            const bulkBar = document.getElementById('bulk-action-bar');
+            let filtered = [];
+
+            if (currentTab === 'new') {
+                filtered = allJobs.filter(j => j.status === 'pending' && !j.driverId);
+                bulkBar.classList.add('hidden');
+                document.getElementById('badge-new').textContent = filtered.length;
+                document.getElementById('badge-new').classList.remove('hidden');
+            } else {
+                filtered = allJobs.filter(j => (j.status === 'assigned' || j.status === 'verified' || j.status === 'started') && j.driverId === driverId);
+                document.getElementById('badge-new').classList.add('hidden');
+                
+                // Active Badge Update: Sum of tickets/passengers
+                const activeTicketCount = filtered.reduce((sum, j) => sum + (parseInt(j.passengers) || 1), 0);
+                const activeBadge = document.getElementById('badge-active');
+                if (activeTicketCount > 0) {
+                     activeBadge.textContent = activeTicketCount;
+                     activeBadge.classList.remove('hidden');
+                } else {
+                     activeBadge.classList.add('hidden');
+                }
+
+                // Bulk Action Logic
+                const readyToStart = filtered.filter(j => j.status === 'verified').length;
+                const activeOnRide = filtered.filter(j => j.status === 'started').length;
+
+                if (activeOnRide > 0) {
+                    document.getElementById('bulk-action-title').textContent = "Complete Trip";
+                    document.getElementById('bulk-action-subtitle').textContent = "Collect Payment & Finish";
+                    document.getElementById('btn-bulk-action').setAttribute('onclick', "promptCompleteRide()");
+                    document.getElementById('btn-bulk-action').className = "w-full bg-green-600 hover:bg-green-700 text-white p-4 rounded-2xl shadow-lg shadow-green-500/20 flex items-center justify-between group transition-all";
+                    bulkBar.classList.remove('hidden');
+                } else if (readyToStart > 0) {
+                    document.getElementById('bulk-action-title').textContent = "Start Trip";
+                    document.getElementById('bulk-action-subtitle').textContent = "For all verified passengers";
+                    document.getElementById('btn-bulk-action').setAttribute('onclick', "promptStartRide('all')");
+                    document.getElementById('btn-bulk-action').className = "w-full bg-brand-600 hover:bg-brand-700 text-white p-4 rounded-2xl shadow-lg shadow-brand-500/20 flex items-center justify-between group transition-all";
+                    bulkBar.classList.remove('hidden');
+                } else {
+                    bulkBar.classList.add('hidden');
+                }
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-12 opacity-50">
+                        <div class="bg-slate-100 dark:bg-slate-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i data-lucide="${currentTab === 'new' ? 'inbox' : 'car'}" class="h-8 w-8 text-slate-400"></i>
+                        </div>
+                        <p class="text-sm font-bold text-slate-500">No ${currentTab === 'new' ? 'requests' : 'active rides'}</p>
+                    </div>`;
                 lucide.createIcons();
                 return;
             }
 
-            container.innerHTML = items.map(job => {
+            container.innerHTML = filtered.map(job => {
                 const isStarted = job.status === 'started';
-                const fromUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.from)}`;
-                const toUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(job.to)}`;
+                const isAssigned = job.status === 'assigned';
+                const isVerified = job.status === 'verified';
+                const time = job.createdAt?.seconds ? new Date(job.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Now';
                 
-                // ACTION BUTTONS
-                let actions = '';
-                if(homeTab === 'requests') {
-                    actions = `
-                    <div class="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
-                        <button onclick="rejectJob('${job.id}')" class="py-2.5 rounded-xl font-bold text-xs text-red-500 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 transition">Reject</button>
-                        <button onclick="acceptJob('${job.id}', '${job.serviceName}')" class="py-2.5 bg-slate-900 dark:bg-blue-600 text-white rounded-xl font-bold text-xs hover:bg-slate-800 transition shadow-md">Accept Ride</button>
-                    </div>`;
+                const clientName = (job.name || 'Guest');
+                const clientPhone = (job.mobile || '');
+
+                // --- VEHICLE / SEAT DISPLAY LOGIC (Consistent Helper) ---
+                const seatDisplay = getVehicleDisplayText(job);
+
+                let btnArea = '';
+                if (currentTab === 'new') {
+                    btnArea = `<button onclick="promptAcceptJob('${job.id}')" class="w-full bg-slate-900 dark:bg-brand-600 text-white py-3 rounded-xl font-bold text-sm shadow-lg active:scale-95 transition flex items-center justify-center gap-2">Accept Ride <span class="bg-white/20 px-2 py-0.5 rounded text-xs">₹${job.price}</span></button>`;
                 } else {
-                    // ACTIVE JOB ACTIONS
-                    if(!isStarted) {
-                        actions = `
-                        <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex gap-3">
-                            <a href="tel:${job.mobile}" class="flex-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2"><i data-lucide="phone" class="h-3 w-3"></i> Call</a>
-                            <button onclick="promptOTP('${job.id}')" class="flex-[2] bg-blue-600 text-white py-3 rounded-xl font-bold text-xs shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 animate-pulse"><i data-lucide="key" class="h-3 w-3"></i> Verify & Start</button>
+                    // Active Tab Actions
+                    if (isAssigned) {
+                        btnArea = `
+                        <div class="grid grid-cols-4 gap-2">
+                            <a href="tel:${clientPhone}" class="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-xl flex items-center justify-center"><i data-lucide="phone" class="h-5 w-5"></i></a>
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(job.from)}" target="_blank" class="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-xl flex items-center justify-center"><i data-lucide="map-pin" class="h-5 w-5"></i></a>
+                            <button onclick="promptOtp('${job.id}')" class="col-span-2 bg-brand-600 text-white py-3 rounded-xl font-bold text-sm shadow-md animate-pulse">Verify OTP</button>
                         </div>`;
-                    } else {
-                        actions = `
-                        <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex gap-3">
-                            <button onclick="openMap('${job.to}')" class="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2"><i data-lucide="navigation" class="h-3 w-3"></i> Navigate</button>
-                            <button onclick="completeJob('${job.id}')" class="flex-[2] bg-slate-900 dark:bg-green-600 text-white py-3 rounded-xl font-bold text-xs shadow-lg flex items-center justify-center gap-2"><i data-lucide="flag" class="h-3 w-3"></i> End Trip</button>
+                    } else if (isVerified) {
+                         btnArea = `
+                        <div class="grid grid-cols-4 gap-2">
+                             <div class="col-span-2 flex items-center justify-center text-green-600 font-bold text-xs bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800"><i data-lucide="check-circle" class="w-4 h-4 mr-1"></i> Verified</div>
+                             <div class="col-span-2 flex items-center justify-center text-slate-400 font-bold text-xs bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">Waiting for Start</div>
+                        </div>`;
+                    } else if (isStarted) {
+                        btnArea = `
+                        <div class="grid grid-cols-4 gap-2">
+                             <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(job.to)}" target="_blank" class="col-span-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-xl flex items-center justify-center"><i data-lucide="navigation" class="h-5 w-5"></i></a>
+                             <button onclick="completeTrip('${job.id}')" class="col-span-3 bg-slate-900 dark:bg-green-600 text-white py-3 rounded-xl font-bold text-sm shadow-lg">Complete & Cash</button>
                         </div>`;
                     }
                 }
 
-                return `
-                <div class="bg-white dark:bg-slate-850 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 animate-slide-in">
-                    <div class="flex justify-between items-start mb-3">
-                        <div>
-                            <span class="text-[10px] font-mono text-slate-400 bg-slate-50 dark:bg-slate-800 px-1.5 py-0.5 rounded">#${job.id.slice(0,6).toUpperCase()}</span>
-                            <h4 class="font-bold text-slate-900 dark:text-white text-base mt-1">${job.name || 'Guest User'}</h4>
-                            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">${job.serviceName}</span>
-                        </div>
-                        <div class="text-right">
-                             <span class="block text-lg font-black text-slate-900 dark:text-white">₹${job.price}</span>
-                             <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${isStarted ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'}">${job.status}</span>
-                        </div>
-                    </div>
-                    
-                    <div class="relative pl-4 space-y-4 border-l-2 border-slate-100 dark:border-slate-700 ml-1">
-                        <div class="relative">
-                            <div class="absolute -left-[21px] top-1 h-3 w-3 rounded-full border-2 border-green-500 bg-white dark:bg-slate-900"></div>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase">Pickup</p>
-                            <a href="${fromUrl}" target="_blank" class="text-xs font-bold text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 truncate block underline decoration-dotted">${job.from}</a>
-                        </div>
-                        <div class="relative">
-                            <div class="absolute -left-[21px] top-1 h-3 w-3 rounded-full border-2 border-red-500 bg-white dark:bg-slate-900"></div>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase">Drop</p>
-                            <a href="${toUrl}" target="_blank" class="text-xs font-bold text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 truncate block underline decoration-dotted">${job.to}</a>
-                        </div>
-                    </div>
+                let statusBadge = '';
+                if (isAssigned) statusBadge = `<div class="absolute top-0 right-0 bg-yellow-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl z-10 shadow-sm">PICKUP</div>`;
+                else if (isVerified) statusBadge = `<div class="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl z-10 shadow-sm">READY</div>`;
+                else if (isStarted) statusBadge = `<div class="absolute top-0 right-0 bg-blue-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl z-10 shadow-sm">ON RIDE</div>`;
+                else if (job.serviceType) statusBadge = `<div class="absolute top-0 right-0 bg-brand-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl z-10 shadow-sm">${job.serviceType}</div>`;
 
-                    ${actions}
+                // Update Heading to show Seat Count in Active tab too
+                const subtitle = `${time} • ${seatDisplay}`;
+
+                return `
+                <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 animate-slide-up relative overflow-hidden transition-all hover:shadow-md">
+                    ${statusBadge}
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-slate-100 dark:bg-slate-800 p-2.5 rounded-full"><i data-lucide="user" class="h-5 w-5 text-slate-500"></i></div>
+                        <div>
+                            <h4 class="font-bold text-slate-900 dark:text-white leading-tight">${clientName}</h4>
+                            <p class="text-[10px] text-slate-500 font-medium">${subtitle}</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4 mb-5 relative pl-4 border-l-2 border-slate-100 dark:border-slate-800 ml-2">
+                        <div class="relative">
+                            <span class="absolute -left-[23px] top-1 h-3 w-3 rounded-full border-2 border-green-500 bg-white dark:bg-slate-900"></span>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase">Pickup</p>
+                            <p class="text-sm font-bold dark:text-white leading-tight">${job.from}</p>
+                        </div>
+                        <div class="relative">
+                            <span class="absolute -left-[23px] top-1 h-3 w-3 rounded-full border-2 border-red-500 bg-white dark:bg-slate-900"></span>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase">Drop</p>
+                            <p class="text-sm font-bold dark:text-white leading-tight">${job.to}</p>
+                        </div>
+                    </div>
+                    ${btnArea}
                 </div>`;
             }).join('');
+            lucide.createIcons();
+        }
+
+        // --- IMPROVED HISTORY RENDERER (GROUPED BY TRIP) ---
+        function renderHistory() {
+            const container = document.getElementById('history-list');
+            if (historyJobs.length === 0) {
+                container.innerHTML = '<div class="flex flex-col items-center justify-center py-20 text-slate-400"><i data-lucide="history" class="w-12 h-12 mb-3 opacity-20"></i><p class="text-xs font-bold">No completed trips yet.</p></div>';
+                lucide.createIcons();
+                return;
+            }
+
+            // Logic to group jobs that ended around the same time (within 120 seconds) into a "Trip Group"
+            const trips = [];
+            let currentGroup = [];
             
+            // historyJobs is already sorted by endTime desc
+            historyJobs.forEach((job, index) => {
+                if (currentGroup.length === 0) {
+                    currentGroup.push(job);
+                } else {
+                    const prevJob = currentGroup[currentGroup.length - 1];
+                    const prevTime = prevJob.endTime?.seconds || 0;
+                    const currTime = job.endTime?.seconds || 0;
+                    // Check if time difference is less than 2 minutes
+                    if (Math.abs(prevTime - currTime) < 120) {
+                        currentGroup.push(job);
+                    } else {
+                        trips.push(currentGroup);
+                        currentGroup = [job];
+                    }
+                }
+                
+                if (index === historyJobs.length - 1 && currentGroup.length > 0) {
+                    trips.push(currentGroup);
+                }
+            });
+
+            const today = new Date().toDateString();
+            const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+            const yStr = yesterday.toDateString();
+
+            // Group trips by date for headers
+            const groupedByDate = {};
+            trips.forEach(group => {
+                const mainJob = group[0];
+                const d = mainJob.endTime ? new Date(mainJob.endTime.seconds * 1000) : new Date();
+                const dateKey = d.toDateString();
+                if(!groupedByDate[dateKey]) groupedByDate[dateKey] = [];
+                groupedByDate[dateKey].push(group);
+            });
+
+            let html = '';
+            Object.keys(groupedByDate).forEach(dateKey => {
+                let displayDate = dateKey;
+                if (dateKey === today) displayDate = "Today";
+                else if (dateKey === yStr) displayDate = "Yesterday";
+                
+                // Calculate Total for that Day using safe parser
+                let dayTotal = 0;
+                groupedByDate[dateKey].forEach(group => {
+                    group.forEach(j => dayTotal += parsePrice(j.price));
+                });
+
+                html += `
+                <div class="sticky top-16 z-10 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur py-2 px-1 flex justify-between items-end border-b border-slate-200 dark:border-slate-800 mb-2 mt-4">
+                    <div>
+                        <h4 class="text-lg font-bold text-slate-800 dark:text-slate-200 leading-none">${displayDate}</h4>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase mt-1">${groupedByDate[dateKey].length} Trips • ${groupedByDate[dateKey].reduce((s, g) => s + g.length, 0)} Orders</p>
+                    </div>
+                    <span class="text-sm font-black text-brand-600 dark:text-brand-400">₹${dayTotal}</span>
+                </div>
+                <div class="space-y-3">
+                `;
+                
+                groupedByDate[dateKey].forEach(group => {
+                     // Summary for the trip group
+                     const mainJob = group[0];
+                     const tripTotal = group.reduce((sum, j) => sum + parsePrice(j.price), 0);
+                     const totalPax = group.reduce((sum, j) => sum + (parseInt(j.passengers)||1), 0);
+                     const time = mainJob.endTime ? new Date(mainJob.endTime.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
+                     
+                     html += `
+                     <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center border-b border-slate-100 dark:border-slate-800">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">Trip Ended at ${time}</p>
+                                <p class="text-xs font-bold dark:text-white">${mainJob.to}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">${totalPax} Pax</p>
+                                <p class="font-black text-green-600 dark:text-green-400">₹${tripTotal}</p>
+                            </div>
+                        </div>
+                     `;
+                     
+                     // Individual Orders in the group
+                     group.forEach(job => {
+                         const passengerText = getVehicleDisplayText(job);
+
+                         html += `
+                         <div onclick="openTripDetails('${job.id}')" class="p-3 flex items-center justify-between border-b border-slate-50 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition cursor-pointer">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 p-1.5 rounded-lg">
+                                    <i data-lucide="user" class="w-4 h-4"></i>
+                                </div>
+                                <div>
+                                    <p class="text-xs font-bold dark:text-white">${job.name || 'Guest'}</p>
+                                    <p class="text-[9px] text-slate-400 font-bold uppercase">${passengerText}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-slate-600 dark:text-slate-300">₹${job.price}</span>
+                                <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
+                            </div>
+                         </div>`;
+                     });
+                     html += `</div>`;
+                });
+                html += `</div>`;
+            });
+            container.innerHTML = html;
             lucide.createIcons();
         }
 
         // --- ACTIONS ---
-        window.toggleOnlineStatus = async () => {
-            const isOnline = document.getElementById('status-toggle').checked;
-            document.getElementById('status-label').textContent = isOnline ? "ON DUTY" : "OFF";
-            document.getElementById('status-label').className = `text-[10px] font-bold ${isOnline ? 'text-green-500' : 'text-slate-500'}`;
+        window.promptAcceptJob = (jobId) => {
+            const job = allJobs.find(j => j.id === jobId);
+            if (!job) return;
+            pendingAcceptJobId = jobId;
             
-            const driverRef = doc(db, 'artifacts', appId, 'public', 'data', 'active_drivers', currentUser.uid);
+            document.getElementById('accept-modal-price').textContent = `₹${job.price}`;
             
-            if(isOnline) {
-                // Background Location Tracking Simulation
-                if("geolocation" in navigator) {
-                    locationInterval = setInterval(() => {
-                        navigator.geolocation.getCurrentPosition(pos => {
-                            updateDoc(driverRef, { 
-                                lat: pos.coords.latitude, 
-                                lng: pos.coords.longitude,
-                                lastUpdate: serverTimestamp() 
-                            }).catch(() => {});
-                        }, (err) => {
-                             document.getElementById('loc-permission-alert').classList.remove('hidden');
-                        });
-                    }, 30000); // 30 seconds
-                }
+            // Use Helper for Modal Text
+            const typeText = getVehicleDisplayText(job);
+            document.getElementById('accept-modal-type').textContent = typeText;
+            
+            document.getElementById('accept-modal').classList.remove('hidden');
+        }
 
-                // Create Active Record
-                const total = parseInt(document.getElementById('stat-total').textContent);
-                const filled = parseInt(document.getElementById('stat-filled').textContent);
-                await setDoc(driverRef, {
-                    uid: currentUser.uid,
-                    name: driverData.name,
-                    vehicleNo: driverData.vehicleNo,
-                    vehicleType: driverData.vehicleType,
-                    phone: driverData.phone,
-                    totalSeats: total,
-                    filledSeats: filled,
-                    seatsAvailable: total - filled,
-                    status: 'active',
-                    lastActive: serverTimestamp()
-                }, {merge: true});
-                showToast("You are now Online");
-            } else {
-                if(locationInterval) clearInterval(locationInterval);
-                await deleteDoc(driverRef);
-                showToast("You are Offline");
+        window.closeAcceptModal = () => {
+            document.getElementById('accept-modal').classList.add('hidden');
+            pendingAcceptJobId = null;
+        }
+
+        window.confirmAcceptJob = async () => {
+            const jobId = pendingAcceptJobId;
+            if(!jobId) return;
+            
+            closeAcceptModal();
+            
+            try {
+                const ref = doc(db, 'artifacts', APP_ID, 'public', 'data', 'bookings', jobId);
+                await updateDoc(ref, {
+                    status: 'assigned',
+                    driverId: driverId, 
+                    driverName: driverProfile.name,
+                    driverPhone: driverProfile.phone,
+                    driverVehicle: driverProfile.vehicleType, 
+                    driverPlate: driverProfile.vehicleNo,
+                    acceptedAt: serverTimestamp()
+                });
+                showToast("Job Accepted!", "success");
+                setHomeTab('active');
+                syncActivePool(); 
+            } catch (e) {
+                showToast("This job was just taken.", "error");
             }
         }
 
-        window.acceptJob = async (id, serviceName) => {
-            const isPrivate = serviceName.includes('Private') || serviceName.includes('Ambulance');
-            try {
-                const updateData = {
-                    status: 'assigned',
-                    driverId: currentUser.uid,
-                    driverName: driverData.name,
-                    driverVehicle: driverData.vehicleType,
-                    driverPlate: driverData.vehicleNo,
-                    driverPhone: driverData.phone
-                };
-                
-                // --- OTP GENERATION (Fallback) ---
-                // If the booking doesn't have an OTP (old client), generate one now so the driver sees it? 
-                // No, simpler: Driver asks user. If user doesn't know, we need a fallback.
-                // We will assume the client generated one. If not, we set a default '1234' here for robustnes.
-                // Ideally, client sets it. We won't overwrite unless it's missing.
-                // Actually, we can't see the OTP field easily without reading first.
-                // Let's just update.
-                
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', id), updateData);
-
-                // Update Seat Availability
-                if(isPrivate) {
-                    const total = parseInt(document.getElementById('stat-total').textContent);
-                    const driverRef = doc(db, 'artifacts', appId, 'public', 'data', 'active_drivers', currentUser.uid);
-                    await updateDoc(driverRef, { filledSeats: total, seatsAvailable: 0 });
-                }
-                
-                showToast("Job Accepted!", "success");
-            } catch(e) { console.error(e); showToast("Error accepting job", "error"); }
-        }
-
-        window.rejectJob = async (id) => {
-            try {
-                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', id), {
-                    offeredTo: null,
-                    rejectedBy: arrayUnion(currentUser.uid)
-                });
-                showToast("Job Rejected");
-            } catch(e) { console.error(e); }
-        }
-
-        // --- OTP LOGIC ---
-        window.promptOTP = (jobId) => {
-            pendingVerificationId = jobId;
+        // --- NEW OTP FLOW ---
+        window.promptOtp = (jobId) => {
+            pendingVerifyJobId = jobId;
             document.getElementById('otp-modal').classList.remove('hidden');
-            document.getElementById('otp-input').value = '';
-            document.getElementById('otp-input').focus();
+            document.querySelectorAll('.otp-input').forEach(i => i.value = '');
+            document.querySelector('.otp-input').focus();
         }
 
         window.closeOtpModal = () => {
-             document.getElementById('otp-modal').classList.add('hidden');
-             pendingVerificationId = null;
+            document.getElementById('otp-modal').classList.add('hidden');
+            pendingVerifyJobId = null;
         }
 
-        window.verifyAndStartTrip = async () => {
-            const input = document.getElementById('otp-input').value;
-            if(input.length !== 4) { showToast("Enter 4-digit OTP", "error"); return; }
+        window.submitOtp = async () => {
+            const inputs = document.querySelectorAll('.otp-input');
+            const enteredOtp = Array.from(inputs).map(i => i.value).join('');
+            if (enteredOtp.length !== 4) { alert("Enter 4 digits"); return; }
             
-            // In a real app, we check against firestore data.otp
-            // For this UI, we will simulate a check or fetch the doc.
-            // Let's fetch the doc to be secure.
-            const ref = doc(db, 'artifacts', appId, 'public', 'data', 'bookings', pendingVerificationId);
-            // Optimization: We have the job in `allJobs` array!
-            const job = allJobs.find(j => j.id === pendingVerificationId);
+            const btn = document.getElementById('btn-verify-submit');
+            btn.innerHTML = "Checking...";
             
-            // If OTP exists in job, check it. If not (legacy booking), accept any or '1234'.
-            const correctOtp = job.otp || '1234'; 
+            try {
+                const job = allJobs.find(j => j.id === pendingVerifyJobId);
+                let isValid = true;
+                if (job.otp) {
+                    const systemOtp = String(job.otp).trim();
+                    const userOtp = String(enteredOtp).trim();
+                    if(systemOtp !== userOtp) isValid = false;
+                }
+                
+                if(isValid) {
+                     await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'bookings', pendingVerifyJobId), {
+                        status: 'verified' 
+                    });
+                    closeOtpModal();
+                    showToast("Passenger Verified", "success");
+                } else {
+                    alert("Incorrect OTP");
+                }
+            } catch(e) { console.error(e); }
             
-            if(input === correctOtp.toString()) {
-                await updateDoc(ref, { status: 'started', startTime: serverTimestamp() });
-                closeOtpModal();
-                showToast("OTP Verified. Trip Started!", "success");
-            } else {
-                showToast("Incorrect OTP", "error");
-                document.getElementById('otp-input').classList.add('animate-shake');
-                setTimeout(()=>document.getElementById('otp-input').classList.remove('animate-shake'), 500);
-            }
+            btn.innerHTML = "Verify PIN";
         }
 
-        window.completeJob = async (id) => {
-             if(!confirm("End this trip?")) return;
-             await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', id), { 
-                 status: 'completed', 
-                 completedAt: serverTimestamp() 
-             });
-             
-             // Reset seats if needed (simple logic: decrement)
-             // For simplicity in this demo, we won't auto-decrement because logic varies (shared vs private).
-             // But we will show toast.
-             showToast("Trip Completed. Great Job!", "success");
-        }
-
-        // --- UTILS ---
-        window.triggerSOS = async () => {
-            if(!confirm("SEND SOS ALERT?\nThis will share your live location with Admin & Emergency contacts.")) return;
-            
-            navigator.geolocation.getCurrentPosition(async (pos) => {
-                await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'emergency_alerts'), {
-                    driverId: currentUser.uid,
-                    driverName: driverData.name,
-                    lat: pos.coords.latitude,
-                    lng: pos.coords.longitude,
-                    timestamp: serverTimestamp(),
-                    status: 'OPEN'
-                });
-                alert("SOS SENT! Support team has been notified.");
+        // --- SETTINGS (AC / LOCATION) ---
+        window.openSettingsModal = () => {
+            document.getElementById('settings-modal').classList.remove('hidden');
+            // Load current values
+            document.getElementById('setting-ac').checked = driverProfile.prefAc || false;
+            const routes = document.getElementsByName('route_pref');
+            routes.forEach(r => {
+                r.checked = (r.value === (driverProfile.prefRoute || 'Karimnagar'));
             });
         }
 
-        window.playAlert = () => {
-            if(document.getElementById('sound-toggle').checked) {
-                document.getElementById('notif-sound').play().catch(e=>console.log("Audio blocked"));
-                if("vibrate" in navigator) navigator.vibrate([200, 100, 200]);
+        window.closeSettingsModal = () => document.getElementById('settings-modal').classList.add('hidden');
+
+        window.saveSettings = async () => {
+            const ac = document.getElementById('setting-ac').checked;
+            let route = 'Karimnagar';
+            document.getElementsByName('route_pref').forEach(r => {
+                if(r.checked) route = r.value;
+            });
+
+            try {
+                // Save to Firestore profile
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), {
+                    prefAc: ac,
+                    prefRoute: route
+                });
+                
+                // Update Local State
+                driverProfile.prefAc = ac;
+                driverProfile.prefRoute = route;
+
+                // Sync to Active Pool if Online
+                if(document.getElementById('status-toggle').checked) await syncActivePool();
+
+                updatePreferenceUI();
+                closeSettingsModal();
+                showToast("Preferences Updated", "success");
+                
+                // REFRESH JOB LIST IMMEDIATELY
+                listenToJobs();
+                
+            } catch(e) {
+                console.error(e);
+                showToast("Failed to save settings", "error");
             }
         }
 
-        window.showToast = (msg, type='info') => {
-            const el = document.createElement('div');
-            const colors = type==='error'?'bg-red-500':(type==='success'?'bg-green-600':'bg-slate-800');
-            el.className = `${colors} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 text-sm font-bold animate-slide-in`;
-            el.innerHTML = `<span>${msg}</span>`;
-            document.getElementById('toast-container').appendChild(el);
-            setTimeout(() => el.remove(), 3000);
-        };
+        // --- CONFIRM START RIDE ---
+        window.promptStartRide = (mode) => {
+            // mode can be 'all' or 'single' (logic simplified for group start here)
+            pendingStartMode = mode;
+            document.getElementById('start-confirm-modal').classList.remove('hidden');
+        }
 
-        window.toggleDarkMode = () => {
-            const isDark = document.getElementById('dark-toggle').checked;
-            if(isDark) document.documentElement.classList.add('dark');
-            else document.documentElement.classList.remove('dark');
-            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        window.confirmStartRide = async () => {
+            document.getElementById('start-confirm-modal').classList.add('hidden');
+            
+            // Logic for 'all' verified
+            const verifiedJobs = allJobs.filter(j => j.status === 'verified' && j.driverId === driverId);
+            if(verifiedJobs.length === 0) return;
+
+            const promises = verifiedJobs.map(job => 
+                updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'bookings', job.id), {
+                    status: 'started',
+                    startTime: serverTimestamp()
+                })
+            );
+            await Promise.all(promises);
+            showToast("Journey Started for All", "success");
+        }
+
+        // --- COMPLETE TRIP (BULK) + AUTO UPDATE LOCATION ---
+        window.promptCompleteRide = () => {
+            // Find all active/started jobs
+            const activeJobs = allJobs.filter(j => j.status === 'started' && j.driverId === driverId);
+            if (activeJobs.length === 0) return;
+
+            const container = document.getElementById('payment-list');
+            let html = '';
+            let total = 0;
+
+            activeJobs.forEach(job => {
+                const amt = parsePrice(job.price);
+                total += amt;
+                html += `
+                <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-800 p-3 rounded-xl">
+                    <div>
+                        <p class="text-sm font-bold dark:text-white">${job.name}</p>
+                        <p class="text-[10px] text-slate-500">${job.to}</p>
+                    </div>
+                    <span class="font-bold text-slate-900 dark:text-white">₹${amt}</span>
+                </div>`;
+            });
+
+            container.innerHTML = html;
+            document.getElementById('payment-total').textContent = `₹${total}`;
+            document.getElementById('payment-modal').classList.remove('hidden');
+        }
+
+        window.confirmCompleteRide = async () => {
+            document.getElementById('payment-modal').classList.add('hidden');
+            const activeJobs = allJobs.filter(j => j.status === 'started' && j.driverId === driverId);
+            
+            if(activeJobs.length === 0) return;
+
+            // Use first job's destination for location update
+            const lastJob = activeJobs[activeJobs.length - 1]; 
+            const newHub = detectHub(lastJob.to);
+
+            const promises = activeJobs.map(job => 
+                updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'bookings', job.id), {
+                    status: 'completed',
+                    endTime: serverTimestamp()
+                })
+            );
+            await Promise.all(promises);
+            showToast("Ride Completed", "success");
+
+            // AUTO UPDATE LOCATION LOGIC
+            if(newHub) {
+                 await updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), {
+                    prefRoute: newHub
+                });
+                driverProfile.prefRoute = newHub;
+                updatePreferenceUI();
+                showToast(`Location Updated to: ${newHub}`, "success");
+                listenToJobs(); // FORCE REFRESH JOBS LIST
+            }
+
+            syncActivePool();
+        }
+
+        window.completeTrip = async (jobId) => {
+            // Single complete fallback
+            if(!confirm("End Trip? Collect Cash first.")) return;
+            const job = allJobs.find(j => j.id === jobId);
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'bookings', jobId), {
+                status: 'completed',
+                endTime: serverTimestamp()
+            });
+            
+            if(job && job.to) {
+                const newHub = detectHub(job.to);
+                if(newHub) {
+                     await updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), { prefRoute: newHub });
+                    driverProfile.prefRoute = newHub;
+                    updatePreferenceUI();
+                    showToast(`Location Updated to: ${newHub}`, "success");
+                    listenToJobs(); // FORCE REFRESH JOBS LIST
+                }
+            }
+            syncActivePool();
+        }
+        
+        function detectHub(locationString) {
+            if(!locationString) return null;
+            const loc = locationString.toLowerCase();
+            if(loc.includes('karimnagar')) return 'Karimnagar';
+            if(loc.includes('airport') || loc.includes('rgi') || loc.includes('shamshabad')) return 'RGI Airport';
+            if(loc.includes('jbs') || loc.includes('secunderabad') || loc.includes('jubilee')) return 'JBS';
+            if(loc.includes('hyderabad') || loc.includes('city') || loc.includes('gachibowli') || loc.includes('hitech')) return 'Hyderabad';
+            return null;
+        }
+
+        // --- HISTORY DETAILS ---
+        window.openTripDetails = (jobId) => {
+            const job = historyJobs.find(j => j.id === jobId);
+            if(!job) return;
+            
+            const modal = document.getElementById('trip-details-modal');
+            const content = document.getElementById('trip-modal-content');
+            
+            // Determine type again for modal using helper
+            const displayType = getVehicleDisplayText(job);
+            
+            content.innerHTML = `
+                <div class="text-center mb-6">
+                    <div class="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-3 relative">
+                        <i data-lucide="check-circle-2" class="h-8 w-8 text-green-600 dark:text-green-400"></i>
+                         <span class="absolute -top-1 -right-2 bg-blue-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full border border-white dark:border-slate-900">WEB BOOKING</span>
+                    </div>
+                    <h2 class="text-3xl font-bold dark:text-white tracking-tight">₹${job.price}</h2>
+                    <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Cash Collected</p>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase">Passenger</p>
+                                <p class="font-bold dark:text-white text-lg">${job.name || 'Guest User'}</p>
+                                <p class="text-sm text-slate-500">${job.mobile}</p>
+                            </div>
+                            <span class="px-2 py-1 bg-purple-100 text-purple-700 text-[10px] font-bold rounded uppercase">${displayType}</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 relative pl-8 space-y-5">
+                         <div class="absolute left-4 top-5 bottom-5 w-0.5 bg-slate-200 dark:bg-slate-600"></div>
+                         <div class="relative">
+                            <span class="absolute -left-[21px] top-1.5 h-3 w-3 rounded-full bg-green-500 border-2 border-white dark:border-slate-800"></span>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Pickup Location</p>
+                            <p class="font-medium dark:text-white">${job.from}</p>
+                        </div>
+                        <div class="relative">
+                            <span class="absolute -left-[21px] top-1.5 h-3 w-3 rounded-full bg-red-500 border-2 border-white dark:border-slate-800"></span>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase">Dropoff Location</p>
+                            <p class="font-medium dark:text-white">${job.to}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                         <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-center">
+                            <p class="text-[10px] text-slate-400 uppercase">Passengers</p>
+                            <p class="font-bold dark:text-white text-lg">${job.passengers || 1}</p>
+                         </div>
+                         <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-center">
+                            <p class="text-[10px] text-slate-400 uppercase">Completed On</p>
+                            <p class="font-bold dark:text-white text-xs mt-1">${job.endTime ? new Date(job.endTime.seconds*1000).toLocaleString() : '-'}</p>
+                         </div>
+                    </div>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+            lucide.createIcons();
+        }
+        
+        window.closeTripModal = () => document.getElementById('trip-details-modal').classList.add('hidden');
+
+
+        // --- WALLET ---
+        function listenToWallet() {
+            if(walletSubscription) walletSubscription();
+            const q = query(collection(db, 'artifacts', APP_ID, 'drivers', driverId, 'expenses'), orderBy('date', 'desc'), limit(50));
+            walletSubscription = onSnapshot(q, (snap) => {
+                expenseList = [];
+                snap.forEach(d => expenseList.push(d.data()));
+                updateWalletView();
+            });
+        }
+        
+        // New: Filter Wallet/Reports
+        window.updateWalletView = () => {
+            const filter = document.getElementById('wallet-filter').value; // 'all', 'week', 'month'
+            const container = document.getElementById('wallet-list');
+            const now = new Date();
+            
+            // Helper to check date range
+            const isInRange = (timestamp) => {
+                if (!timestamp) return false;
+                const d = new Date(timestamp.seconds * 1000);
+                if (filter === 'week') {
+                    const oneWeekAgo = new Date(); oneWeekAgo.setDate(now.getDate() - 7);
+                    return d >= oneWeekAgo;
+                }
+                if (filter === 'month') {
+                    const oneMonthAgo = new Date(); oneMonthAgo.setMonth(now.getMonth() - 1);
+                    return d >= oneMonthAgo;
+                }
+                return true;
+            };
+
+            // Filter Expenses
+            const filteredExpenses = expenseList.filter(e => isInRange(e.date));
+            const totalExp = filteredExpenses.reduce((sum, e) => sum + parsePrice(e.amount), 0);
+
+            // Filter Income (Completed Trips)
+            const filteredIncome = historyJobs.filter(j => isInRange(j.endTime));
+            const totalIncome = filteredIncome.reduce((sum, j) => sum + parsePrice(j.price), 0);
+
+            // Update Big Balance Display
+            document.getElementById('wallet-balance').textContent = (totalIncome - totalExp).toLocaleString();
+
+            // Render Report List (Group by Day for "Report" feel)
+            const combined = [];
+            filteredIncome.forEach(j => combined.push({ type: 'income', date: j.endTime, amount: parsePrice(j.price), desc: `Trip: ${j.to}` }));
+            filteredExpenses.forEach(e => combined.push({ type: 'expense', date: e.date, amount: parsePrice(e.amount), desc: e.description }));
+            
+            // Sort Descending
+            combined.sort((a,b) => (b.date?.seconds || 0) - (a.date?.seconds || 0));
+
+            // Group by Day
+            const grouped = {};
+            combined.forEach(item => {
+                const dStr = new Date(item.date.seconds * 1000).toDateString();
+                if (!grouped[dStr]) grouped[dStr] = [];
+                grouped[dStr].push(item);
+            });
+
+            let html = '';
+            if (combined.length === 0) html = '<p class="text-center text-xs text-slate-400 mt-4">No records for this period.</p>';
+            
+            Object.keys(grouped).forEach(dateStr => {
+                 let dayNet = 0;
+                 grouped[dateStr].forEach(i => i.type==='income' ? dayNet+=i.amount : dayNet-=i.amount);
+                 const dateDisplay = dateStr === now.toDateString() ? 'Today' : dateStr;
+
+                 html += `
+                 <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden mb-3">
+                    <div class="bg-slate-50 dark:bg-slate-800/50 px-3 py-2 flex justify-between items-center border-b border-slate-100 dark:border-slate-800">
+                        <span class="text-xs font-bold text-slate-500 uppercase">${dateDisplay}</span>
+                        <span class="text-xs font-bold ${dayNet>=0 ? 'text-green-600' : 'text-red-500'}">Net: ₹${dayNet}</span>
+                    </div>
+                    <div class="p-2 space-y-2">
+                 `;
+                 
+                 grouped[dateStr].forEach(item => {
+                     html += `
+                     <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-600 dark:text-slate-400 truncate w-2/3">${item.desc}</span>
+                        <span class="font-bold ${item.type==='income' ? 'text-slate-800 dark:text-white' : 'text-red-500'}">${item.type==='income' ? '+' : '-'}₹${item.amount}</span>
+                     </div>`;
+                 });
+                 html += `</div></div>`;
+            });
+
+            container.innerHTML = html;
+        }
+
+        window.saveExpense = async () => {
+            const desc = document.getElementById('exp-desc').value;
+            const amt = document.getElementById('exp-amt').value;
+            if(!desc || !amt) return;
+            await addDoc(collection(db, 'artifacts', APP_ID, 'drivers', driverId, 'expenses'), {
+                description: desc,
+                amount: parseInt(amt),
+                date: serverTimestamp()
+            });
+            toggleExpenseForm();
+            document.getElementById('exp-desc').value = '';
+            document.getElementById('exp-amt').value = '';
+        }
+
+        window.toggleExpenseForm = () => document.getElementById('expense-form').classList.toggle('hidden');
+
+        window.toggleOnlineStatus = async (checkbox) => {
+            if(!driverId) { alert("Profile not ready."); checkbox.checked = false; return; }
+            const isOnline = checkbox.checked;
+            const label = document.getElementById('status-label');
+            label.textContent = isOnline ? "Online" : "Offline";
+            label.className = `text-[10px] font-bold uppercase ${isOnline ? 'text-green-500' : 'text-slate-400'}`;
+            const tripCard = document.getElementById('trip-status-card');
+            if(isOnline) tripCard.classList.remove('hidden'); else tripCard.classList.add('hidden');
+            await updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), { status: isOnline ? 'online' : 'offline', lastSeen: serverTimestamp() });
+            if (isOnline) { await syncActivePool(); showToast("You are now Online", "success"); } 
+            else { await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'active_drivers', driverId)); showToast("You are Offline."); }
+        }
+
+        window.switchView = (view) => {
+            ['home', 'wallet', 'profile', 'history'].forEach(v => {
+                document.getElementById(`view-${v}`).classList.add('hidden');
+                document.getElementById(`nav-${v}`).className = "flex flex-col items-center gap-1 p-2 text-slate-400 transition-colors";
+            });
+            document.getElementById(`view-${view}`).classList.remove('hidden');
+            const btn = document.getElementById(`nav-${view}`);
+            btn.className = "flex flex-col items-center gap-1 p-2 text-brand-600 dark:text-brand-500 transition-colors";
+        }
+
+        window.toggleTheme = () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('nandu_theme', isDark ? 'dark' : 'light');
         }
 
         window.logout = () => {
-            if(confirm("Logout?")) {
-                localStorage.removeItem('driver_profile');
-                location.reload();
+            if(confirm("Log out?")) {
+                if(jobsSubscription) jobsSubscription();
+                const activeRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'active_drivers', driverId);
+                deleteDoc(activeRef).then(() => { signOut(auth); location.reload(); });
             }
         }
 
-        // --- WALLET & HISTORY RENDERERS (Simple) ---
-        window.addExpense = () => {
-            const name = document.getElementById('exp-name').value;
-            const amt = document.getElementById('exp-amount').value;
-            if(name && amt) {
-                const list = document.getElementById('wallet-list');
-                const div = document.createElement('div');
-                div.className = "flex justify-between items-center p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700";
-                div.innerHTML = `<span class="text-xs font-bold dark:text-white">${name}</span><span class="text-xs font-bold text-red-500">-₹${amt}</span>`;
-                list.prepend(div);
-                document.getElementById('exp-name').value = '';
-                document.getElementById('exp-amount').value = '';
-                document.getElementById('expense-form').classList.add('hidden');
-                
-                // Update Balance Visually
-                const balEl = document.getElementById('wallet-balance');
-                balEl.textContent = (parseInt(balEl.textContent) - parseInt(amt)).toLocaleString();
-            }
+        window.showToast = (msg, type) => {
+            const t = document.createElement('div');
+            t.className = `p-4 rounded-xl shadow-lg text-white text-xs font-bold animate-enter ${type==='success'?'bg-green-600':'bg-red-500'}`;
+            t.textContent = msg;
+            document.getElementById('toast-container').appendChild(t);
+            setTimeout(()=>t.remove(), 3000);
         }
 
-        window.renderHistory = () => {
-            const list = document.getElementById('history-list');
-            const done = allJobs.filter(j => ['completed', 'cancelled'].includes(j.status));
-            
-            if(done.length === 0) {
-                list.innerHTML = `<p class="text-center text-slate-400 text-xs py-10">No history yet.</p>`;
-                return;
-            }
+        function playSound() { try { document.getElementById('notif-sound').play(); } catch(e){} }
 
-            list.innerHTML = done.map(j => `
-                <div class="bg-white dark:bg-slate-850 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 opacity-75">
-                    <div class="flex justify-between mb-2">
-                        <span class="text-xs font-bold dark:text-white">${j.date || 'Unknown Date'}</span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded ${j.status==='completed'?'bg-green-100 text-green-700':'bg-red-100 text-red-700'} uppercase">${j.status}</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-xs text-slate-500 mb-2">
-                        <span class="truncate w-1/3">${j.from.split(',')[0]}</span>
-                        <i data-lucide="arrow-right" class="h-3 w-3"></i>
-                        <span class="truncate w-1/3">${j.to.split(',')[0]}</span>
-                    </div>
-                    <div class="text-right border-t border-slate-100 dark:border-slate-800 pt-2">
-                         <span class="font-black text-slate-900 dark:text-white">₹${j.price}</span>
-                    </div>
-                </div>
-            `).join('');
-            lucide.createIcons();
-        }
-
+        init();
         lucide.createIcons();
     </script>
 </body>
