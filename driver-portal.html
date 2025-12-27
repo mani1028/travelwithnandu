@@ -6,6 +6,7 @@
     <title>Driver Partner - Nandu Travels</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -47,7 +48,6 @@
         .dark .glass { background: rgba(15, 23, 42, 0.95); }
         .loader { width: 20px; height: 20px; border: 3px solid #FFF; border-bottom-color: transparent; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        /* OTP Input Styling */
         .otp-input { width: 3rem; height: 3.5rem; text-align: center; font-size: 1.5rem; border-radius: 0.75rem; border: 2px solid #e2e8f0; background: #f8fafc; transition: all 0.2s; }
         .otp-input:focus { border-color: #3B82F6; background: #fff; outline: none; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
         .dark .otp-input { background: #0f172a; border-color: #1e293b; color: white; }
@@ -69,10 +69,79 @@
     <audio id="notif-sound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.m4a" preload="auto"></audio>
 
     <!-- Toast Notifications -->
-    <div id="toast-container" class="fixed top-4 left-4 right-4 z-[90] pointer-events-none flex flex-col gap-2"></div>
+    <div id="toast-container" class="fixed top-4 left-4 right-4 z-[110] pointer-events-none flex flex-col gap-2"></div>
 
-    <!-- Job Accept Modal (New) -->
-    <div id="accept-modal" class="fixed inset-0 z-[85] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
+    <!-- 3-Dot Options Modal (Trip Actions) -->
+    <div id="options-modal" class="fixed inset-0 z-[105] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up relative">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold dark:text-white">Trip Options</h3>
+                <button onclick="closeOptionsModal()" class="p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 transition">
+                    <i data-lucide="x" class="h-4 w-4 text-slate-500"></i>
+                </button>
+            </div>
+            <div class="space-y-3">
+                <button onclick="reportNoResponse()" class="w-full flex items-center gap-3 p-4 bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 font-bold rounded-xl hover:bg-orange-100 transition active:scale-95">
+                    <div class="bg-orange-100 dark:bg-orange-900/40 p-2 rounded-lg"><i data-lucide="phone-off" class="h-5 w-5"></i></div>
+                    Customer Not Responding
+                </button>
+                <button onclick="reportNotInterested()" class="w-full flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold rounded-xl hover:bg-red-100 transition active:scale-95">
+                    <div class="bg-red-100 dark:bg-red-900/40 p-2 rounded-lg"><i data-lucide="thumbs-down" class="h-5 w-5"></i></div>
+                    Customer Not Interested
+                </button>
+                <button onclick="cancelTripReason()" class="w-full flex items-center gap-3 p-4 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 transition active:scale-95">
+                    <div class="bg-slate-200 dark:bg-slate-700 p-2 rounded-lg"><i data-lucide="x-circle" class="h-5 w-5"></i></div>
+                    Cancel Trip (Other Reason)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Upload Modal -->
+    <div id="doc-upload-modal" class="fixed inset-0 z-[105] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up relative">
+             <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-bold dark:text-white">Upload Documents</h3>
+                <button onclick="closeDocModal()" class="p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 transition">
+                    <i data-lucide="x" class="h-4 w-4 text-slate-500"></i>
+                </button>
+            </div>
+            <div class="space-y-4">
+                 <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 transition group">
+                      <i data-lucide="id-card" class="h-8 w-8 mx-auto text-slate-400 mb-2 group-hover:text-brand-500 transition-colors"></i>
+                      <p class="text-sm font-bold text-slate-700 dark:text-slate-300">Driving License</p>
+                      <p class="text-[10px] text-slate-500">Tap to upload (Front/Back)</p>
+                 </div>
+                 <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 text-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700/50 transition group">
+                      <i data-lucide="file-check" class="h-8 w-8 mx-auto text-slate-400 mb-2 group-hover:text-brand-500 transition-colors"></i>
+                      <p class="text-sm font-bold text-slate-700 dark:text-slate-300">Vehicle Insurance</p>
+                      <p class="text-[10px] text-slate-500">Tap to upload PDF/Image</p>
+                 </div>
+                 <button onclick="showToast('Documents Uploaded!', 'success'); closeDocModal()" class="w-full py-3 bg-brand-600 text-white font-bold rounded-xl shadow-lg mt-4 active:scale-95 transition">Submit for Verification</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trip Details Modal (Receipt View) -->
+    <div id="trip-details-modal" class="fixed inset-0 z-[105] bg-black/60 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-slate-50 dark:bg-slate-900 w-full max-w-md h-[90vh] sm:h-auto sm:rounded-3xl rounded-t-3xl shadow-2xl animate-slide-up flex flex-col overflow-hidden">
+            <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900">
+                <h3 class="font-bold text-lg dark:text-white">Trip Receipt</h3>
+                <button onclick="closeTripModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                    <i data-lucide="x" class="h-4 w-4 text-slate-500"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto p-5 space-y-5" id="trip-modal-content">
+                <!-- Content Injected via JS -->
+            </div>
+            <div class="p-5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
+                <button onclick="closeTripModal()" class="w-full py-3 bg-slate-900 dark:bg-slate-800 text-white font-bold rounded-xl">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job Accept Modal -->
+    <div id="accept-modal" class="fixed inset-0 z-[105] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
         <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up relative">
             <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
@@ -101,7 +170,7 @@
     </div>
 
     <!-- OTP Verification Modal -->
-    <div id="otp-modal" class="fixed inset-0 z-[85] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
+    <div id="otp-modal" class="fixed inset-0 z-[105] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
         <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up relative">
             <button onclick="closeOtpModal()" class="absolute top-4 right-4 p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:rotate-90 transition-transform">
                 <i data-lucide="x" class="h-4 w-4 text-slate-500"></i>
@@ -128,7 +197,7 @@
     </div>
 
     <!-- Start Ride Confirmation Modal -->
-    <div id="start-confirm-modal" class="fixed inset-0 z-[85] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
+    <div id="start-confirm-modal" class="fixed inset-0 z-[105] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
         <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-zoom-in relative">
             <div class="text-center mb-6">
                 <div class="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
@@ -145,7 +214,7 @@
     </div>
 
     <!-- Payment Collection / Complete Trip Modal -->
-    <div id="payment-modal" class="fixed inset-0 z-[85] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
+    <div id="payment-modal" class="fixed inset-0 z-[105] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
         <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up relative flex flex-col max-h-[80vh]">
             <div class="text-center mb-4">
                 <div class="w-16 h-16 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -173,8 +242,25 @@
         </div>
     </div>
 
+    <!-- Offline Confirmation Modal -->
+    <div id="offline-modal" class="fixed inset-0 z-[105] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
+        <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-zoom-in relative">
+            <div class="text-center mb-6">
+                <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                    <i data-lucide="power-off" class="h-8 w-8"></i>
+                </div>
+                <h3 class="text-xl font-bold dark:text-white">Go Offline?</h3>
+                <p class="text-sm text-slate-500 mt-2" id="offline-msg">You have active trips. Going offline will release them.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                 <button onclick="closeOfflineModal()" class="py-3 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold rounded-xl">Stay Online</button>
+                 <button onclick="confirmOfflineAction()" class="py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-500/30">Yes, Offline</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Driver Settings Modal -->
-    <div id="settings-modal" class="fixed inset-0 z-[85] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
+    <div id="settings-modal" class="fixed inset-0 z-[105] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
         <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up relative">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-bold dark:text-white">Ride Preferences</h3>
@@ -243,26 +329,8 @@
         </div>
     </div>
 
-    <!-- Trip Details Modal (History) -->
-    <div id="trip-details-modal" class="fixed inset-0 z-[85] bg-black/60 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
-        <div class="bg-slate-50 dark:bg-slate-950 w-full max-w-md h-[90vh] sm:h-auto sm:rounded-3xl rounded-t-3xl shadow-2xl animate-slide-up flex flex-col overflow-hidden">
-            <div class="p-5 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center bg-white dark:bg-slate-900">
-                <h3 class="font-bold text-lg dark:text-white">Trip Details</h3>
-                <button onclick="closeTripModal()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                    <i data-lucide="x" class="h-4 w-4 text-slate-500"></i>
-                </button>
-            </div>
-            <div class="flex-1 overflow-y-auto p-5 space-y-5" id="trip-modal-content">
-                <!-- Content Injected -->
-            </div>
-            <div class="p-5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800">
-                <button onclick="closeTripModal()" class="w-full py-3 bg-slate-900 dark:bg-slate-800 text-white font-bold rounded-xl">Close</button>
-            </div>
-        </div>
-    </div>
-
     <!-- Manual Seat Editor Modal -->
-    <div id="seat-modal" class="fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div id="seat-modal" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 rounded-3xl p-6 w-full max-w-xs animate-slide-up">
             <h3 class="text-lg font-bold mb-4 dark:text-white">Manage Seats</h3>
             <div class="flex items-center justify-between bg-slate-100 dark:bg-slate-800 p-4 rounded-2xl mb-6">
@@ -358,14 +426,17 @@
         <!-- Header -->
         <header class="glass sticky top-0 z-40 border-b border-slate-200 dark:border-slate-800 px-5 py-3 flex justify-between items-center transition-all duration-300">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <i data-lucide="user" class="h-5 w-5 text-slate-500 dark:text-slate-400"></i>
+                <div class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center border border-slate-200 dark:border-slate-700 shadow-sm relative">
+                    <img id="header-pic" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Nandu" class="w-full h-full rounded-full object-cover" alt="Profile">
+                    <div class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-slate-800 rounded-full"></div>
                 </div>
                 <div>
                     <h2 id="header-name" class="font-bold text-sm leading-tight dark:text-white truncate max-w-[120px]">...</h2>
-                    <div class="flex items-center gap-1.5">
-                        <span id="header-plate" class="text-[10px] font-bold text-slate-500 uppercase bg-slate-100 dark:bg-slate-800 px-1.5 rounded border border-slate-200 dark:border-slate-700">...</span>
-                        <span id="header-type" class="text-[10px] text-slate-400">...</span>
+                    <div class="flex items-center gap-1.5" id="header-plate-container">
+                        <span id="header-plate" class="text-[10px] font-bold text-slate-500 uppercase bg-slate-100 dark:bg-slate-800 px-1.5 rounded border border-slate-200 dark:border-slate-700 flex items-center">
+                            ...
+                        </span>
+                        <i data-lucide="badge-check" class="h-3 w-3 text-blue-500"></i>
                     </div>
                 </div>
             </div>
@@ -385,7 +456,7 @@
             <!-- HOME TAB -->
             <div id="view-home" class="space-y-4 animate-slide-up">
                 
-                <!-- Preferences Bar (NEW) -->
+                <!-- Preferences Bar -->
                 <div class="bg-white dark:bg-slate-900 rounded-xl p-3 flex justify-between items-center shadow-sm border border-slate-100 dark:border-slate-800">
                     <div class="flex items-center gap-3">
                          <div class="bg-indigo-100 dark:bg-indigo-900/30 p-2 rounded-lg text-indigo-600 dark:text-indigo-400">
@@ -433,7 +504,7 @@
                     </button>
                 </div>
 
-                <!-- Bulk Action Bar (For Group Start/Complete) -->
+                <!-- Bulk Action Bar -->
                 <div id="bulk-action-bar" class="hidden animate-slide-up sticky top-36 z-30">
                     <button id="btn-bulk-action" class="w-full bg-brand-600 hover:bg-brand-700 text-white p-4 rounded-2xl shadow-lg shadow-brand-500/20 flex items-center justify-between group transition-all">
                         <div class="flex items-center gap-3">
@@ -450,9 +521,7 @@
                 </div>
 
                 <!-- Job List -->
-                <div id="job-list-container" class="space-y-4 pb-20 min-h-[300px]">
-                    <!-- Injected via JS -->
-                </div>
+                <div id="job-list-container" class="space-y-4 pb-20 min-h-[300px]"></div>
             </div>
 
             <!-- WALLET TAB -->
@@ -491,7 +560,7 @@
                 </div>
             </div>
 
-            <!-- HISTORY TAB (New) -->
+            <!-- HISTORY TAB -->
             <div id="view-history" class="hidden space-y-4 animate-slide-up">
                  <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 flex items-center justify-between shadow-sm sticky top-20 z-20">
                     <div>
@@ -502,40 +571,117 @@
                         <i data-lucide="history" class="h-6 w-6"></i>
                     </div>
                  </div>
-                 <div id="history-list" class="space-y-4 pb-20">
-                     <!-- Injected JS -->
-                 </div>
+                 <div id="history-list" class="space-y-4 pb-20"></div>
             </div>
 
-            <!-- PROFILE TAB -->
-            <div id="view-profile" class="hidden space-y-6 animate-slide-up">
-                <div class="bg-white dark:bg-slate-900 p-8 rounded-3xl border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm relative">
-                    <div class="w-24 h-24 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 border-4 border-white dark:border-slate-700 shadow-lg">
-                        <i data-lucide="user" class="h-10 w-10 text-slate-400"></i>
+            <!-- PROFILE TAB (Enhanced) -->
+            <div id="view-profile" class="hidden space-y-6 animate-slide-up pb-20">
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 flex flex-col items-center text-center shadow-sm relative overflow-hidden">
+                    <div class="w-24 h-24 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 border-4 border-white dark:border-slate-700 shadow-lg relative cursor-pointer group" onclick="document.getElementById('profile-upload').click()">
+                        <img id="profile-img" src="https://api.dicebear.com/7.x/avataaars/svg?seed=Nandu" class="w-full h-full rounded-full object-cover">
+                        <div class="absolute inset-0 bg-black/30 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i data-lucide="camera" class="text-white h-6 w-6"></i>
+                        </div>
+                        <input type="file" id="profile-upload" class="hidden" accept="image/*" onchange="uploadProfilePic(this)">
                     </div>
-                    <h3 id="prof-name" class="font-bold text-xl dark:text-white">Driver</h3>
-                    <p id="prof-details" class="text-sm text-slate-500 dark:text-slate-400 mt-1">...</p>
+                    <h3 id="prof-name" class="font-bold text-xl dark:text-white">Driver Name</h3>
+                    
+                    <!-- NEW: PARTNER ID DISPLAY -->
+                    <div class="mt-1 flex flex-col items-center gap-1">
+                        <span id="prof-id" class="text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">ID-....</span>
+                        <div class="flex items-center gap-1 text-slate-500 text-sm">
+                             <i data-lucide="phone" class="h-3 w-3"></i> <span id="prof-phone">...</span>
+                        </div>
+                    </div>
+
                     <div class="mt-4 flex gap-2">
-                        <span class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold rounded-full border border-green-200 dark:border-green-900">Verified Partner</span>
+                        <span class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold rounded-full border border-green-200 dark:border-green-900 flex items-center gap-1"><i data-lucide="badge-check" class="h-3 w-3"></i> Verified Partner</span>
                         <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold rounded-full border border-blue-200 dark:border-blue-900" id="prof-type">Type</span>
                     </div>
                 </div>
 
-                <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 overflow-hidden shadow-sm">
-                    <label class="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
-                        <div class="flex items-center gap-3">
-                            <i data-lucide="moon" class="h-4 w-4 text-slate-500"></i>
-                            <span class="text-sm font-bold dark:text-white">Dark Mode</span>
+                <!-- Analytics Dashboard Mini (Moved to Profile) -->
+                <div class="grid grid-cols-2 gap-3">
+                     <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-center">
+                          <p class="text-[10px] text-slate-400 font-bold uppercase">Jobs Done</p>
+                          <p class="text-2xl font-black text-slate-900 dark:text-white" id="stat-jobs">0</p>
+                          <span class="text-[9px] text-green-500 font-bold flex justify-center items-center"><i data-lucide="trending-up" class="h-3 w-3 mr-1"></i> +2 this week</span>
+                     </div>
+                     <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-center">
+                          <p class="text-[10px] text-slate-400 font-bold uppercase">Rating</p>
+                          <div class="flex items-center justify-center gap-1">
+                               <span class="text-2xl font-black text-slate-900 dark:text-white">4.9</span>
+                               <i data-lucide="star" class="h-4 w-4 text-yellow-400 fill-current"></i>
+                          </div>
+                          <span class="text-[9px] text-slate-400">50+ Reviews</span>
+                     </div>
+                </div>
+
+                <!-- Structured Sections -->
+                <div class="space-y-4">
+                    <!-- Personal Info -->
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-bold text-sm text-slate-800 dark:text-slate-200">Personal Info</h4>
+                            <button class="text-xs text-brand-600 font-bold" onclick="toggleEditProfile()">Edit</button>
                         </div>
-                        <input type="checkbox" id="dark-toggle" class="accent-brand-600 w-5 h-5" onchange="toggleTheme()">
-                    </label>
-                    <button onclick="logout()" class="w-full flex items-center gap-3 p-4 text-red-500 text-sm font-bold hover:bg-red-50 dark:hover:bg-red-900/10 transition">
-                        <i data-lucide="log-out" class="h-4 w-4"></i>
-                        Log Out
+                        <div class="space-y-3 text-sm">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-slate-50 dark:bg-slate-800 p-2 rounded-lg"><i data-lucide="mail" class="h-4 w-4 text-slate-400"></i></div>
+                                <input type="email" id="prof-email" value="driver@nandu.com" class="bg-transparent outline-none w-full text-slate-600 dark:text-slate-300" disabled>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="bg-slate-50 dark:bg-slate-800 p-2 rounded-lg"><i data-lucide="map-pin" class="h-4 w-4 text-slate-400"></i></div>
+                                <input type="text" id="prof-address" value="Karimnagar, Telangana" class="bg-transparent outline-none w-full text-slate-600 dark:text-slate-300" disabled>
+                            </div>
+                        </div>
+                        <button id="save-profile-btn" class="hidden w-full mt-3 py-2 bg-brand-600 text-white rounded-lg text-xs font-bold" onclick="saveProfileChanges()">Save Changes</button>
+                    </div>
+
+                    <!-- Documents -->
+                    <div class="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800">
+                         <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-bold text-sm text-slate-800 dark:text-slate-200">Documents</h4>
+                            <button onclick="openDocModal()" class="text-xs text-brand-600 font-bold">+ Upload</button>
+                        </div>
+                        <div class="space-y-2">
+                             <div class="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                                 <div class="flex items-center gap-2">
+                                     <i data-lucide="file-text" class="h-4 w-4 text-slate-400"></i>
+                                     <span class="text-xs font-medium dark:text-white">Driving License</span>
+                                 </div>
+                                 <span class="text-[10px] font-bold text-green-500 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded">Verified</span>
+                             </div>
+                             <div class="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                                 <div class="flex items-center gap-2">
+                                     <i data-lucide="shield" class="h-4 w-4 text-slate-400"></i>
+                                     <span class="text-xs font-medium dark:text-white">Insurance</span>
+                                 </div>
+                                 <span class="text-[10px] font-bold text-orange-500 bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded">Expiring Soon</span>
+                             </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Support & Settings -->
+                     <div class="grid grid-cols-2 gap-3">
+                         <button onclick="window.open('https://wa.me/917842424201', '_blank')" class="bg-green-50 dark:bg-green-900/20 p-4 rounded-2xl border border-green-100 dark:border-green-800 flex flex-col items-center justify-center gap-2 hover:bg-green-100 transition active:scale-95">
+                             <i data-lucide="headphones" class="h-6 w-6 text-green-600"></i>
+                             <span class="text-xs font-bold text-green-700 dark:text-green-400">Help & Support</span>
+                         </button>
+                          <div class="bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border border-slate-100 dark:border-slate-700 flex flex-col items-center justify-center gap-2">
+                             <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="dark-toggle" class="sr-only peer" onchange="toggleTheme()">
+                                <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-slate-900"></div>
+                            </label>
+                             <span class="text-xs font-bold text-slate-500">Dark Mode</span>
+                         </div>
+                     </div>
+
+                    <button onclick="logout()" class="w-full flex items-center justify-center gap-2 p-4 text-red-500 font-bold bg-white dark:bg-slate-900 rounded-2xl border border-red-100 hover:bg-red-50 dark:hover:bg-red-900/10 transition active:scale-95">
+                        <i data-lucide="log-out" class="h-4 w-4"></i> Log Out
                     </button>
                 </div>
-                
-                <p class="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest">Nandu Travels v2.3</p>
+                 <p class="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-4">Nandu Travels v3.2 (ID Updated)</p>
             </div>
 
         </main>
@@ -566,7 +712,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp, orderBy, addDoc, limit } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp, orderBy, addDoc, limit, arrayUnion, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // CONFIG
         let firebaseConfig;
@@ -585,15 +731,55 @@
         let currentTab = 'new';
         let allJobs = [];
         let historyJobs = [];
-        let expenseList = []; // New state for wallet
+        let expenseList = [];
         let jobsSubscription = null;
         let historySubscription = null;
         let walletSubscription = null;
         let confirmationResult = null;
         let manualSeats = 0;
         let pendingVerifyJobId = null;
-        let pendingAcceptJobId = null; // New for acceptance modal
-        let pendingStartMode = null; // 'all' or specific ID
+        let pendingAcceptJobId = null;
+        let pendingStartMode = null;
+        let pendingOptionsJobId = null; 
+
+        // Helper to safely init ReCaptcha
+        const initRecaptcha = () => {
+            const container = document.getElementById('recaptcha-container');
+            if(!container) return;
+
+            if(window.recaptchaVerifier) {
+                // If verifier exists, check if container is still valid
+                if (container.hasChildNodes()) {
+                    try { window.recaptchaVerifier.reset(); } catch(e) {}
+                    return; 
+                } else {
+                    // Container empty but verifier object exists (likely from prev render)
+                    // We must clear it to avoid "internal-error" on re-render
+                    try { window.recaptchaVerifier.clear(); } catch(e) {}
+                    window.recaptchaVerifier = null;
+                }
+            }
+
+            try {
+                window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { 
+                    'size': 'normal', 
+                    'callback': (response) => {
+                        // reCAPTCHA solved
+                    },
+                    'expired-callback': () => {
+                        // Response expired
+                    }
+                });
+                window.recaptchaVerifier.render().catch(e => {
+                    console.error("Recaptcha Render Error", e);
+                    // If rendering fails, we reset so we can try again
+                    window.recaptchaVerifier = null; 
+                    container.innerHTML = '';
+                });
+            } catch (error) {
+                console.error("Recaptcha Init Error", error);
+            }
+        };
 
         // --- INIT ---
         function init() {
@@ -602,19 +788,19 @@
                 document.getElementById('dark-toggle').checked = true;
             }
 
-            // OTP Input Focus Logic
             setupOtpInputs();
 
-            // Auth State Listener
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     const mobile = user.phoneNumber;
+                    // Ensure we fetch profile, if not exists handle gracefully
                     const profile = await fetchProfile(mobile);
                     if(profile) {
                         driverProfile = profile;
                         driverId = mobile;
                         loadDashboard();
                     } else {
+                        // Redirect to registration if profile doesn't exist
                         document.getElementById('auth-step-1').classList.add('hidden');
                         document.getElementById('auth-step-2').classList.add('hidden');
                         document.getElementById('auth-step-3').classList.remove('hidden');
@@ -627,13 +813,8 @@
                     document.getElementById('loading-screen').classList.add('hidden');
                     document.getElementById('login-screen').classList.remove('hidden');
                     
-                    if(!window.recaptchaVerifier) {
-                        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-                            'size': 'normal',
-                            'callback': (response) => {}
-                        });
-                        window.recaptchaVerifier.render();
-                    }
+                    // Initialize Recaptcha if needed
+                    setTimeout(() => initRecaptcha(), 500); 
                 }
             });
         }
@@ -651,14 +832,10 @@
             const inputs = document.querySelectorAll('.otp-input');
             inputs.forEach((input, index) => {
                 input.addEventListener('input', (e) => {
-                    if (e.target.value.length === 1) {
-                        if (index < inputs.length - 1) inputs[index + 1].focus();
-                    }
+                    if (e.target.value.length === 1) { if (index < inputs.length - 1) inputs[index + 1].focus(); }
                 });
                 input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Backspace' && e.target.value === '') {
-                        if (index > 0) inputs[index - 1].focus();
-                    }
+                    if (e.key === 'Backspace' && e.target.value === '') { if (index > 0) inputs[index - 1].focus(); }
                 });
             });
         }
@@ -668,92 +845,105 @@
             const mobileInput = document.getElementById('auth-mobile').value.trim();
             if(!mobileInput || mobileInput.length !== 10) { alert("Invalid Mobile Number"); return; }
             const phoneNumber = "+91" + mobileInput;
-            
             const btn = document.getElementById('btn-send-otp');
-            btn.innerHTML = '<span class="loader border-white w-4 h-4"></span> Sending...';
-            btn.disabled = true;
-
+            btn.innerHTML = '<span class="loader border-white w-4 h-4"></span> Sending...'; btn.disabled = true;
             try {
+                // Ensure Recaptcha is ready
+                if(!window.recaptchaVerifier) initRecaptcha();
+
                 confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier);
                 document.getElementById('auth-step-1').classList.add('hidden');
                 document.getElementById('auth-step-2').classList.remove('hidden');
                 document.getElementById('display-auth-mobile').textContent = phoneNumber;
-                window.recaptchaVerifier.clear();
-            } catch (error) {
-                console.error("SMS Error:", error);
-                alert("Error sending OTP. Check console.");
-                btn.innerHTML = 'Send OTP <i data-lucide="arrow-right" class="h-4 w-4"></i>';
-                btn.disabled = false;
-                window.recaptchaVerifier.reset();
+            } catch (error) { 
+                console.error("SMS Error:", error); 
+                alert("Error sending OTP: " + error.message); 
+                btn.innerHTML = 'Send OTP <i data-lucide="arrow-right" class="h-4 w-4"></i>'; 
+                btn.disabled = false; 
+                // Reset Recaptcha on error so user can try again
+                if(window.recaptchaVerifier) window.recaptchaVerifier.reset(); 
             }
         };
 
         window.verifyOtp = async () => {
             const code = document.getElementById('otp-input').value.trim();
-            if(code.length !== 6) { alert("Please enter 6-digit code"); return; }
+            if(code.length !== 6) { alert("Enter 6-digit code"); return; }
             const btn = document.getElementById('btn-verify-otp');
-            btn.innerHTML = "Verifying...";
-            btn.disabled = true;
-
+            btn.innerHTML = "Verifying..."; btn.disabled = true;
             try {
                 const result = await confirmationResult.confirm(code);
                 const user = result.user;
                 const mobile = user.phoneNumber;
                 const docRef = doc(db, 'artifacts', APP_ID, 'drivers', mobile);
                 const docSnap = await getDoc(docRef);
-
-                if (docSnap.exists()) {
-                    document.getElementById('login-screen').classList.add('hidden');
-                    loadDashboard();
-                } else {
-                    document.getElementById('auth-step-2').classList.add('hidden');
-                    document.getElementById('auth-step-3').classList.remove('hidden');
-                    document.getElementById('reg-mobile').value = mobile;
-                }
-            } catch (error) {
-                console.error("Verify Error:", error);
-                alert("Invalid OTP");
-                btn.innerText = "Verify & Login";
-                btn.disabled = false;
-            }
+                if (docSnap.exists()) { document.getElementById('login-screen').classList.add('hidden'); loadDashboard(); } 
+                else { document.getElementById('auth-step-2').classList.add('hidden'); document.getElementById('auth-step-3').classList.remove('hidden'); document.getElementById('reg-mobile').value = mobile; }
+            } catch (error) { console.error("Verify Error:", error); alert("Invalid OTP"); btn.innerText = "Verify & Login"; btn.disabled = false; }
         };
 
         window.completeRegistration = async () => {
             let mobile = document.getElementById('reg-mobile').value;
             const user = auth.currentUser;
             if(!mobile && user) mobile = user.phoneNumber;
-            if(!mobile) { alert("Error: Mobile number missing."); location.reload(); return; }
-
+            if(!mobile) { alert("Mobile missing."); location.reload(); return; }
             const name = document.getElementById('reg-name').value;
             let plate = document.getElementById('reg-plate').value;
             const type = document.getElementById('reg-type').value;
             if(!name || !plate) { alert("Please fill all details"); return; }
             plate = plate.toUpperCase().replace(/\s/g, '');
-
             const btn = document.getElementById('btn-final-reg');
-            btn.innerHTML = "Creating Account...";
-            btn.disabled = true;
-
+            btn.innerHTML = "Generating Partner ID..."; btn.disabled = true;
+            
             try {
-                const data = {
-                    name, phone: mobile, vehicleNo: plate, vehicleType: type,
-                    createdAt: serverTimestamp(),
-                    status: 'offline',
-                    manualFilledSeats: 0,
-                    uid: mobile,
-                    // Default Settings
-                    prefAc: false,
-                    prefRoute: 'Karimnagar' 
-                };
-                await setDoc(doc(db, 'artifacts', APP_ID, 'drivers', mobile), data);
-                driverProfile = data;
+                // --- NEW: GENERATE ID TRANSACTIONALLY ---
+                // Format: ID-YYYYXXXX (e.g., ID-20250001) - Sequential, No middle hyphen
+                const counterRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'counters', 'driver_stats');
+                
+                await runTransaction(db, async (transaction) => {
+                    const counterDoc = await transaction.get(counterRef);
+                    let currentCount = 0;
+                    if (counterDoc.exists()) {
+                        currentCount = counterDoc.data().count || 0;
+                    }
+                    const newCount = currentCount + 1;
+                    
+                    const year = new Date().getFullYear();
+                    // Sequence starts from 0001
+                    const padded = String(newCount).padStart(4, '0'); 
+                    
+                    // ID Construction: ID + Hyphen + Year + Sequence (No extra hyphens)
+                    const newId = `ID-${year}${padded}`;
+                    
+                    const data = { 
+                        name, 
+                        phone: mobile, 
+                        vehicleNo: plate, 
+                        vehicleType: type, 
+                        createdAt: serverTimestamp(), 
+                        status: 'offline', 
+                        manualFilledSeats: 0, 
+                        uid: mobile, 
+                        prefAc: false, 
+                        prefRoute: 'Karimnagar', 
+                        email: "", 
+                        address: "",
+                        partnerId: newId // Save the new ID
+                    };
+
+                    transaction.set(counterRef, { count: newCount }, { merge: true });
+                    transaction.set(doc(db, 'artifacts', APP_ID, 'drivers', mobile), data);
+                });
+
+                // Fetch new profile immediately to update local state
+                driverProfile = await fetchProfile(mobile);
                 driverId = mobile; 
                 document.getElementById('login-screen').classList.add('hidden');
                 loadDashboard();
-            } catch(err) {
-                alert("Registration failed: " + err.message);
-                btn.innerHTML = "Submit & Login";
-                btn.disabled = false;
+            } catch(err) { 
+                alert("Registration failed: " + err.message); 
+                console.error(err);
+                btn.innerHTML = "Submit & Login"; 
+                btn.disabled = false; 
             }
         };
 
@@ -762,7 +952,11 @@
             document.getElementById('auth-step-1').classList.remove('hidden');
             document.getElementById('btn-send-otp').disabled = false;
             document.getElementById('btn-send-otp').innerHTML = 'Send OTP <i data-lucide="arrow-right" class="h-4 w-4"></i>';
-            window.recaptchaVerifier.render();
+            
+            // Just reset, don't destroy
+            if(window.recaptchaVerifier) {
+                try { window.recaptchaVerifier.reset(); } catch(e) {}
+            }
         }
 
         // --- DASHBOARD LOGIC ---
@@ -770,31 +964,46 @@
             document.getElementById('loading-screen').classList.add('hidden');
             document.getElementById('app-content').classList.remove('hidden');
             
-            document.getElementById('header-name').textContent = driverProfile.name;
-            document.getElementById('header-plate').textContent = driverProfile.vehicleNo;
-            document.getElementById('header-type').textContent = driverProfile.vehicleType;
-            document.getElementById('prof-name').textContent = driverProfile.name;
-            document.getElementById('prof-details').textContent = `${driverProfile.phone} • ${driverProfile.vehicleNo}`;
-            document.getElementById('prof-type').textContent = driverProfile.vehicleType;
+            // Header Info
+            if(driverProfile) {
+                document.getElementById('header-name').textContent = driverProfile.name || 'Driver';
+                
+                // --- UPDATE: Display Partner ID (Format: ID-YYYYXXXX) ---
+                // Removed extra hyphen in fallback to match "ID-20250001" style
+                const displayId = driverProfile.partnerId || ('ID-' + new Date().getFullYear() + driverId.replace(/\D/g, '').slice(-4));
+                
+                // Set Header Badge
+                const plateEl = document.getElementById('header-plate');
+                plateEl.innerHTML = `<span class="text-brand-600 dark:text-brand-400 mr-1">${displayId}</span> <span class="text-slate-300 dark:text-slate-600 mx-1">|</span> ${driverProfile.vehicleNo || '...'}`;
+                
+                // Set Profile Badge
+                document.getElementById('prof-name').textContent = driverProfile.name || 'Driver Name';
+                document.getElementById('prof-id').textContent = displayId;
+                
+                // FIX: Ensure phone number is displayed even if it's stored under different keys
+                const phoneDisplay = driverProfile.phone || driverProfile.mobile || driverId || '...';
+                const phoneEl = document.getElementById('prof-phone');
+                if(phoneEl) phoneEl.textContent = phoneDisplay;
 
-            // Load Settings to UI
-            document.getElementById('setting-ac').checked = driverProfile.prefAc || false;
-            const routes = document.getElementsByName('route_pref');
-            routes.forEach(r => {
-                if(r.value === driverProfile.prefRoute) r.checked = true;
-            });
-            
-            // Update UI elements for preferences (Home Tab + Profile)
-            updatePreferenceUI();
+                document.getElementById('prof-type').textContent = driverProfile.vehicleType || 'Vehicle';
+                document.getElementById('prof-email').value = driverProfile.email || "No email added";
+                document.getElementById('prof-address').value = driverProfile.address || "No address added";
 
-            manualSeats = driverProfile.manualFilledSeats || 0;
-            updateSeatUI();
+                // Load Settings
+                document.getElementById('setting-ac').checked = driverProfile.prefAc || false;
+                const routes = document.getElementsByName('route_pref');
+                routes.forEach(r => { if(r.value === driverProfile.prefRoute) r.checked = true; });
+                
+                updatePreferenceUI();
+                manualSeats = driverProfile.manualFilledSeats || 0;
+                updateSeatUI();
 
-            if(driverProfile.status === 'online') {
-                document.getElementById('status-toggle').checked = true;
-                document.getElementById('status-label').textContent = 'Online';
-                document.getElementById('status-label').className = "text-[10px] font-bold text-green-500 uppercase";
-                document.getElementById('trip-status-card').classList.remove('hidden');
+                if(driverProfile.status === 'online') {
+                    document.getElementById('status-toggle').checked = true;
+                    document.getElementById('status-label').textContent = 'Online';
+                    document.getElementById('status-label').className = "text-[10px] font-bold text-green-500 uppercase";
+                    document.getElementById('trip-status-card').classList.remove('hidden');
+                }
             }
 
             listenToJobs();
@@ -802,225 +1011,201 @@
             listenToWallet();
         }
 
-        function updatePreferenceUI() {
-             const acText = driverProfile.prefAc ? "AC CAR" : "NON-AC";
-             const routeText = (driverProfile.prefRoute || "ANY ROUTE").toUpperCase();
-             // Home Tab
-             document.getElementById('home-pref-ac').textContent = acText;
-             document.getElementById('home-pref-route').textContent = routeText;
-        }
-
-        // --- HELPER: VEHICLE DISPLAY TEXT ---
         function getVehicleDisplayText(job) {
-            // Check for Shared explicitly
             const sName = (job.serviceName || '').toLowerCase();
             const sType = (job.serviceType || '').toLowerCase();
             const vType = (job.vehicleType || '').toLowerCase();
             const rVehicle = (job.requiredVehicle || '').toUpperCase();
-
-            // Fix: Check matches more broadly including requiredVehicle
             if (sName.includes('shared') || sType.includes('shared') || vType.includes('shared') || rVehicle.includes('SHARED')) {
                 return `Shared: ${job.passengers || 1}`;
             }
             if (vType.includes('ambulance') || rVehicle === 'AMBULANCE') return "Ambulance";
-            
-            // Fallback
             return "Full Vehicle";
         }
+        function parsePrice(p) { if (!p) return 0; const clean = String(p).replace(/[^0-9]/g, ''); return parseInt(clean, 10) || 0; }
+        function getTotalCapacity() { return (driverProfile && driverProfile.vehicleType && driverProfile.vehicleType.includes('7')) ? 6 : 4; }
+        function updatePreferenceUI() {
+             if(!driverProfile) return;
+             const acText = driverProfile.prefAc ? "AC CAR" : "NON-AC";
+             const routeText = (driverProfile.prefRoute || "ANY ROUTE").toUpperCase();
+             document.getElementById('home-pref-ac').textContent = acText;
+             document.getElementById('home-pref-route').textContent = routeText;
+        }
 
-        // --- HELPER: SAFE PRICE PARSE ---
-        function parsePrice(p) {
-            if (!p) return 0;
-            const clean = String(p).replace(/[^0-9]/g, '');
-            return parseInt(clean, 10) || 0;
+        // --- NEW: PROFILE EDITING ---
+        window.toggleEditProfile = () => {
+            const inputs = ['prof-email', 'prof-address'];
+            const btn = document.getElementById('save-profile-btn');
+            const isDisabled = document.getElementById('prof-email').disabled;
+            inputs.forEach(id => {
+                const el = document.getElementById(id);
+                el.disabled = !isDisabled;
+                if(!isDisabled) el.parentElement.classList.remove('border-brand-500'); 
+                else el.parentElement.classList.add('border', 'border-brand-500');
+            });
+            if(isDisabled) {
+                btn.classList.remove('hidden');
+                document.getElementById('prof-email').focus();
+            } else {
+                btn.classList.add('hidden');
+            }
+        };
+
+        window.saveProfileChanges = async () => {
+            const email = document.getElementById('prof-email').value;
+            const address = document.getElementById('prof-address').value;
+            try {
+                await updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), { email, address });
+                driverProfile.email = email; driverProfile.address = address;
+                toggleEditProfile();
+                showToast("Profile Updated", "success");
+            } catch(e) { console.error(e); showToast("Failed to save", "error"); }
+        };
+
+        window.uploadProfilePic = (input) => {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('header-pic').src = e.target.result;
+                    document.getElementById('profile-img').src = e.target.result;
+                    showToast("Photo Updated (Local Preview)", "success");
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        };
+
+        window.openDocModal = () => document.getElementById('doc-upload-modal').classList.remove('hidden');
+        window.closeDocModal = () => document.getElementById('doc-upload-modal').classList.add('hidden');
+
+
+        // --- 3-DOT MENU LOGIC ---
+        window.openOptions = (event, jobId) => {
+            event.stopPropagation();
+            pendingOptionsJobId = jobId;
+            document.getElementById('options-modal').classList.remove('hidden');
+        };
+        window.closeOptionsModal = () => {
+            document.getElementById('options-modal').classList.add('hidden');
+            pendingOptionsJobId = null;
+        };
+
+        window.reportNoResponse = async () => {
+            if(!pendingOptionsJobId) return;
+            if(!confirm("Report customer as not responding? This will cancel the booking.")) return;
+            await cancelTrip("Customer No Response");
+        };
+        window.reportNotInterested = async () => {
+            if(!pendingOptionsJobId) return;
+             if(!confirm("Report customer as not interested?")) return;
+            await cancelTrip("Customer Not Interested");
+        };
+        window.cancelTripReason = async () => {
+            if(!pendingOptionsJobId) return;
+            const reason = prompt("Enter cancellation reason:", "Other");
+            if(reason) await cancelTrip(reason);
+        };
+
+        async function cancelTrip(reason) {
+             try {
+                const ref = doc(db, 'artifacts', APP_ID, 'public', 'data', 'bookings', pendingOptionsJobId);
+                await updateDoc(ref, {
+                    status: 'cancelled',
+                    cancellationReason: reason,
+                    cancelledByDriver: true,
+                    driverId: null
+                });
+                showToast("Trip Cancelled", "success");
+                closeOptionsModal();
+                syncActivePool();
+            } catch(e) {
+                console.error(e);
+                showToast("Error cancelling trip", "error");
+            }
         }
 
         // --- SEAT MANAGEMENT ---
-        function getTotalCapacity() { return driverProfile.vehicleType.includes('7') ? 6 : 4; }
-
-        window.openSeatModal = () => {
-            document.getElementById('seat-modal').classList.remove('hidden');
-            document.getElementById('manual-seat-count').textContent = manualSeats;
-        }
-
-        window.adjustManualSeats = (delta) => {
-            const capacity = getTotalCapacity();
-            let newVal = manualSeats + delta;
-            if (newVal < 0) newVal = 0;
-            if (newVal > capacity) newVal = capacity;
-            manualSeats = newVal;
-            document.getElementById('manual-seat-count').textContent = manualSeats;
-        }
-
-        window.saveManualSeats = async () => {
-            document.getElementById('seat-modal').classList.add('hidden');
-            driverProfile.manualFilledSeats = manualSeats;
-            await updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), { manualFilledSeats: manualSeats });
-            if(document.getElementById('status-toggle').checked) await syncActivePool();
-            updateSeatUI();
-        }
-
-        function updateSeatUI() {
-            const capacity = getTotalCapacity();
-            const bookedSeats = allJobs.filter(j => (j.status === 'assigned' || j.status === 'verified' || j.status === 'started') && j.driverId === driverId).reduce((sum, j) => sum + (j.passengers || 1), 0);
-            const totalFilled = manualSeats + bookedSeats;
-            document.getElementById('seats-filled-display').textContent = totalFilled;
-            document.getElementById('seats-total-display').textContent = capacity;
-            const pct = (totalFilled / capacity) * 100;
-            document.getElementById('seat-progress-bar').style.width = `${pct}%`;
-        }
-
+        window.openSeatModal = () => { document.getElementById('seat-modal').classList.remove('hidden'); document.getElementById('manual-seat-count').textContent = manualSeats; }
+        window.adjustManualSeats = (delta) => { const cap = getTotalCapacity(); let n = manualSeats + delta; if(n<0) n=0; if(n>cap) n=cap; manualSeats = n; document.getElementById('manual-seat-count').textContent = manualSeats; }
+        window.saveManualSeats = async () => { document.getElementById('seat-modal').classList.add('hidden'); driverProfile.manualFilledSeats = manualSeats; await updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), { manualFilledSeats: manualSeats }); if(document.getElementById('status-toggle').checked) await syncActivePool(); updateSeatUI(); }
+        function updateSeatUI() { const cap = getTotalCapacity(); const booked = allJobs.filter(j => (j.status === 'assigned' || j.status === 'verified' || j.status === 'started') && j.driverId === driverId).reduce((s, j) => s + (parseInt(j.passengers)||1), 0); const tot = manualSeats + booked; document.getElementById('seats-filled-display').textContent = tot; document.getElementById('seats-total-display').textContent = cap; document.getElementById('seat-progress-bar').style.width = `${(tot/cap)*100}%`; }
+        
         async function syncActivePool() {
             const capacity = getTotalCapacity();
-            const bookedSeats = allJobs.filter(j => (j.status === 'assigned' || j.status === 'verified' || j.status === 'started') && j.driverId === driverId).reduce((sum, j) => sum + (j.passengers || 1), 0);
+            const bookedSeats = allJobs.filter(j => (j.status === 'assigned' || j.status === 'verified' || j.status === 'started') && j.driverId === driverId).reduce((sum, j) => sum + (parseInt(j.passengers)||1), 0);
             const totalFilled = manualSeats + bookedSeats;
             const seatsAvailable = Math.max(0, capacity - totalFilled);
-
-            const activeRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'active_drivers', driverId);
-            await setDoc(activeRef, {
-                uid: driverId,
-                name: driverProfile.name,
-                phone: driverProfile.phone,
-                vehicleType: driverProfile.vehicleType,
-                vehicleNo: driverProfile.vehicleNo,
-                seatsAvailable: seatsAvailable,
-                filledSeats: totalFilled,
-                prefAc: driverProfile.prefAc || false,
-                prefRoute: driverProfile.prefRoute || 'Karimnagar',
-                queueTime: serverTimestamp()
+            await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'active_drivers', driverId), {
+                uid: driverId, name: driverProfile.name, phone: driverProfile.phone, vehicleType: driverProfile.vehicleType, vehicleNo: driverProfile.vehicleNo,
+                seatsAvailable, filledSeats: totalFilled, prefAc: driverProfile.prefAc||false, prefRoute: driverProfile.prefRoute||'Karimnagar', queueTime: serverTimestamp(), totalSeats: capacity
             });
         }
-
-        // --- JOB LISTENER (STRICT MATCHING IMPLEMENTED) ---
+        
+        // --- JOB LISTENING (MERGED ROBUST LOGIC) ---
         function listenToJobs() {
-            if(!driverId) return;
+            if(!driverId || !driverProfile) return; 
             if(jobsSubscription) jobsSubscription();
             
             const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'bookings'), orderBy("createdAt", "desc"), limit(50));
-
-            jobsSubscription = onSnapshot(q, (snapshot) => {
-                const newJobs = [];
-                let hasNewRequest = false;
-
-                // Pre-calc driver details for matching loop
+            jobsSubscription = onSnapshot(q, (snap) => {
+                const newJobs = []; let hasNew = false;
                 const driverType = (driverProfile.vehicleType || '').toLowerCase();
                 const driverRoute = (driverProfile.prefRoute || '').toLowerCase().trim();
                 const driverCapacity = driverType.includes('7') ? 6 : 4;
 
-                snapshot.forEach(doc => {
+                snap.forEach(doc => {
                     const job = { id: doc.id, ...doc.data() };
                     let relevant = false;
-
+                    
                     if (job.driverId === driverId) {
-                        // Always show my assignments
-                        if (['assigned', 'verified', 'started'].includes(job.status)) relevant = true;
+                        if(['assigned', 'verified', 'started'].includes(job.status)) relevant = true;
                     } 
                     else if (job.status === 'pending' && !job.driverId) {
-                        
                         const jobType = (job.vehicleType || '').toLowerCase();
                         const jobFrom = (job.from || '').toLowerCase().trim();
-                        // Shared Check: Look at all potential indicators including requiredVehicle
                         const rVehicle = (job.requiredVehicle || '').toUpperCase();
-                        const isJobShared = (job.serviceName || '').toLowerCase().includes('shared') || (job.serviceType || '').toLowerCase().includes('shared') || jobType.includes('shared') || rVehicle.includes('SHARED');
+                        const isJobShared = (job.serviceName || '').toLowerCase().includes('shared') || jobType.includes('shared') || rVehicle.includes('SHARED');
                         
-                        // --- STRICT MATCHING LOGIC ---
-                        
-                        // 1. AC/Non-AC Strict Match
+                        // Strict AC Match
                         let acMatch = true;
-                        const isJobAc = (job.serviceName && job.serviceName.includes('AC')) || (job.vehicleType && job.vehicleType.includes('AC'));
-                        if (isJobAc && !driverProfile.prefAc) acMatch = false; 
-                        
-                        // 2. Location/Route Match (Exact Hub)
-                        let routeMatch = false; 
-                        
-                        // FIX: Strict Start Location Match
-                        // Only show jobs that START in the driver's current hub location
+                        if ((job.serviceName && job.serviceName.includes('AC')) && !driverProfile.prefAc) acMatch = false;
+
+                        // Strict Route Match
+                        let routeMatch = false;
                         if (driverRoute === 'karimnagar') {
                             if (jobFrom.includes('karimnagar')) routeMatch = true;
                         } else if (driverRoute === 'rgi airport') {
-                            if (jobFrom.includes('airport') || jobFrom.includes('rgi') || jobFrom.includes('shamshabad')) routeMatch = true;
+                            if (jobFrom.includes('airport') || jobFrom.includes('rgi')) routeMatch = true;
                         } else if (driverRoute === 'jbs') {
-                            if (jobFrom.includes('jbs') || jobFrom.includes('secunderabad') || jobFrom.includes('jubilee')) routeMatch = true;
+                            if (jobFrom.includes('jbs') || jobFrom.includes('secunderabad')) routeMatch = true;
                         } else if (driverRoute === 'hyderabad') {
-                             // Hyderabad driver (general) picks up from Hyderabad areas, but NOT Karimnagar
                              if (!jobFrom.includes('karimnagar')) routeMatch = true;
                         }
 
-                        if (acMatch && routeMatch) {
-                            if (isJobShared) {
-                                // Shared: Check Capacity
+                        if(acMatch && routeMatch) {
+                            if(isJobShared) {
                                 const currentBooked = allJobs.filter(j => (j.status === 'assigned' || j.status === 'verified' || j.status === 'started') && j.driverId === driverId).reduce((s,j)=>s+(parseInt(j.passengers)||1),0);
-                                const available = driverCapacity - (manualSeats + currentBooked);
-                                const jobPax = parseInt(job.passengers) || 1;
-                                
-                                if (available >= jobPax) relevant = true;
+                                if ((driverCapacity - (manualSeats + currentBooked)) >= (parseInt(job.passengers) || 1)) relevant = true;
                             } else {
-                                // Private / Full Vehicle: Strict Type Match
-                                const cleanDriverType = driverType.replace(/[^a-z0-9]/g, ''); // "5seater"
-                                const cleanJobType = jobType.replace(/[^a-z0-9]/g, ''); // "5seater"
-
-                                if (driverType.includes('ambulance')) {
-                                    if (jobType.includes('ambulance')) relevant = true;
-                                } else {
-                                    // Car Driver
-                                    if (!jobType.includes('ambulance')) {
-                                        // If job specifies a type (e.g., 7 Seater), driver must match exactly
-                                        // If job is "Any", match.
-                                        if (jobType === 'any' || !jobType || cleanJobType === cleanDriverType) relevant = true;
-                                    }
+                                // Private strict match
+                                const cleanD = driverType.replace(/[^a-z0-9]/g, '');
+                                const cleanJ = jobType.replace(/[^a-z0-9]/g, '');
+                                if (driverType.includes('ambulance')) { 
+                                    if(jobType.includes('ambulance')) relevant = true; 
+                                } else { 
+                                    if(!jobType.includes('ambulance')) { 
+                                        if(jobType === 'any' || !jobType || cleanJ === cleanD) relevant = true; 
+                                    } 
                                 }
                             }
                         }
                     }
-
-                    if (relevant) {
-                        newJobs.push(job);
-                        const exists = allJobs.find(j => j.id === job.id);
-                        if (!exists && job.status === 'pending' && !job.driverId) hasNewRequest = true;
-                    }
+                    if(relevant) { newJobs.push(job); if(!allJobs.find(j=>j.id===job.id) && job.status==='pending' && !job.driverId) hasNew = true; }
                 });
-
-                allJobs = newJobs;
-                if(hasNewRequest) playSound();
-                updateSeatUI();
-                if(document.getElementById('status-toggle').checked) syncActivePool();
-                renderJobs();
+                allJobs = newJobs; if(hasNew) playSound(); updateSeatUI(); if(document.getElementById('status-toggle').checked) syncActivePool(); renderJobs();
             });
         }
-
-        // --- HISTORY LISTENER ---
-        function listenToHistory() {
-             if(historySubscription) historySubscription();
-             const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'bookings'), where('driverId', '==', driverId));
-             
-             historySubscription = onSnapshot(q, (snap) => {
-                 historyJobs = [];
-                 snap.forEach(d => {
-                     const data = d.data();
-                     if(data.status === 'completed') {
-                         historyJobs.push({id: d.id, ...data});
-                     }
-                 });
-                 historyJobs.sort((a,b) => (b.endTime?.seconds || 0) - (a.endTime?.seconds || 0));
-                 renderHistory();
-                 updateWalletView(); // Recalculate earnings when history updates
-             }, (error) => {
-                 console.error("History Error", error);
-             });
-        }
-
-        // --- RENDERING ---
-        window.setHomeTab = (tab) => {
-            currentTab = tab;
-            const tabs = { new: 'htab-new', active: 'htab-active' };
-            Object.keys(tabs).forEach(k => {
-                const el = document.getElementById(tabs[k]);
-                if (k === tab) el.className = "flex-1 py-2.5 rounded-lg text-xs font-bold text-center transition-all bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white border border-slate-200 dark:border-slate-600";
-                else el.className = "flex-1 py-2.5 rounded-lg text-xs font-bold text-center transition-all text-slate-500 hover:text-slate-700 dark:text-slate-400";
-            });
-            renderJobs();
-        }
-
+        
+        // --- JOB RENDERER (MERGED WITH 3-DOT MENU) ---
         function renderJobs() {
             const container = document.getElementById('job-list-container');
             const bulkBar = document.getElementById('bulk-action-bar');
@@ -1035,118 +1220,71 @@
                 filtered = allJobs.filter(j => (j.status === 'assigned' || j.status === 'verified' || j.status === 'started') && j.driverId === driverId);
                 document.getElementById('badge-new').classList.add('hidden');
                 
-                // Active Badge Update: Sum of tickets/passengers
-                const activeTicketCount = filtered.reduce((sum, j) => sum + (parseInt(j.passengers) || 1), 0);
-                const activeBadge = document.getElementById('badge-active');
-                if (activeTicketCount > 0) {
-                     activeBadge.textContent = activeTicketCount;
-                     activeBadge.classList.remove('hidden');
-                } else {
-                     activeBadge.classList.add('hidden');
-                }
+                const cnt = filtered.reduce((s,j)=>s+(parseInt(j.passengers)||1),0);
+                const badge = document.getElementById('badge-active');
+                if(cnt>0) { badge.textContent = cnt; badge.classList.remove('hidden'); } else badge.classList.add('hidden');
 
-                // Bulk Action Logic
-                const readyToStart = filtered.filter(j => j.status === 'verified').length;
-                const activeOnRide = filtered.filter(j => j.status === 'started').length;
-
-                if (activeOnRide > 0) {
-                    document.getElementById('bulk-action-title').textContent = "Complete Trip";
-                    document.getElementById('bulk-action-subtitle').textContent = "Collect Payment & Finish";
-                    document.getElementById('btn-bulk-action').setAttribute('onclick', "promptCompleteRide()");
-                    document.getElementById('btn-bulk-action').className = "w-full bg-green-600 hover:bg-green-700 text-white p-4 rounded-2xl shadow-lg shadow-green-500/20 flex items-center justify-between group transition-all";
-                    bulkBar.classList.remove('hidden');
-                } else if (readyToStart > 0) {
-                    document.getElementById('bulk-action-title').textContent = "Start Trip";
-                    document.getElementById('bulk-action-subtitle').textContent = "For all verified passengers";
-                    document.getElementById('btn-bulk-action').setAttribute('onclick', "promptStartRide('all')");
-                    document.getElementById('btn-bulk-action').className = "w-full bg-brand-600 hover:bg-brand-700 text-white p-4 rounded-2xl shadow-lg shadow-brand-500/20 flex items-center justify-between group transition-all";
-                    bulkBar.classList.remove('hidden');
-                } else {
-                    bulkBar.classList.add('hidden');
-                }
+                const onRide = filtered.filter(j => j.status === 'started').length;
+                const ready = filtered.filter(j => j.status === 'verified').length;
+                const btn = document.getElementById('btn-bulk-action');
+                
+                if (onRide > 0) {
+                     document.getElementById('bulk-action-title').textContent = "Complete Trip"; document.getElementById('bulk-action-subtitle').textContent = "Collect Payment";
+                     btn.onclick = () => promptCompleteRide(); btn.className = "w-full bg-green-600 hover:bg-green-700 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between group transition-all";
+                     bulkBar.classList.remove('hidden');
+                } else if (ready > 0) {
+                     document.getElementById('bulk-action-title').textContent = "Start Trip"; document.getElementById('bulk-action-subtitle').textContent = "All Passengers";
+                     btn.onclick = () => promptStartRide('all'); btn.className = "w-full bg-brand-600 hover:bg-brand-700 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between group transition-all";
+                     bulkBar.classList.remove('hidden');
+                } else bulkBar.classList.add('hidden');
             }
 
             if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-12 opacity-50">
-                        <div class="bg-slate-100 dark:bg-slate-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <i data-lucide="${currentTab === 'new' ? 'inbox' : 'car'}" class="h-8 w-8 text-slate-400"></i>
-                        </div>
-                        <p class="text-sm font-bold text-slate-500">No ${currentTab === 'new' ? 'requests' : 'active rides'}</p>
-                    </div>`;
-                lucide.createIcons();
-                return;
+                container.innerHTML = `<div class="text-center py-12 opacity-50"><div class="bg-slate-100 dark:bg-slate-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3"><i data-lucide="${currentTab === 'new' ? 'inbox' : 'car'}" class="h-8 w-8 text-slate-400"></i></div><p class="text-sm font-bold text-slate-500">No ${currentTab === 'new' ? 'requests' : 'active rides'}</p></div>`;
+                lucide.createIcons(); return;
             }
 
             container.innerHTML = filtered.map(job => {
-                const isStarted = job.status === 'started';
                 const isAssigned = job.status === 'assigned';
-                const isVerified = job.status === 'verified';
-                const time = job.createdAt?.seconds ? new Date(job.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Now';
-                
-                const clientName = (job.name || 'Guest');
-                const clientPhone = (job.mobile || '');
-
-                // --- VEHICLE / SEAT DISPLAY LOGIC (Consistent Helper) ---
                 const seatDisplay = getVehicleDisplayText(job);
+                const time = job.createdAt?.seconds ? new Date(job.createdAt.seconds * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Now';
 
                 let btnArea = '';
                 if (currentTab === 'new') {
+                    // FIX: Ensure promptAcceptJob ID is quoted correctly
                     btnArea = `<button onclick="promptAcceptJob('${job.id}')" class="w-full bg-slate-900 dark:bg-brand-600 text-white py-3 rounded-xl font-bold text-sm shadow-lg active:scale-95 transition flex items-center justify-center gap-2">Accept Ride <span class="bg-white/20 px-2 py-0.5 rounded text-xs">₹${job.price}</span></button>`;
                 } else {
-                    // Active Tab Actions
-                    if (isAssigned) {
+                     if (isAssigned) {
                         btnArea = `
                         <div class="grid grid-cols-4 gap-2">
-                            <a href="tel:${clientPhone}" class="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-xl flex items-center justify-center"><i data-lucide="phone" class="h-5 w-5"></i></a>
+                            <a href="tel:${job.mobile}" class="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-xl flex items-center justify-center"><i data-lucide="phone" class="h-5 w-5"></i></a>
                             <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(job.from)}" target="_blank" class="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-xl flex items-center justify-center"><i data-lucide="map-pin" class="h-5 w-5"></i></a>
                             <button onclick="promptOtp('${job.id}')" class="col-span-2 bg-brand-600 text-white py-3 rounded-xl font-bold text-sm shadow-md animate-pulse">Verify OTP</button>
                         </div>`;
-                    } else if (isVerified) {
-                         btnArea = `
-                        <div class="grid grid-cols-4 gap-2">
-                             <div class="col-span-2 flex items-center justify-center text-green-600 font-bold text-xs bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800"><i data-lucide="check-circle" class="w-4 h-4 mr-1"></i> Verified</div>
-                             <div class="col-span-2 flex items-center justify-center text-slate-400 font-bold text-xs bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">Waiting for Start</div>
-                        </div>`;
-                    } else if (isStarted) {
-                        btnArea = `
-                        <div class="grid grid-cols-4 gap-2">
-                             <a href="https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(job.to)}" target="_blank" class="col-span-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-xl flex items-center justify-center"><i data-lucide="navigation" class="h-5 w-5"></i></a>
-                             <button onclick="completeTrip('${job.id}')" class="col-span-3 bg-slate-900 dark:bg-green-600 text-white py-3 rounded-xl font-bold text-sm shadow-lg">Complete & Cash</button>
-                        </div>`;
+                    } else if (job.status === 'verified') {
+                         btnArea = `<div class="w-full py-3 bg-slate-50 dark:bg-slate-800 text-slate-400 font-bold text-xs rounded-xl text-center border border-slate-200 dark:border-slate-700">Ready to Start</div>`;
+                    } else {
+                         btnArea = `<button onclick="completeTrip('${job.id}')" class="w-full py-3 bg-green-600 text-white font-bold text-sm rounded-xl shadow-lg">Complete</button>`;
                     }
                 }
 
-                let statusBadge = '';
-                if (isAssigned) statusBadge = `<div class="absolute top-0 right-0 bg-yellow-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl z-10 shadow-sm">PICKUP</div>`;
-                else if (isVerified) statusBadge = `<div class="absolute top-0 right-0 bg-green-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl z-10 shadow-sm">READY</div>`;
-                else if (isStarted) statusBadge = `<div class="absolute top-0 right-0 bg-blue-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl z-10 shadow-sm">ON RIDE</div>`;
-                else if (job.serviceType) statusBadge = `<div class="absolute top-0 right-0 bg-brand-600 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl z-10 shadow-sm">${job.serviceType}</div>`;
-
-                // Update Heading to show Seat Count in Active tab too
-                const subtitle = `${time} • ${seatDisplay}`;
+                // 3-Dot Menu Button
+                const menuBtn = (currentTab === 'active') ? 
+                    `<button onclick="openOptions(event, '${job.id}')" class="absolute top-4 right-4 p-2 bg-slate-100 dark:bg-slate-800 rounded-full hover:bg-slate-200 z-20"><i data-lucide="more-vertical" class="h-4 w-4 text-slate-500"></i></button>` : '';
 
                 return `
                 <div class="bg-white dark:bg-slate-900 p-5 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 animate-slide-up relative overflow-hidden transition-all hover:shadow-md">
-                    ${statusBadge}
-                    <div class="flex items-center gap-3 mb-4">
+                    ${menuBtn}
+                    <div class="flex items-center gap-3 mb-4 pr-8">
                         <div class="bg-slate-100 dark:bg-slate-800 p-2.5 rounded-full"><i data-lucide="user" class="h-5 w-5 text-slate-500"></i></div>
                         <div>
-                            <h4 class="font-bold text-slate-900 dark:text-white leading-tight">${clientName}</h4>
-                            <p class="text-[10px] text-slate-500 font-medium">${subtitle}</p>
+                            <h4 class="font-bold text-slate-900 dark:text-white leading-tight">${job.name || 'Guest'}</h4>
+                            <p class="text-[10px] text-slate-500 font-medium">${time} • ${seatDisplay}</p>
                         </div>
                     </div>
                     <div class="space-y-4 mb-5 relative pl-4 border-l-2 border-slate-100 dark:border-slate-800 ml-2">
-                        <div class="relative">
-                            <span class="absolute -left-[23px] top-1 h-3 w-3 rounded-full border-2 border-green-500 bg-white dark:bg-slate-900"></span>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase">Pickup</p>
-                            <p class="text-sm font-bold dark:text-white leading-tight">${job.from}</p>
-                        </div>
-                        <div class="relative">
-                            <span class="absolute -left-[23px] top-1 h-3 w-3 rounded-full border-2 border-red-500 bg-white dark:bg-slate-900"></span>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase">Drop</p>
-                            <p class="text-sm font-bold dark:text-white leading-tight">${job.to}</p>
-                        </div>
+                        <div class="relative"><span class="absolute -left-[23px] top-1 h-3 w-3 rounded-full border-2 border-green-500 bg-white dark:bg-slate-900"></span><p class="text-[10px] text-slate-400 font-bold uppercase">Pickup</p><p class="text-sm font-bold dark:text-white leading-tight">${job.from}</p></div>
+                        <div class="relative"><span class="absolute -left-[23px] top-1 h-3 w-3 rounded-full border-2 border-red-500 bg-white dark:bg-slate-900"></span><p class="text-[10px] text-slate-400 font-bold uppercase">Drop</p><p class="text-sm font-bold dark:text-white leading-tight">${job.to}</p></div>
                     </div>
                     ${btnArea}
                 </div>`;
@@ -1154,448 +1292,7 @@
             lucide.createIcons();
         }
 
-        // --- IMPROVED HISTORY RENDERER (GROUPED BY TRIP) ---
-        function renderHistory() {
-            const container = document.getElementById('history-list');
-            if (historyJobs.length === 0) {
-                container.innerHTML = '<div class="flex flex-col items-center justify-center py-20 text-slate-400"><i data-lucide="history" class="w-12 h-12 mb-3 opacity-20"></i><p class="text-xs font-bold">No completed trips yet.</p></div>';
-                lucide.createIcons();
-                return;
-            }
-
-            // Logic to group jobs that ended around the same time (within 120 seconds) into a "Trip Group"
-            const trips = [];
-            let currentGroup = [];
-            
-            // historyJobs is already sorted by endTime desc
-            historyJobs.forEach((job, index) => {
-                if (currentGroup.length === 0) {
-                    currentGroup.push(job);
-                } else {
-                    const prevJob = currentGroup[currentGroup.length - 1];
-                    const prevTime = prevJob.endTime?.seconds || 0;
-                    const currTime = job.endTime?.seconds || 0;
-                    // Check if time difference is less than 2 minutes
-                    if (Math.abs(prevTime - currTime) < 120) {
-                        currentGroup.push(job);
-                    } else {
-                        trips.push(currentGroup);
-                        currentGroup = [job];
-                    }
-                }
-                
-                if (index === historyJobs.length - 1 && currentGroup.length > 0) {
-                    trips.push(currentGroup);
-                }
-            });
-
-            const today = new Date().toDateString();
-            const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-            const yStr = yesterday.toDateString();
-
-            // Group trips by date for headers
-            const groupedByDate = {};
-            trips.forEach(group => {
-                const mainJob = group[0];
-                const d = mainJob.endTime ? new Date(mainJob.endTime.seconds * 1000) : new Date();
-                const dateKey = d.toDateString();
-                if(!groupedByDate[dateKey]) groupedByDate[dateKey] = [];
-                groupedByDate[dateKey].push(group);
-            });
-
-            let html = '';
-            Object.keys(groupedByDate).forEach(dateKey => {
-                let displayDate = dateKey;
-                if (dateKey === today) displayDate = "Today";
-                else if (dateKey === yStr) displayDate = "Yesterday";
-                
-                // Calculate Total for that Day using safe parser
-                let dayTotal = 0;
-                groupedByDate[dateKey].forEach(group => {
-                    group.forEach(j => dayTotal += parsePrice(j.price));
-                });
-
-                html += `
-                <div class="sticky top-16 z-10 bg-slate-50/95 dark:bg-slate-950/95 backdrop-blur py-2 px-1 flex justify-between items-end border-b border-slate-200 dark:border-slate-800 mb-2 mt-4">
-                    <div>
-                        <h4 class="text-lg font-bold text-slate-800 dark:text-slate-200 leading-none">${displayDate}</h4>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase mt-1">${groupedByDate[dateKey].length} Trips • ${groupedByDate[dateKey].reduce((s, g) => s + g.length, 0)} Orders</p>
-                    </div>
-                    <span class="text-sm font-black text-brand-600 dark:text-brand-400">₹${dayTotal}</span>
-                </div>
-                <div class="space-y-3">
-                `;
-                
-                groupedByDate[dateKey].forEach(group => {
-                     // Summary for the trip group
-                     const mainJob = group[0];
-                     const tripTotal = group.reduce((sum, j) => sum + parsePrice(j.price), 0);
-                     const totalPax = group.reduce((sum, j) => sum + (parseInt(j.passengers)||1), 0);
-                     const time = mainJob.endTime ? new Date(mainJob.endTime.seconds * 1000).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : '';
-                     
-                     html += `
-                     <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-                        <div class="p-3 bg-slate-50 dark:bg-slate-800/50 flex justify-between items-center border-b border-slate-100 dark:border-slate-800">
-                            <div>
-                                <p class="text-[10px] font-bold text-slate-400 uppercase">Trip Ended at ${time}</p>
-                                <p class="text-xs font-bold dark:text-white">${mainJob.to}</p>
-                            </div>
-                            <div class="text-right">
-                                <p class="text-[10px] font-bold text-slate-400 uppercase">${totalPax} Pax</p>
-                                <p class="font-black text-green-600 dark:text-green-400">₹${tripTotal}</p>
-                            </div>
-                        </div>
-                     `;
-                     
-                     // Individual Orders in the group
-                     group.forEach(job => {
-                         const passengerText = getVehicleDisplayText(job);
-
-                         html += `
-                         <div onclick="openTripDetails('${job.id}')" class="p-3 flex items-center justify-between border-b border-slate-50 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition cursor-pointer">
-                            <div class="flex items-center gap-3">
-                                <div class="bg-blue-50 dark:bg-blue-900/20 text-blue-600 p-1.5 rounded-lg">
-                                    <i data-lucide="user" class="w-4 h-4"></i>
-                                </div>
-                                <div>
-                                    <p class="text-xs font-bold dark:text-white">${job.name || 'Guest'}</p>
-                                    <p class="text-[9px] text-slate-400 font-bold uppercase">${passengerText}</p>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-bold text-slate-600 dark:text-slate-300">₹${job.price}</span>
-                                <i data-lucide="chevron-right" class="w-3 h-3 text-slate-300"></i>
-                            </div>
-                         </div>`;
-                     });
-                     html += `</div>`;
-                });
-                html += `</div>`;
-            });
-            container.innerHTML = html;
-            lucide.createIcons();
-        }
-
-        // --- ACTIONS ---
-        window.promptAcceptJob = (jobId) => {
-            const job = allJobs.find(j => j.id === jobId);
-            if (!job) return;
-            pendingAcceptJobId = jobId;
-            
-            document.getElementById('accept-modal-price').textContent = `₹${job.price}`;
-            
-            // Use Helper for Modal Text
-            const typeText = getVehicleDisplayText(job);
-            document.getElementById('accept-modal-type').textContent = typeText;
-            
-            document.getElementById('accept-modal').classList.remove('hidden');
-        }
-
-        window.closeAcceptModal = () => {
-            document.getElementById('accept-modal').classList.add('hidden');
-            pendingAcceptJobId = null;
-        }
-
-        window.confirmAcceptJob = async () => {
-            const jobId = pendingAcceptJobId;
-            if(!jobId) return;
-            
-            closeAcceptModal();
-            
-            try {
-                const ref = doc(db, 'artifacts', APP_ID, 'public', 'data', 'bookings', jobId);
-                await updateDoc(ref, {
-                    status: 'assigned',
-                    driverId: driverId, 
-                    driverName: driverProfile.name,
-                    driverPhone: driverProfile.phone,
-                    driverVehicle: driverProfile.vehicleType, 
-                    driverPlate: driverProfile.vehicleNo,
-                    acceptedAt: serverTimestamp()
-                });
-                showToast("Job Accepted!", "success");
-                setHomeTab('active');
-                syncActivePool(); 
-            } catch (e) {
-                showToast("This job was just taken.", "error");
-            }
-        }
-
-        // --- NEW OTP FLOW ---
-        window.promptOtp = (jobId) => {
-            pendingVerifyJobId = jobId;
-            document.getElementById('otp-modal').classList.remove('hidden');
-            document.querySelectorAll('.otp-input').forEach(i => i.value = '');
-            document.querySelector('.otp-input').focus();
-        }
-
-        window.closeOtpModal = () => {
-            document.getElementById('otp-modal').classList.add('hidden');
-            pendingVerifyJobId = null;
-        }
-
-        window.submitOtp = async () => {
-            const inputs = document.querySelectorAll('.otp-input');
-            const enteredOtp = Array.from(inputs).map(i => i.value).join('');
-            if (enteredOtp.length !== 4) { alert("Enter 4 digits"); return; }
-            
-            const btn = document.getElementById('btn-verify-submit');
-            btn.innerHTML = "Checking...";
-            
-            try {
-                const job = allJobs.find(j => j.id === pendingVerifyJobId);
-                let isValid = true;
-                if (job.otp) {
-                    const systemOtp = String(job.otp).trim();
-                    const userOtp = String(enteredOtp).trim();
-                    if(systemOtp !== userOtp) isValid = false;
-                }
-                
-                if(isValid) {
-                     await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'bookings', pendingVerifyJobId), {
-                        status: 'verified' 
-                    });
-                    closeOtpModal();
-                    showToast("Passenger Verified", "success");
-                } else {
-                    alert("Incorrect OTP");
-                }
-            } catch(e) { console.error(e); }
-            
-            btn.innerHTML = "Verify PIN";
-        }
-
-        // --- SETTINGS (AC / LOCATION) ---
-        window.openSettingsModal = () => {
-            document.getElementById('settings-modal').classList.remove('hidden');
-            // Load current values
-            document.getElementById('setting-ac').checked = driverProfile.prefAc || false;
-            const routes = document.getElementsByName('route_pref');
-            routes.forEach(r => {
-                r.checked = (r.value === (driverProfile.prefRoute || 'Karimnagar'));
-            });
-        }
-
-        window.closeSettingsModal = () => document.getElementById('settings-modal').classList.add('hidden');
-
-        window.saveSettings = async () => {
-            const ac = document.getElementById('setting-ac').checked;
-            let route = 'Karimnagar';
-            document.getElementsByName('route_pref').forEach(r => {
-                if(r.checked) route = r.value;
-            });
-
-            try {
-                // Save to Firestore profile
-                await updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), {
-                    prefAc: ac,
-                    prefRoute: route
-                });
-                
-                // Update Local State
-                driverProfile.prefAc = ac;
-                driverProfile.prefRoute = route;
-
-                // Sync to Active Pool if Online
-                if(document.getElementById('status-toggle').checked) await syncActivePool();
-
-                updatePreferenceUI();
-                closeSettingsModal();
-                showToast("Preferences Updated", "success");
-                
-                // REFRESH JOB LIST IMMEDIATELY
-                listenToJobs();
-                
-            } catch(e) {
-                console.error(e);
-                showToast("Failed to save settings", "error");
-            }
-        }
-
-        // --- CONFIRM START RIDE ---
-        window.promptStartRide = (mode) => {
-            // mode can be 'all' or 'single' (logic simplified for group start here)
-            pendingStartMode = mode;
-            document.getElementById('start-confirm-modal').classList.remove('hidden');
-        }
-
-        window.confirmStartRide = async () => {
-            document.getElementById('start-confirm-modal').classList.add('hidden');
-            
-            // Logic for 'all' verified
-            const verifiedJobs = allJobs.filter(j => j.status === 'verified' && j.driverId === driverId);
-            if(verifiedJobs.length === 0) return;
-
-            const promises = verifiedJobs.map(job => 
-                updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'bookings', job.id), {
-                    status: 'started',
-                    startTime: serverTimestamp()
-                })
-            );
-            await Promise.all(promises);
-            showToast("Journey Started for All", "success");
-        }
-
-        // --- COMPLETE TRIP (BULK) + AUTO UPDATE LOCATION ---
-        window.promptCompleteRide = () => {
-            // Find all active/started jobs
-            const activeJobs = allJobs.filter(j => j.status === 'started' && j.driverId === driverId);
-            if (activeJobs.length === 0) return;
-
-            const container = document.getElementById('payment-list');
-            let html = '';
-            let total = 0;
-
-            activeJobs.forEach(job => {
-                const amt = parsePrice(job.price);
-                total += amt;
-                html += `
-                <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-800 p-3 rounded-xl">
-                    <div>
-                        <p class="text-sm font-bold dark:text-white">${job.name}</p>
-                        <p class="text-[10px] text-slate-500">${job.to}</p>
-                    </div>
-                    <span class="font-bold text-slate-900 dark:text-white">₹${amt}</span>
-                </div>`;
-            });
-
-            container.innerHTML = html;
-            document.getElementById('payment-total').textContent = `₹${total}`;
-            document.getElementById('payment-modal').classList.remove('hidden');
-        }
-
-        window.confirmCompleteRide = async () => {
-            document.getElementById('payment-modal').classList.add('hidden');
-            const activeJobs = allJobs.filter(j => j.status === 'started' && j.driverId === driverId);
-            
-            if(activeJobs.length === 0) return;
-
-            // Use first job's destination for location update
-            const lastJob = activeJobs[activeJobs.length - 1]; 
-            const newHub = detectHub(lastJob.to);
-
-            const promises = activeJobs.map(job => 
-                updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'bookings', job.id), {
-                    status: 'completed',
-                    endTime: serverTimestamp()
-                })
-            );
-            await Promise.all(promises);
-            showToast("Ride Completed", "success");
-
-            // AUTO UPDATE LOCATION LOGIC
-            if(newHub) {
-                 await updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), {
-                    prefRoute: newHub
-                });
-                driverProfile.prefRoute = newHub;
-                updatePreferenceUI();
-                showToast(`Location Updated to: ${newHub}`, "success");
-                listenToJobs(); // FORCE REFRESH JOBS LIST
-            }
-
-            syncActivePool();
-        }
-
-        window.completeTrip = async (jobId) => {
-            // Single complete fallback
-            if(!confirm("End Trip? Collect Cash first.")) return;
-            const job = allJobs.find(j => j.id === jobId);
-            await updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'bookings', jobId), {
-                status: 'completed',
-                endTime: serverTimestamp()
-            });
-            
-            if(job && job.to) {
-                const newHub = detectHub(job.to);
-                if(newHub) {
-                     await updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), { prefRoute: newHub });
-                    driverProfile.prefRoute = newHub;
-                    updatePreferenceUI();
-                    showToast(`Location Updated to: ${newHub}`, "success");
-                    listenToJobs(); // FORCE REFRESH JOBS LIST
-                }
-            }
-            syncActivePool();
-        }
-        
-        function detectHub(locationString) {
-            if(!locationString) return null;
-            const loc = locationString.toLowerCase();
-            if(loc.includes('karimnagar')) return 'Karimnagar';
-            if(loc.includes('airport') || loc.includes('rgi') || loc.includes('shamshabad')) return 'RGI Airport';
-            if(loc.includes('jbs') || loc.includes('secunderabad') || loc.includes('jubilee')) return 'JBS';
-            if(loc.includes('hyderabad') || loc.includes('city') || loc.includes('gachibowli') || loc.includes('hitech')) return 'Hyderabad';
-            return null;
-        }
-
-        // --- HISTORY DETAILS ---
-        window.openTripDetails = (jobId) => {
-            const job = historyJobs.find(j => j.id === jobId);
-            if(!job) return;
-            
-            const modal = document.getElementById('trip-details-modal');
-            const content = document.getElementById('trip-modal-content');
-            
-            // Determine type again for modal using helper
-            const displayType = getVehicleDisplayText(job);
-            
-            content.innerHTML = `
-                <div class="text-center mb-6">
-                    <div class="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-3 relative">
-                        <i data-lucide="check-circle-2" class="h-8 w-8 text-green-600 dark:text-green-400"></i>
-                         <span class="absolute -top-1 -right-2 bg-blue-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full border border-white dark:border-slate-900">WEB BOOKING</span>
-                    </div>
-                    <h2 class="text-3xl font-bold dark:text-white tracking-tight">₹${job.price}</h2>
-                    <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Cash Collected</p>
-                </div>
-                
-                <div class="space-y-4">
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <p class="text-[10px] font-bold text-slate-400 uppercase">Passenger</p>
-                                <p class="font-bold dark:text-white text-lg">${job.name || 'Guest User'}</p>
-                                <p class="text-sm text-slate-500">${job.mobile}</p>
-                            </div>
-                            <span class="px-2 py-1 bg-purple-100 text-purple-700 text-[10px] font-bold rounded uppercase">${displayType}</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 relative pl-8 space-y-5">
-                         <div class="absolute left-4 top-5 bottom-5 w-0.5 bg-slate-200 dark:bg-slate-600"></div>
-                         <div class="relative">
-                            <span class="absolute -left-[21px] top-1.5 h-3 w-3 rounded-full bg-green-500 border-2 border-white dark:border-slate-800"></span>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase">Pickup Location</p>
-                            <p class="font-medium dark:text-white">${job.from}</p>
-                        </div>
-                        <div class="relative">
-                            <span class="absolute -left-[21px] top-1.5 h-3 w-3 rounded-full bg-red-500 border-2 border-white dark:border-slate-800"></span>
-                            <p class="text-[10px] font-bold text-slate-400 uppercase">Dropoff Location</p>
-                            <p class="font-medium dark:text-white">${job.to}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-3">
-                         <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-center">
-                            <p class="text-[10px] text-slate-400 uppercase">Passengers</p>
-                            <p class="font-bold dark:text-white text-lg">${job.passengers || 1}</p>
-                         </div>
-                         <div class="bg-slate-50 dark:bg-slate-800 p-3 rounded-xl text-center">
-                            <p class="text-[10px] text-slate-400 uppercase">Completed On</p>
-                            <p class="font-bold dark:text-white text-xs mt-1">${job.endTime ? new Date(job.endTime.seconds*1000).toLocaleString() : '-'}</p>
-                         </div>
-                    </div>
-                </div>
-            `;
-            modal.classList.remove('hidden');
-            lucide.createIcons();
-        }
-        
-        window.closeTripModal = () => document.getElementById('trip-details-modal').classList.add('hidden');
-
-
-        // --- WALLET ---
+        // --- WALLET & ANALYTICS (MERGED) ---
         function listenToWallet() {
             if(walletSubscription) walletSubscription();
             const q = query(collection(db, 'artifacts', APP_ID, 'drivers', driverId, 'expenses'), orderBy('date', 'desc'), limit(50));
@@ -1606,148 +1303,455 @@
             });
         }
         
-        // New: Filter Wallet/Reports
         window.updateWalletView = () => {
-            const filter = document.getElementById('wallet-filter').value; // 'all', 'week', 'month'
-            const container = document.getElementById('wallet-list');
-            const now = new Date();
-            
-            // Helper to check date range
-            const isInRange = (timestamp) => {
+             const filter = document.getElementById('wallet-filter').value;
+             // Stats
+             document.getElementById('stat-jobs').textContent = historyJobs.length;
+             
+             const container = document.getElementById('wallet-list');
+             const now = new Date();
+             const isInRange = (timestamp) => {
                 if (!timestamp) return false;
                 const d = new Date(timestamp.seconds * 1000);
-                if (filter === 'week') {
-                    const oneWeekAgo = new Date(); oneWeekAgo.setDate(now.getDate() - 7);
-                    return d >= oneWeekAgo;
-                }
-                if (filter === 'month') {
-                    const oneMonthAgo = new Date(); oneMonthAgo.setMonth(now.getMonth() - 1);
-                    return d >= oneMonthAgo;
-                }
+                if (filter === 'week') { const w = new Date(); w.setDate(now.getDate()-7); return d >= w; }
+                if (filter === 'month') { const m = new Date(); m.setMonth(now.getMonth()-1); return d >= m; }
                 return true;
             };
-
-            // Filter Expenses
-            const filteredExpenses = expenseList.filter(e => isInRange(e.date));
-            const totalExp = filteredExpenses.reduce((sum, e) => sum + parsePrice(e.amount), 0);
-
-            // Filter Income (Completed Trips)
-            const filteredIncome = historyJobs.filter(j => isInRange(j.endTime));
-            const totalIncome = filteredIncome.reduce((sum, j) => sum + parsePrice(j.price), 0);
-
-            // Update Big Balance Display
-            document.getElementById('wallet-balance').textContent = (totalIncome - totalExp).toLocaleString();
-
-            // Render Report List (Group by Day for "Report" feel)
-            const combined = [];
-            filteredIncome.forEach(j => combined.push({ type: 'income', date: j.endTime, amount: parsePrice(j.price), desc: `Trip: ${j.to}` }));
-            filteredExpenses.forEach(e => combined.push({ type: 'expense', date: e.date, amount: parsePrice(e.amount), desc: e.description }));
+            const fExp = expenseList.filter(e => isInRange(e.date));
+            const fInc = historyJobs.filter(j => isInRange(j.endTime));
             
-            // Sort Descending
-            combined.sort((a,b) => (b.date?.seconds || 0) - (a.date?.seconds || 0));
-
-            // Group by Day
+            const totExp = fExp.reduce((s,e)=>s+parsePrice(e.amount),0);
+            const totInc = fInc.reduce((s,j)=>s+parsePrice(j.price),0);
+            
+            document.getElementById('wallet-balance').textContent = (totInc - totExp).toLocaleString();
+            
+            // List Logic (Combined)
+            const combined = [];
+            fInc.forEach(j => combined.push({ type: 'income', date: j.endTime, amount: parsePrice(j.price), desc: `Trip: ${j.to.split(',')[0]}` }));
+            fExp.forEach(e => combined.push({ type: 'expense', date: e.date, amount: parsePrice(e.amount), desc: e.description }));
+            combined.sort((a,b) => (b.date?.seconds||0) - (a.date?.seconds||0));
+            
+            // Group By Date
             const grouped = {};
             combined.forEach(item => {
-                const dStr = new Date(item.date.seconds * 1000).toDateString();
+                const dStr = item.date ? new Date(item.date.seconds * 1000).toDateString() : 'Unknown';
                 if (!grouped[dStr]) grouped[dStr] = [];
                 grouped[dStr].push(item);
             });
 
             let html = '';
-            if (combined.length === 0) html = '<p class="text-center text-xs text-slate-400 mt-4">No records for this period.</p>';
-            
-            Object.keys(grouped).forEach(dateStr => {
-                 let dayNet = 0;
-                 grouped[dateStr].forEach(i => i.type==='income' ? dayNet+=i.amount : dayNet-=i.amount);
-                 const dateDisplay = dateStr === now.toDateString() ? 'Today' : dateStr;
-
-                 html += `
-                 <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden mb-3">
-                    <div class="bg-slate-50 dark:bg-slate-800/50 px-3 py-2 flex justify-between items-center border-b border-slate-100 dark:border-slate-800">
-                        <span class="text-xs font-bold text-slate-500 uppercase">${dateDisplay}</span>
-                        <span class="text-xs font-bold ${dayNet>=0 ? 'text-green-600' : 'text-red-500'}">Net: ₹${dayNet}</span>
-                    </div>
-                    <div class="p-2 space-y-2">
-                 `;
-                 
-                 grouped[dateStr].forEach(item => {
+            if(combined.length===0) html='<p class="text-center text-slate-400 text-xs mt-4">No records.</p>';
+            else {
+                 Object.keys(grouped).forEach(dateStr => {
+                     let dayNet = 0; grouped[dateStr].forEach(i => i.type==='income' ? dayNet+=i.amount : dayNet-=i.amount);
                      html += `
-                     <div class="flex justify-between items-center text-xs">
-                        <span class="text-slate-600 dark:text-slate-400 truncate w-2/3">${item.desc}</span>
-                        <span class="font-bold ${item.type==='income' ? 'text-slate-800 dark:text-white' : 'text-red-500'}">${item.type==='income' ? '+' : '-'}₹${item.amount}</span>
-                     </div>`;
-                 });
-                 html += `</div></div>`;
-            });
-
+                     <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden mb-3">
+                        <div class="bg-slate-50 dark:bg-slate-800/50 px-3 py-2 flex justify-between items-center border-b border-slate-100 dark:border-slate-800">
+                            <span class="text-xs font-bold text-slate-500 uppercase">${dateStr}</span>
+                            <span class="text-xs font-bold ${dayNet>=0 ? 'text-green-600' : 'text-red-500'}">Net: ₹${dayNet}</span>
+                        </div>
+                        <div class="p-2 space-y-2">`;
+                     grouped[dateStr].forEach(item => {
+                         html += `
+                         <div class="flex justify-between items-center text-xs">
+                            <span class="text-slate-600 dark:text-slate-400 truncate w-2/3">${item.desc}</span>
+                            <span class="font-bold ${item.type==='income' ? 'text-slate-800 dark:text-white' : 'text-red-500'}">${item.type==='income' ? '+' : '-'}₹${item.amount}</span>
+                         </div>`;
+                     });
+                     html += `</div></div>`;
+                });
+            }
             container.innerHTML = html;
         }
-
+        
         window.saveExpense = async () => {
             const desc = document.getElementById('exp-desc').value;
             const amt = document.getElementById('exp-amt').value;
             if(!desc || !amt) return;
-            await addDoc(collection(db, 'artifacts', APP_ID, 'drivers', driverId, 'expenses'), {
-                description: desc,
-                amount: parseInt(amt),
-                date: serverTimestamp()
-            });
-            toggleExpenseForm();
-            document.getElementById('exp-desc').value = '';
-            document.getElementById('exp-amt').value = '';
+            await addDoc(collection(db, 'artifacts', APP_ID, 'drivers', driverId, 'expenses'), { description: desc, amount: parseInt(amt), date: serverTimestamp() });
+            toggleExpenseForm(); document.getElementById('exp-desc').value = ''; document.getElementById('exp-amt').value = '';
+        }
+        window.toggleExpenseForm = () => document.getElementById('expense-form').classList.toggle('hidden');
+
+        // --- COMPLETING RIDES & LOCATION UPDATES ---
+        window.promptCompleteRide = () => {
+             const active = allJobs.filter(j=>j.status==='started'&&j.driverId===driverId);
+             if(active.length===0) return;
+             let html = ''; let tot = 0;
+             active.forEach(j=>{ const p=parsePrice(j.price); tot+=p; html+=`<div class="flex justify-between p-2 border-b dark:border-slate-700"><span>${j.name}</span><span class="font-bold">₹${p}</span></div>`; });
+             document.getElementById('payment-list').innerHTML = html; document.getElementById('payment-total').textContent = `₹${tot}`; document.getElementById('payment-modal').classList.remove('hidden');
+        }
+        window.confirmCompleteRide = async () => {
+             document.getElementById('payment-modal').classList.add('hidden');
+             const active = allJobs.filter(j=>j.status==='started'&&j.driverId===driverId);
+             if(active.length===0) return;
+             const last = active[active.length-1]; 
+             const newHub = detectHub(last.to);
+             await Promise.all(active.map(j=>updateDoc(doc(db,'artifacts',APP_ID,'public','data','bookings',j.id),{status:'completed',endTime:serverTimestamp()})));
+             showToast("Ride Completed","success");
+             if(newHub) { await updateDoc(doc(db,'artifacts',APP_ID,'drivers',driverId),{prefRoute:newHub}); driverProfile.prefRoute=newHub; updatePreferenceUI(); showToast(`Location Updated: ${newHub}`,"success"); listenToJobs(); }
+             syncActivePool();
+        }
+        function detectHub(s){ if(!s) return null; const l=s.toLowerCase(); if(l.includes('karimnagar'))return 'Karimnagar'; if(l.includes('airport')||l.includes('rgi'))return 'RGI Airport'; if(l.includes('jbs')||l.includes('secunderabad'))return 'JBS'; if(l.includes('hyderabad'))return 'Hyderabad'; return null;}
+
+        // --- SETTINGS (STANDARD) ---
+        window.openSettingsModal = () => { document.getElementById('settings-modal').classList.remove('hidden'); document.getElementById('setting-ac').checked = driverProfile.prefAc||false; const r=document.getElementsByName('route_pref'); r.forEach(e=>{if(e.value===(driverProfile.prefRoute||'Karimnagar'))e.checked=true}); }
+        window.closeSettingsModal = () => document.getElementById('settings-modal').classList.add('hidden');
+        
+        window.saveSettings = async () => {
+             const ac = document.getElementById('setting-ac').checked;
+             let route = 'Karimnagar'; 
+             document.getElementsByName('route_pref').forEach(r=>{if(r.checked)route=r.value});
+             
+             // Update DB
+             await updateDoc(doc(db,'artifacts',APP_ID,'drivers',driverId),{prefAc:ac, prefRoute:route});
+             
+             // Update Local Profile for immediate logic use
+             driverProfile.prefAc = ac; 
+             driverProfile.prefRoute = route;
+
+             // --- STRICT PREFERENCE ENFORCEMENT ---
+             // Check assigned jobs against new settings
+             const activeJobs = allJobs.filter(j => ['assigned', 'verified'].includes(j.status) && j.driverId === driverId);
+             let releasedCount = 0;
+
+             const updatePromises = activeJobs.map(async (job) => {
+                 let match = true;
+                 const jobFrom = (job.from || '').toLowerCase().trim();
+                 
+                 // 1. Check AC Compatibility: If job needs AC but driver turned it OFF
+                 if ((job.serviceName && job.serviceName.includes('AC')) && !ac) match = false;
+
+                 // 2. Check Route Compatibility
+                 const driverRoute = route.toLowerCase();
+                 let routeMatch = false;
+                 if (driverRoute === 'karimnagar') {
+                    if (jobFrom.includes('karimnagar')) routeMatch = true;
+                 } else if (driverRoute === 'rgi airport') {
+                    if (jobFrom.includes('airport') || jobFrom.includes('rgi')) routeMatch = true;
+                 } else if (driverRoute === 'jbs') {
+                    if (jobFrom.includes('jbs') || jobFrom.includes('secunderabad')) routeMatch = true;
+                 } else if (driverRoute === 'hyderabad') {
+                     if (!jobFrom.includes('karimnagar')) routeMatch = true; 
+                 }
+                 
+                 if (!routeMatch) match = false;
+
+                 // If mismatch found, release the job
+                 if (!match) {
+                     releasedCount++;
+                     return updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'bookings', job.id), {
+                        status: 'pending',
+                        driverId: null,
+                        driverName: null,
+                        driverPhone: null,
+                        driverVehicle: null,
+                        driverPlate: null,
+                        cancelledByDriver: true // Mark as cancelled by driver so it goes back to pool
+                     });
+                 }
+             });
+
+             await Promise.all(updatePromises);
+
+             if (releasedCount > 0) {
+                 showToast(`${releasedCount} job(s) released due to setting mismatch.`, 'info');
+             }
+
+             if(document.getElementById('status-toggle').checked) await syncActivePool();
+             
+             updatePreferenceUI(); 
+             closeSettingsModal(); 
+             showToast("Preferences Updated", "success"); 
+             // listenToJobs will automatically refresh the UI when the docs update
         }
 
-        window.toggleExpenseForm = () => document.getElementById('expense-form').classList.toggle('hidden');
+        // --- HISTORY (FIXED GROUPING) ---
+        function listenToHistory() {
+             if(historySubscription) historySubscription();
+             // Query completed and cancelled jobs
+             const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'bookings'), where('driverId', '==', driverId));
+             historySubscription = onSnapshot(q, (snap) => {
+                 historyJobs = []; 
+                 snap.forEach(d=>{
+                     const v=d.data(); 
+                     if(v.status==='completed' || v.status==='cancelled') {
+                         historyJobs.push({id:d.id, ...v}); 
+                     }
+                 });
+                 // Sort descending by time
+                 historyJobs.sort((a,b)=>(b.endTime?.seconds||0)-(a.endTime?.seconds||0));
+                 updateWalletView(); 
+                 renderHistory();
+             });
+        }
+        
+        function renderHistory() {
+             const c = document.getElementById('history-list'); 
+             if(historyJobs.length===0){
+                 c.innerHTML='<div class="flex flex-col items-center justify-center py-10 opacity-50"><i data-lucide="history" class="w-12 h-12 mb-2"></i><p>No trip history yet</p></div>';
+                 lucide.createIcons();
+                 return;
+             }
+
+             // Group trips by proximity (within 2 mins of each other) to handle shared rides
+             const trips = []; 
+             let currentGroup = [];
+             
+             historyJobs.forEach((job, index) => {
+                if (currentGroup.length === 0) {
+                    currentGroup.push(job);
+                } else {
+                    const prevTime = currentGroup[currentGroup.length-1].endTime?.seconds || 0;
+                    const currTime = job.endTime?.seconds || 0;
+                    // If trips completed within 120 seconds (2 mins), group them
+                    if (Math.abs(prevTime - currTime) < 120) {
+                        currentGroup.push(job);
+                    } else {
+                        trips.push(currentGroup);
+                        currentGroup = [job];
+                    }
+                }
+                // Push last group
+                if (index === historyJobs.length - 1 && currentGroup.length > 0) {
+                    trips.push(currentGroup);
+                }
+             });
+             
+             let h=''; 
+             trips.forEach(group => {
+                 const mainJob = group[0];
+                 const totalFare = group.reduce((sum, j) => sum + parsePrice(j.price), 0);
+                 const date = mainJob.endTime ? new Date(mainJob.endTime.seconds*1000).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Unknown Date';
+                 const isMulti = group.length > 1;
+                 
+                 h += `<div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 mb-4 overflow-hidden shadow-sm">
+                        <div class="bg-slate-50 dark:bg-slate-800/50 p-3 flex justify-between items-center border-b border-slate-100 dark:border-slate-800">
+                             <div>
+                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wide block">${date}</span>
+                                 ${isMulti ? `<span class="text-[10px] font-bold text-brand-600 bg-brand-50 dark:bg-brand-900/20 px-1.5 py-0.5 rounded">Shared Trip (${group.length} Drops)</span>` : ''}
+                             </div>
+                             <span class="text-sm font-black dark:text-white">Total: ₹${totalFare}</span>
+                        </div>`;
+                 
+                 group.forEach(j => {
+                     const price = parsePrice(j.price);
+                     const statusColor = j.status === 'cancelled' ? 'text-red-500' : 'text-slate-500';
+                     h+=`
+                     <div onclick="openTripDetails('${j.id}')" class="p-3 border-b border-slate-50 dark:border-slate-800 last:border-0 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition cursor-pointer flex justify-between items-center">
+                        <div class="flex-1 pr-2">
+                             <h4 class="font-bold text-xs dark:text-white leading-tight truncate">${j.to.split(',')[0]}</h4>
+                             <p class="text-[10px] text-slate-400">${j.name}</p>
+                        </div>
+                        <div class="text-right flex flex-col items-end">
+                             <span class="font-bold text-xs ${statusColor}">₹${price}</span>
+                        </div>
+                        <i data-lucide="chevron-right" class="h-4 w-4 text-slate-300 ml-2"></i>
+                     </div>`;
+                 });
+                 h += `</div>`;
+             });
+             
+             c.innerHTML=h;
+             lucide.createIcons();
+        }
+
+        window.openTripDetails = (jobId) => {
+            const job = historyJobs.find(j => j.id === jobId);
+            if(!job) return;
+            const modal = document.getElementById('trip-details-modal');
+            const content = document.getElementById('trip-modal-content');
+            
+            content.innerHTML = `
+                <div class="text-center mb-6">
+                    <h2 class="text-3xl font-bold dark:text-white tracking-tight">₹${job.price}</h2>
+                    <p class="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">${job.status === 'cancelled' ? 'Cancelled' : 'Cash Collected'}</p>
+                </div>
+                <div class="space-y-4">
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase">Passenger</p>
+                        <p class="font-bold dark:text-white text-lg">${job.name}</p>
+                        <p class="text-sm text-slate-500">${job.mobile}</p>
+                    </div>
+                    <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-100 dark:border-slate-700 space-y-3">
+                         <div><p class="text-[10px] font-bold text-slate-400 uppercase">From</p><p class="font-medium dark:text-white">${job.from}</p></div>
+                         <div><p class="text-[10px] font-bold text-slate-400 uppercase">To</p><p class="font-medium dark:text-white">${job.to}</p></div>
+                    </div>
+                    <div class="text-center"><p class="text-[10px] text-slate-400 uppercase">Timestamp</p><p class="font-bold dark:text-white">${job.endTime ? new Date(job.endTime.seconds*1000).toLocaleString() : '-'}</p></div>
+                </div>`;
+            modal.classList.remove('hidden');
+        }
+        window.closeTripModal = () => document.getElementById('trip-details-modal').classList.add('hidden');
+
+        // Standard Functions
+        // --- ADDED setHomeTab FUNCTION HERE ---
+        window.setHomeTab = (tab) => {
+            currentTab = tab;
+            // Update styling
+            const btnNew = document.getElementById('htab-new');
+            const btnActive = document.getElementById('htab-active');
+            
+            if (tab === 'new') {
+                btnNew.className = "flex-1 py-2.5 rounded-lg text-xs font-bold text-center transition-all bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white";
+                btnActive.className = "flex-1 py-2.5 rounded-lg text-xs font-bold text-center transition-all text-slate-500 hover:text-slate-700 dark:text-slate-400";
+            } else {
+                btnNew.className = "flex-1 py-2.5 rounded-lg text-xs font-bold text-center transition-all text-slate-500 hover:text-slate-700 dark:text-slate-400";
+                btnActive.className = "flex-1 py-2.5 rounded-lg text-xs font-bold text-center transition-all bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white";
+            }
+            renderJobs();
+        };
+
+        window.promptAcceptJob=(id)=>{ 
+            const j=allJobs.find(x=>x.id===id); 
+            if(j){ 
+                pendingAcceptJobId=id; 
+                document.getElementById('accept-modal-price').textContent=`₹${j.price}`; 
+                document.getElementById('accept-modal-type').textContent=getVehicleDisplayText(j); 
+                document.getElementById('accept-modal').classList.remove('hidden'); 
+            } 
+        }
+        window.closeAcceptModal=()=>document.getElementById('accept-modal').classList.add('hidden');
+        window.confirmAcceptJob=async()=>{ 
+            if(!pendingAcceptJobId)return; 
+            closeAcceptModal(); 
+            try{ 
+                await updateDoc(doc(db,'artifacts',APP_ID,'public','data','bookings',pendingAcceptJobId),{
+                    status:'assigned',
+                    driverId: driverId,
+                    driverName: driverProfile.name,
+                    driverPhone: driverProfile.phone || driverId, // Fallback
+                    driverVehicle: driverProfile.vehicleType,
+                    driverPlate: driverProfile.vehicleNo,
+                    acceptedAt: serverTimestamp()
+                }); 
+                showToast("Accepted","success"); 
+                setHomeTab('active'); 
+                syncActivePool(); 
+            }catch(e){
+                console.error(e);
+                showToast("Already taken or Error","error");
+            } 
+        }
+        window.promptOtp=(id)=>{
+            pendingVerifyJobId=id; 
+            // Clear inputs
+            document.querySelectorAll('#otp-inputs input').forEach(input => input.value = '');
+            document.getElementById('otp-modal').classList.remove('hidden');
+        }
+        window.closeOtpModal=()=>document.getElementById('otp-modal').classList.add('hidden');
+        window.submitOtp=async()=>{ 
+             const code=Array.from(document.querySelectorAll('#otp-inputs input')).map(i=>i.value).join('');
+             const job = allJobs.find(j=>j.id===pendingVerifyJobId);
+             if(job && String(job.otp)===code) {
+                 await updateDoc(doc(db,'artifacts',APP_ID,'public','data','bookings',pendingVerifyJobId),{status:'verified'});
+                 closeOtpModal(); showToast("Verified","success");
+             } else { alert("Incorrect OTP"); }
+        }
+        window.promptStartRide=(m)=>{pendingStartMode=m; document.getElementById('start-confirm-modal').classList.remove('hidden');}
+        window.confirmStartRide=async()=>{
+             document.getElementById('start-confirm-modal').classList.add('hidden');
+             const v = allJobs.filter(j=>j.status==='verified'&&j.driverId===driverId);
+             await Promise.all(v.map(j=>updateDoc(doc(db,'artifacts',APP_ID,'public','data','bookings',j.id),{status:'started',startTime:serverTimestamp()})));
+             showToast("Trip Started","success");
+        }
+        window.completeTrip=async(id)=>{ 
+             if(!confirm("End Trip?"))return; 
+             const j = allJobs.find(x=>x.id===id);
+             await updateDoc(doc(db,'artifacts',APP_ID,'public','data','bookings',id),{status:'completed',endTime:serverTimestamp()});
+             if(j){ const h=detectHub(j.to); if(h){ await updateDoc(doc(db,'artifacts',APP_ID,'drivers',driverId),{prefRoute:h}); driverProfile.prefRoute=h; updatePreferenceUI(); showToast(`Loc: ${h}`,"success"); listenToJobs(); }}
+             syncActivePool();
+        }
 
         window.toggleOnlineStatus = async (checkbox) => {
             if(!driverId) { alert("Profile not ready."); checkbox.checked = false; return; }
+            
             const isOnline = checkbox.checked;
-            const label = document.getElementById('status-label');
-            label.textContent = isOnline ? "Online" : "Offline";
-            label.className = `text-[10px] font-bold uppercase ${isOnline ? 'text-green-500' : 'text-slate-400'}`;
-            const tripCard = document.getElementById('trip-status-card');
-            if(isOnline) tripCard.classList.remove('hidden'); else tripCard.classList.add('hidden');
-            await updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), { status: isOnline ? 'online' : 'offline', lastSeen: serverTimestamp() });
-            if (isOnline) { await syncActivePool(); showToast("You are now Online", "success"); } 
-            else { await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'active_drivers', driverId)); showToast("You are Offline."); }
+            const label = document.getElementById('status-label'); // Get label element
+            
+            if (!isOnline) { // User trying to switch OFF
+                const activeJobs = allJobs.filter(j => ['assigned', 'verified', 'started'].includes(j.status) && j.driverId === driverId);
+                
+                if (activeJobs.length > 0) {
+                    // Prevent switch immediately
+                    checkbox.checked = true; 
+                    
+                    // Show custom modal
+                    document.getElementById('offline-msg').textContent = `You have ${activeJobs.length} active trip(s). Going offline will release them to other drivers.`;
+                    document.getElementById('offline-modal').classList.remove('hidden');
+                    return; // Stop here, wait for modal
+                }
+            }
+            
+            // If switching ON or switching OFF with no jobs, proceed normally
+            updateOnlineStatus(isOnline);
         }
 
-        window.switchView = (view) => {
-            ['home', 'wallet', 'profile', 'history'].forEach(v => {
-                document.getElementById(`view-${v}`).classList.add('hidden');
-                document.getElementById(`nav-${v}`).className = "flex flex-col items-center gap-1 p-2 text-slate-400 transition-colors";
-            });
-            document.getElementById(`view-${view}`).classList.remove('hidden');
-            const btn = document.getElementById(`nav-${view}`);
-            btn.className = "flex flex-col items-center gap-1 p-2 text-brand-600 dark:text-brand-500 transition-colors";
-        }
+        // New helper to handle the actual DB update
+        async function updateOnlineStatus(isOnline) {
+             const checkbox = document.getElementById('status-toggle');
+             const label = document.getElementById('status-label');
+             
+             // Update UI visually just in case
+             checkbox.checked = isOnline;
+             label.textContent = isOnline ? "Online" : "Offline";
+             label.className = `text-[10px] font-bold uppercase ${isOnline ? 'text-green-500' : 'text-slate-400'}`;
+             const tripCard = document.getElementById('trip-status-card');
+             if(isOnline) tripCard.classList.remove('hidden'); else tripCard.classList.add('hidden');
 
-        window.toggleTheme = () => {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('nandu_theme', isDark ? 'dark' : 'light');
-        }
-
-        window.logout = () => {
-            if(confirm("Log out?")) {
-                if(jobsSubscription) jobsSubscription();
-                const activeRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'active_drivers', driverId);
-                deleteDoc(activeRef).then(() => { signOut(auth); location.reload(); });
+             await updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), { status: isOnline ? 'online' : 'offline', lastSeen: serverTimestamp() });
+            
+             if (isOnline) { 
+                await syncActivePool(); 
+                showToast("You are now Online", "success"); 
+             } else { 
+                await deleteDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'active_drivers', driverId)); 
+                showToast("You are Offline."); 
             }
         }
 
-        window.showToast = (msg, type) => {
-            const t = document.createElement('div');
-            t.className = `p-4 rounded-xl shadow-lg text-white text-xs font-bold animate-enter ${type==='success'?'bg-green-600':'bg-red-500'}`;
-            t.textContent = msg;
-            document.getElementById('toast-container').appendChild(t);
-            setTimeout(()=>t.remove(), 3000);
+        window.closeOfflineModal = () => {
+            document.getElementById('offline-modal').classList.add('hidden');
         }
 
-        function playSound() { try { document.getElementById('notif-sound').play(); } catch(e){} }
+        window.confirmOfflineAction = async () => {
+            closeOfflineModal();
+            const activeJobs = allJobs.filter(j => ['assigned', 'verified', 'started'].includes(j.status) && j.driverId === driverId);
+            
+            showToast("Releasing trips...", "info");
+            try {
+                await Promise.all(activeJobs.map(job => updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'bookings', job.id), {
+                    status: 'pending',
+                    driverId: null,
+                    driverName: null,
+                    driverPhone: null,
+                    driverVehicle: null,
+                    driverPlate: null,
+                    cancelledByDriver: true 
+                })));
+                
+                // Now proceed to actually go offline
+                await updateOnlineStatus(false);
+                
+            } catch(e) {
+                console.error("Error releasing trips", e);
+                showToast("Error releasing trips", "error");
+            }
+        }
 
-        init();
-        lucide.createIcons();
+        window.switchView=(v)=>{
+            ['home','wallet','profile','history'].forEach(x=>{
+                document.getElementById(`view-${x}`).classList.add('hidden');
+                document.getElementById(`nav-${x}`).className="flex flex-col items-center gap-1 p-2 text-slate-400 transition-colors";
+            });
+            document.getElementById(`view-${v}`).classList.remove('hidden');
+            document.getElementById(`nav-${v}`).className="flex flex-col items-center gap-1 p-2 text-brand-600 dark:text-brand-500 transition-colors";
+        }
+        window.toggleTheme=()=>{ document.documentElement.classList.toggle('dark'); localStorage.setItem('nandu_theme', document.documentElement.classList.contains('dark')?'dark':'light'); }
+        window.logout=()=>{ if(confirm("Log out?")){ if(jobsSubscription)jobsSubscription(); deleteDoc(doc(db,'artifacts',APP_ID,'public','data','active_drivers',driverId)).then(()=>{signOut(auth);location.reload();}); } }
+        window.showToast=(m,t)=>{ const d=document.createElement('div'); d.className=`p-4 rounded-xl shadow-lg text-white text-xs font-bold animate-enter fixed top-4 right-4 z-[100] ${t==='success'?'bg-green-600':'bg-red-500'}`; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),3000); }
+        function playSound(){ try{document.getElementById('notif-sound').play()}catch(e){} }
+        
+        init(); lucide.createIcons();
     </script>
 </body>
 </html>
