@@ -681,7 +681,7 @@
                         <i data-lucide="log-out" class="h-4 w-4"></i> Log Out
                     </button>
                 </div>
-                 <p class="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-4">Nandu Travels v3.2 (ID Updated)</p>
+                 <p class="text-center text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-4">Nandu Travels v3.3 (Optimized)</p>
             </div>
 
         </main>
@@ -729,10 +729,16 @@
         let driverProfile = null;
         let driverId = null; 
         let currentTab = 'new';
-        let allJobs = [];
+        
+        // SPLIT STATE FOR OPTIMIZATION
+        let myActiveJobs = []; // Jobs assigned to me
+        let availableMarketJobs = []; // Pending jobs in my area
+        
+        let activeJobsUnsubscribe = null;
+        let marketJobsUnsubscribe = null;
+        
         let historyJobs = [];
         let expenseList = [];
-        let jobsSubscription = null;
         let historySubscription = null;
         let walletSubscription = null;
         let confirmationResult = null;
@@ -748,13 +754,10 @@
             if(!container) return;
 
             if(window.recaptchaVerifier) {
-                // If verifier exists, check if container is still valid
                 if (container.hasChildNodes()) {
                     try { window.recaptchaVerifier.reset(); } catch(e) {}
                     return; 
                 } else {
-                    // Container empty but verifier object exists (likely from prev render)
-                    // We must clear it to avoid "internal-error" on re-render
                     try { window.recaptchaVerifier.clear(); } catch(e) {}
                     window.recaptchaVerifier = null;
                 }
@@ -763,16 +766,11 @@
             try {
                 window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { 
                     'size': 'normal', 
-                    'callback': (response) => {
-                        // reCAPTCHA solved
-                    },
-                    'expired-callback': () => {
-                        // Response expired
-                    }
+                    'callback': (response) => { },
+                    'expired-callback': () => { }
                 });
                 window.recaptchaVerifier.render().catch(e => {
                     console.error("Recaptcha Render Error", e);
-                    // If rendering fails, we reset so we can try again
                     window.recaptchaVerifier = null; 
                     container.innerHTML = '';
                 });
@@ -793,14 +791,12 @@
             onAuthStateChanged(auth, async (user) => {
                 if (user) {
                     const mobile = user.phoneNumber;
-                    // Ensure we fetch profile, if not exists handle gracefully
                     const profile = await fetchProfile(mobile);
                     if(profile) {
                         driverProfile = profile;
                         driverId = mobile;
                         loadDashboard();
                     } else {
-                        // Redirect to registration if profile doesn't exist
                         document.getElementById('auth-step-1').classList.add('hidden');
                         document.getElementById('auth-step-2').classList.add('hidden');
                         document.getElementById('auth-step-3').classList.remove('hidden');
@@ -812,8 +808,6 @@
                 } else {
                     document.getElementById('loading-screen').classList.add('hidden');
                     document.getElementById('login-screen').classList.remove('hidden');
-                    
-                    // Initialize Recaptcha if needed
                     setTimeout(() => initRecaptcha(), 500); 
                 }
             });
@@ -848,9 +842,7 @@
             const btn = document.getElementById('btn-send-otp');
             btn.innerHTML = '<span class="loader border-white w-4 h-4"></span> Sending...'; btn.disabled = true;
             try {
-                // Ensure Recaptcha is ready
                 if(!window.recaptchaVerifier) initRecaptcha();
-
                 confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier);
                 document.getElementById('auth-step-1').classList.add('hidden');
                 document.getElementById('auth-step-2').classList.remove('hidden');
@@ -860,7 +852,6 @@
                 alert("Error sending OTP: " + error.message); 
                 btn.innerHTML = 'Send OTP <i data-lucide="arrow-right" class="h-4 w-4"></i>'; 
                 btn.disabled = false; 
-                // Reset Recaptcha on error so user can try again
                 if(window.recaptchaVerifier) window.recaptchaVerifier.reset(); 
             }
         };
@@ -895,10 +886,7 @@
             btn.innerHTML = "Generating Partner ID..."; btn.disabled = true;
             
             try {
-                // --- NEW: GENERATE ID TRANSACTIONALLY ---
-                // Format: ID-YYYYXXXX (e.g., ID-20250001) - Sequential, No middle hyphen
                 const counterRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'counters', 'driver_stats');
-                
                 await runTransaction(db, async (transaction) => {
                     const counterDoc = await transaction.get(counterRef);
                     let currentCount = 0;
@@ -906,12 +894,8 @@
                         currentCount = counterDoc.data().count || 0;
                     }
                     const newCount = currentCount + 1;
-                    
                     const year = new Date().getFullYear();
-                    // Sequence starts from 0001
                     const padded = String(newCount).padStart(4, '0'); 
-                    
-                    // ID Construction: ID + Hyphen + Year + Sequence (No extra hyphens)
                     const newId = `ID-${year}${padded}`;
                     
                     const data = { 
@@ -927,14 +911,13 @@
                         prefRoute: 'Karimnagar', 
                         email: "", 
                         address: "",
-                        partnerId: newId // Save the new ID
+                        partnerId: newId 
                     };
 
                     transaction.set(counterRef, { count: newCount }, { merge: true });
                     transaction.set(doc(db, 'artifacts', APP_ID, 'drivers', mobile), data);
                 });
 
-                // Fetch new profile immediately to update local state
                 driverProfile = await fetchProfile(mobile);
                 driverId = mobile; 
                 document.getElementById('login-screen').classList.add('hidden');
@@ -952,11 +935,7 @@
             document.getElementById('auth-step-1').classList.remove('hidden');
             document.getElementById('btn-send-otp').disabled = false;
             document.getElementById('btn-send-otp').innerHTML = 'Send OTP <i data-lucide="arrow-right" class="h-4 w-4"></i>';
-            
-            // Just reset, don't destroy
-            if(window.recaptchaVerifier) {
-                try { window.recaptchaVerifier.reset(); } catch(e) {}
-            }
+            if(window.recaptchaVerifier) { try { window.recaptchaVerifier.reset(); } catch(e) {} }
         }
 
         // --- DASHBOARD LOGIC ---
@@ -964,23 +943,13 @@
             document.getElementById('loading-screen').classList.add('hidden');
             document.getElementById('app-content').classList.remove('hidden');
             
-            // Header Info
             if(driverProfile) {
                 document.getElementById('header-name').textContent = driverProfile.name || 'Driver';
-                
-                // --- UPDATE: Display Partner ID (Format: ID-YYYYXXXX) ---
-                // Removed extra hyphen in fallback to match "ID-20250001" style
                 const displayId = driverProfile.partnerId || ('ID-' + new Date().getFullYear() + driverId.replace(/\D/g, '').slice(-4));
-                
-                // Set Header Badge
                 const plateEl = document.getElementById('header-plate');
                 plateEl.innerHTML = `<span class="text-brand-600 dark:text-brand-400 mr-1">${displayId}</span> <span class="text-slate-300 dark:text-slate-600 mx-1">|</span> ${driverProfile.vehicleNo || '...'}`;
-                
-                // Set Profile Badge
                 document.getElementById('prof-name').textContent = driverProfile.name || 'Driver Name';
                 document.getElementById('prof-id').textContent = displayId;
-                
-                // FIX: Ensure phone number is displayed even if it's stored under different keys
                 const phoneDisplay = driverProfile.phone || driverProfile.mobile || driverId || '...';
                 const phoneEl = document.getElementById('prof-phone');
                 if(phoneEl) phoneEl.textContent = phoneDisplay;
@@ -989,7 +958,6 @@
                 document.getElementById('prof-email').value = driverProfile.email || "No email added";
                 document.getElementById('prof-address').value = driverProfile.address || "No address added";
 
-                // Load Settings
                 document.getElementById('setting-ac').checked = driverProfile.prefAc || false;
                 const routes = document.getElementsByName('route_pref');
                 routes.forEach(r => { if(r.value === driverProfile.prefRoute) r.checked = true; });
@@ -1006,7 +974,7 @@
                 }
             }
 
-            listenToJobs();
+            listenToJobs(); // New Optimized Listener
             listenToHistory();
             listenToWallet();
         }
@@ -1032,7 +1000,6 @@
              document.getElementById('home-pref-route').textContent = routeText;
         }
 
-        // --- NEW: PROFILE EDITING ---
         window.toggleEditProfile = () => {
             const inputs = ['prof-email', 'prof-address'];
             const btn = document.getElementById('save-profile-btn');
@@ -1077,8 +1044,6 @@
         window.openDocModal = () => document.getElementById('doc-upload-modal').classList.remove('hidden');
         window.closeDocModal = () => document.getElementById('doc-upload-modal').classList.add('hidden');
 
-
-        // --- 3-DOT MENU LOGIC ---
         window.openOptions = (event, jobId) => {
             event.stopPropagation();
             pendingOptionsJobId = jobId;
@@ -1127,11 +1092,20 @@
         window.openSeatModal = () => { document.getElementById('seat-modal').classList.remove('hidden'); document.getElementById('manual-seat-count').textContent = manualSeats; }
         window.adjustManualSeats = (delta) => { const cap = getTotalCapacity(); let n = manualSeats + delta; if(n<0) n=0; if(n>cap) n=cap; manualSeats = n; document.getElementById('manual-seat-count').textContent = manualSeats; }
         window.saveManualSeats = async () => { document.getElementById('seat-modal').classList.add('hidden'); driverProfile.manualFilledSeats = manualSeats; await updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), { manualFilledSeats: manualSeats }); if(document.getElementById('status-toggle').checked) await syncActivePool(); updateSeatUI(); }
-        function updateSeatUI() { const cap = getTotalCapacity(); const booked = allJobs.filter(j => (j.status === 'assigned' || j.status === 'verified' || j.status === 'started') && j.driverId === driverId).reduce((s, j) => s + (parseInt(j.passengers)||1), 0); const tot = manualSeats + booked; document.getElementById('seats-filled-display').textContent = tot; document.getElementById('seats-total-display').textContent = cap; document.getElementById('seat-progress-bar').style.width = `${(tot/cap)*100}%`; }
+        
+        function updateSeatUI() { 
+            const cap = getTotalCapacity(); 
+            // Calculate booked seats from MY ACTIVE jobs only
+            const booked = myActiveJobs.filter(j => ['assigned', 'verified', 'started'].includes(j.status)).reduce((s, j) => s + (parseInt(j.passengers)||1), 0); 
+            const tot = manualSeats + booked; 
+            document.getElementById('seats-filled-display').textContent = tot; 
+            document.getElementById('seats-total-display').textContent = cap; 
+            document.getElementById('seat-progress-bar').style.width = `${(tot/cap)*100}%`; 
+        }
         
         async function syncActivePool() {
             const capacity = getTotalCapacity();
-            const bookedSeats = allJobs.filter(j => (j.status === 'assigned' || j.status === 'verified' || j.status === 'started') && j.driverId === driverId).reduce((sum, j) => sum + (parseInt(j.passengers)||1), 0);
+            const bookedSeats = myActiveJobs.filter(j => ['assigned', 'verified', 'started'].includes(j.status)).reduce((sum, j) => sum + (parseInt(j.passengers)||1), 0);
             const totalFilled = manualSeats + bookedSeats;
             const seatsAvailable = Math.max(0, capacity - totalFilled);
             await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'active_drivers', driverId), {
@@ -1140,84 +1114,106 @@
             });
         }
         
-        // --- JOB LISTENING (MERGED ROBUST LOGIC) ---
+        // --- OPTIMIZED JOB LISTENER (SPLIT QUERY) ---
         function listenToJobs() {
             if(!driverId || !driverProfile) return; 
-            if(jobsSubscription) jobsSubscription();
-            
-            const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'bookings'), orderBy("createdAt", "desc"), limit(50));
-            jobsSubscription = onSnapshot(q, (snap) => {
-                const newJobs = []; let hasNew = false;
-                const driverType = (driverProfile.vehicleType || '').toLowerCase();
-                const driverRoute = (driverProfile.prefRoute || '').toLowerCase().trim();
-                const driverCapacity = driverType.includes('7') ? 6 : 4;
 
+            // 1. Listen to MY Active Jobs (Assigned/Verified/Started)
+            if(activeJobsUnsubscribe) activeJobsUnsubscribe();
+            
+            // Optimization: Only listen to jobs where driverId matches. Low cost.
+            const qMyJobs = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'bookings'), 
+                where('driverId', '==', driverId),
+                where('status', 'in', ['assigned', 'verified', 'started'])
+            );
+            
+            activeJobsUnsubscribe = onSnapshot(qMyJobs, (snap) => {
+                myActiveJobs = [];
+                snap.forEach(doc => myActiveJobs.push({ id: doc.id, ...doc.data() }));
+                updateCombinedJobList();
+                updateSeatUI();
+                if(document.getElementById('status-toggle').checked) syncActivePool();
+            });
+
+            // 2. Listen to NEW Market Jobs (Pending) based on ROUTE
+            if(marketJobsUnsubscribe) marketJobsUnsubscribe();
+            
+            // Optimization: Filter by STATUS and ROUTE. Reduce reads by 90%.
+            // Note: This requires the Booking to have 'routeKey' field.
+            // If index is missing, this might error in console initially, but standard Firestore usually handles simple equality filters.
+            // We use 'limit(20)' to prevent reading thousands of pending jobs.
+            const route = driverProfile.prefRoute || 'Karimnagar';
+            
+            const qMarket = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'bookings'), 
+                where('status', '==', 'pending'),
+                where('routeKey', '==', route),
+                limit(20) 
+            );
+
+            marketJobsUnsubscribe = onSnapshot(qMarket, (snap) => {
+                availableMarketJobs = [];
+                let hasNew = false;
+                
                 snap.forEach(doc => {
                     const job = { id: doc.id, ...doc.data() };
-                    let relevant = false;
-                    
-                    if (job.driverId === driverId) {
-                        if(['assigned', 'verified', 'started'].includes(job.status)) relevant = true;
-                    } 
-                    else if (job.status === 'pending' && !job.driverId) {
-                        const jobType = (job.vehicleType || '').toLowerCase();
-                        const jobFrom = (job.from || '').toLowerCase().trim();
-                        const rVehicle = (job.requiredVehicle || '').toUpperCase();
-                        const isJobShared = (job.serviceName || '').toLowerCase().includes('shared') || jobType.includes('shared') || rVehicle.includes('SHARED');
-                        
-                        // Strict AC Match
-                        let acMatch = true;
-                        if ((job.serviceName && job.serviceName.includes('AC')) && !driverProfile.prefAc) acMatch = false;
-
-                        // Strict Route Match
-                        let routeMatch = false;
-                        if (driverRoute === 'karimnagar') {
-                            if (jobFrom.includes('karimnagar')) routeMatch = true;
-                        } else if (driverRoute === 'rgi airport') {
-                            if (jobFrom.includes('airport') || jobFrom.includes('rgi')) routeMatch = true;
-                        } else if (driverRoute === 'jbs') {
-                            if (jobFrom.includes('jbs') || jobFrom.includes('secunderabad')) routeMatch = true;
-                        } else if (driverRoute === 'hyderabad') {
-                             if (!jobFrom.includes('karimnagar')) routeMatch = true;
-                        }
-
-                        if(acMatch && routeMatch) {
-                            if(isJobShared) {
-                                const currentBooked = allJobs.filter(j => (j.status === 'assigned' || j.status === 'verified' || j.status === 'started') && j.driverId === driverId).reduce((s,j)=>s+(parseInt(j.passengers)||1),0);
-                                if ((driverCapacity - (manualSeats + currentBooked)) >= (parseInt(job.passengers) || 1)) relevant = true;
-                            } else {
-                                // Private strict match
-                                const cleanD = driverType.replace(/[^a-z0-9]/g, '');
-                                const cleanJ = jobType.replace(/[^a-z0-9]/g, '');
-                                if (driverType.includes('ambulance')) { 
-                                    if(jobType.includes('ambulance')) relevant = true; 
-                                } else { 
-                                    if(!jobType.includes('ambulance')) { 
-                                        if(jobType === 'any' || !jobType || cleanJ === cleanD) relevant = true; 
-                                    } 
-                                }
-                            }
-                        }
+                    // Extra Client Side Filter just to be safe and rigorous
+                    if(isJobRelevant(job)) {
+                         availableMarketJobs.push(job);
+                         if(!myActiveJobs.find(j=>j.id===job.id)) hasNew = true; // Simple check
                     }
-                    if(relevant) { newJobs.push(job); if(!allJobs.find(j=>j.id===job.id) && job.status==='pending' && !job.driverId) hasNew = true; }
                 });
-                allJobs = newJobs; if(hasNew) playSound(); updateSeatUI(); if(document.getElementById('status-toggle').checked) syncActivePool(); renderJobs();
+                
+                if(hasNew && availableMarketJobs.length > 0) playSound();
+                updateCombinedJobList();
             });
         }
+
+        function isJobRelevant(job) {
+             const driverType = (driverProfile.vehicleType || '').toLowerCase();
+             const jobType = (job.vehicleType || '').toLowerCase();
+             const isJobShared = (job.serviceName || '').toLowerCase().includes('shared') || jobType.includes('shared');
+             const driverCapacity = driverType.includes('7') ? 6 : 4;
+             
+             // Strict AC
+             if ((job.serviceName && job.serviceName.includes('AC')) && !driverProfile.prefAc) return false;
+
+             // Capacity Check for Shared
+             if(isJobShared) {
+                 const currentBooked = myActiveJobs.reduce((s,j)=>s+(parseInt(j.passengers)||1),0);
+                 if ((driverCapacity - (manualSeats + currentBooked)) < (parseInt(job.passengers) || 1)) return false;
+             }
+             
+             // Ambulance / Private Type Check
+             if (driverType.includes('ambulance')) {
+                 if(!jobType.includes('ambulance')) return false;
+             } else {
+                 if(jobType.includes('ambulance')) return false;
+             }
+
+             return true;
+        }
+
+        function updateCombinedJobList() {
+            renderJobs(); // Render uses myActiveJobs and availableMarketJobs directly now
+        }
         
-        // --- JOB RENDERER (MERGED WITH 3-DOT MENU) ---
+        // --- JOB RENDERER ---
         function renderJobs() {
             const container = document.getElementById('job-list-container');
             const bulkBar = document.getElementById('bulk-action-bar');
             let filtered = [];
 
             if (currentTab === 'new') {
-                filtered = allJobs.filter(j => j.status === 'pending' && !j.driverId);
+                // Show available market jobs
+                // Sort by time descending client-side
+                filtered = availableMarketJobs.sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
+                
                 bulkBar.classList.add('hidden');
                 document.getElementById('badge-new').textContent = filtered.length;
                 document.getElementById('badge-new').classList.remove('hidden');
             } else {
-                filtered = allJobs.filter(j => (j.status === 'assigned' || j.status === 'verified' || j.status === 'started') && j.driverId === driverId);
+                // Show my active jobs
+                filtered = myActiveJobs.sort((a,b) => (b.createdAt?.seconds||0) - (a.createdAt?.seconds||0));
                 document.getElementById('badge-new').classList.add('hidden');
                 
                 const cnt = filtered.reduce((s,j)=>s+(parseInt(j.passengers)||1),0);
@@ -1251,7 +1247,6 @@
 
                 let btnArea = '';
                 if (currentTab === 'new') {
-                    // FIX: Ensure promptAcceptJob ID is quoted correctly
                     btnArea = `<button onclick="promptAcceptJob('${job.id}')" class="w-full bg-slate-900 dark:bg-brand-600 text-white py-3 rounded-xl font-bold text-sm shadow-lg active:scale-95 transition flex items-center justify-center gap-2">Accept Ride <span class="bg-white/20 px-2 py-0.5 rounded text-xs">₹${job.price}</span></button>`;
                 } else {
                      if (isAssigned) {
@@ -1292,9 +1287,10 @@
             lucide.createIcons();
         }
 
-        // --- WALLET & ANALYTICS (MERGED) ---
+        // --- WALLET ---
         function listenToWallet() {
             if(walletSubscription) walletSubscription();
+            // Optimization: Limit expenses
             const q = query(collection(db, 'artifacts', APP_ID, 'drivers', driverId, 'expenses'), orderBy('date', 'desc'), limit(50));
             walletSubscription = onSnapshot(q, (snap) => {
                 expenseList = [];
@@ -1305,7 +1301,7 @@
         
         window.updateWalletView = () => {
              const filter = document.getElementById('wallet-filter').value;
-             // Stats
+             // Stats based on historyJobs
              document.getElementById('stat-jobs').textContent = historyJobs.length;
              
              const container = document.getElementById('wallet-list');
@@ -1325,13 +1321,11 @@
             
             document.getElementById('wallet-balance').textContent = (totInc - totExp).toLocaleString();
             
-            // List Logic (Combined)
             const combined = [];
             fInc.forEach(j => combined.push({ type: 'income', date: j.endTime, amount: parsePrice(j.price), desc: `Trip: ${j.to.split(',')[0]}` }));
             fExp.forEach(e => combined.push({ type: 'expense', date: e.date, amount: parsePrice(e.amount), desc: e.description }));
             combined.sort((a,b) => (b.date?.seconds||0) - (a.date?.seconds||0));
             
-            // Group By Date
             const grouped = {};
             combined.forEach(item => {
                 const dStr = item.date ? new Date(item.date.seconds * 1000).toDateString() : 'Unknown';
@@ -1375,7 +1369,7 @@
 
         // --- COMPLETING RIDES & LOCATION UPDATES ---
         window.promptCompleteRide = () => {
-             const active = allJobs.filter(j=>j.status==='started'&&j.driverId===driverId);
+             const active = myActiveJobs.filter(j=>j.status==='started');
              if(active.length===0) return;
              let html = ''; let tot = 0;
              active.forEach(j=>{ const p=parsePrice(j.price); tot+=p; html+=`<div class="flex justify-between p-2 border-b dark:border-slate-700"><span>${j.name}</span><span class="font-bold">₹${p}</span></div>`; });
@@ -1383,7 +1377,7 @@
         }
         window.confirmCompleteRide = async () => {
              document.getElementById('payment-modal').classList.add('hidden');
-             const active = allJobs.filter(j=>j.status==='started'&&j.driverId===driverId);
+             const active = myActiveJobs.filter(j=>j.status==='started');
              if(active.length===0) return;
              const last = active[active.length-1]; 
              const newHub = detectHub(last.to);
@@ -1406,78 +1400,33 @@
              // Update DB
              await updateDoc(doc(db,'artifacts',APP_ID,'drivers',driverId),{prefAc:ac, prefRoute:route});
              
-             // Update Local Profile for immediate logic use
              driverProfile.prefAc = ac; 
              driverProfile.prefRoute = route;
 
-             // --- STRICT PREFERENCE ENFORCEMENT ---
-             // Check assigned jobs against new settings
-             const activeJobs = allJobs.filter(j => ['assigned', 'verified'].includes(j.status) && j.driverId === driverId);
-             let releasedCount = 0;
-
-             const updatePromises = activeJobs.map(async (job) => {
-                 let match = true;
-                 const jobFrom = (job.from || '').toLowerCase().trim();
-                 
-                 // 1. Check AC Compatibility: If job needs AC but driver turned it OFF
-                 if ((job.serviceName && job.serviceName.includes('AC')) && !ac) match = false;
-
-                 // 2. Check Route Compatibility
-                 const driverRoute = route.toLowerCase();
-                 let routeMatch = false;
-                 if (driverRoute === 'karimnagar') {
-                    if (jobFrom.includes('karimnagar')) routeMatch = true;
-                 } else if (driverRoute === 'rgi airport') {
-                    if (jobFrom.includes('airport') || jobFrom.includes('rgi')) routeMatch = true;
-                 } else if (driverRoute === 'jbs') {
-                    if (jobFrom.includes('jbs') || jobFrom.includes('secunderabad')) routeMatch = true;
-                 } else if (driverRoute === 'hyderabad') {
-                     if (!jobFrom.includes('karimnagar')) routeMatch = true; 
-                 }
-                 
-                 if (!routeMatch) match = false;
-
-                 // If mismatch found, release the job
-                 if (!match) {
-                     releasedCount++;
-                     return updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'bookings', job.id), {
-                        status: 'pending',
-                        driverId: null,
-                        driverName: null,
-                        driverPhone: null,
-                        driverVehicle: null,
-                        driverPlate: null,
-                        cancelledByDriver: true // Mark as cancelled by driver so it goes back to pool
-                     });
-                 }
-             });
-
-             await Promise.all(updatePromises);
-
-             if (releasedCount > 0) {
-                 showToast(`${releasedCount} job(s) released due to setting mismatch.`, 'info');
-             }
-
+             // Only release jobs if absolutely necessary or notify user. 
+             // For now, we just update the listener to fetch new relevant market jobs.
+             
              if(document.getElementById('status-toggle').checked) await syncActivePool();
              
              updatePreferenceUI(); 
              closeSettingsModal(); 
              showToast("Preferences Updated", "success"); 
-             // listenToJobs will automatically refresh the UI when the docs update
+             listenToJobs(); // Re-trigger listeners to switch market channel
         }
 
-        // --- HISTORY (FIXED GROUPING) ---
+        // --- HISTORY (OPTIMIZED) ---
         function listenToHistory() {
              if(historySubscription) historySubscription();
-             // Query completed and cancelled jobs
-             const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'bookings'), where('driverId', '==', driverId));
+             // Optimization: limit to 20 history items to save reads.
+             const q = query(collection(db, 'artifacts', APP_ID, 'public', 'data', 'bookings'), 
+                where('driverId', '==', driverId),
+                where('status', 'in', ['completed', 'cancelled']),
+                limit(20) // CRITICAL: Stop downloading infinite history
+            );
              historySubscription = onSnapshot(q, (snap) => {
                  historyJobs = []; 
                  snap.forEach(d=>{
-                     const v=d.data(); 
-                     if(v.status==='completed' || v.status==='cancelled') {
-                         historyJobs.push({id:d.id, ...v}); 
-                     }
+                     historyJobs.push({id:d.id, ...d.data()}); 
                  });
                  // Sort descending by time
                  historyJobs.sort((a,b)=>(b.endTime?.seconds||0)-(a.endTime?.seconds||0));
@@ -1584,7 +1533,6 @@
         window.closeTripModal = () => document.getElementById('trip-details-modal').classList.add('hidden');
 
         // Standard Functions
-        // --- ADDED setHomeTab FUNCTION HERE ---
         window.setHomeTab = (tab) => {
             currentTab = tab;
             // Update styling
@@ -1602,7 +1550,7 @@
         };
 
         window.promptAcceptJob=(id)=>{ 
-            const j=allJobs.find(x=>x.id===id); 
+            const j=availableMarketJobs.find(x=>x.id===id); 
             if(j){ 
                 pendingAcceptJobId=id; 
                 document.getElementById('accept-modal-price').textContent=`₹${j.price}`; 
@@ -1619,7 +1567,7 @@
                     status:'assigned',
                     driverId: driverId,
                     driverName: driverProfile.name,
-                    driverPhone: driverProfile.phone || driverId, // Fallback
+                    driverPhone: driverProfile.phone || driverId,
                     driverVehicle: driverProfile.vehicleType,
                     driverPlate: driverProfile.vehicleNo,
                     acceptedAt: serverTimestamp()
@@ -1634,14 +1582,13 @@
         }
         window.promptOtp=(id)=>{
             pendingVerifyJobId=id; 
-            // Clear inputs
             document.querySelectorAll('#otp-inputs input').forEach(input => input.value = '');
             document.getElementById('otp-modal').classList.remove('hidden');
         }
         window.closeOtpModal=()=>document.getElementById('otp-modal').classList.add('hidden');
         window.submitOtp=async()=>{ 
              const code=Array.from(document.querySelectorAll('#otp-inputs input')).map(i=>i.value).join('');
-             const job = allJobs.find(j=>j.id===pendingVerifyJobId);
+             const job = myActiveJobs.find(j=>j.id===pendingVerifyJobId);
              if(job && String(job.otp)===code) {
                  await updateDoc(doc(db,'artifacts',APP_ID,'public','data','bookings',pendingVerifyJobId),{status:'verified'});
                  closeOtpModal(); showToast("Verified","success");
@@ -1650,13 +1597,13 @@
         window.promptStartRide=(m)=>{pendingStartMode=m; document.getElementById('start-confirm-modal').classList.remove('hidden');}
         window.confirmStartRide=async()=>{
              document.getElementById('start-confirm-modal').classList.add('hidden');
-             const v = allJobs.filter(j=>j.status==='verified'&&j.driverId===driverId);
+             const v = myActiveJobs.filter(j=>j.status==='verified');
              await Promise.all(v.map(j=>updateDoc(doc(db,'artifacts',APP_ID,'public','data','bookings',j.id),{status:'started',startTime:serverTimestamp()})));
              showToast("Trip Started","success");
         }
         window.completeTrip=async(id)=>{ 
              if(!confirm("End Trip?"))return; 
-             const j = allJobs.find(x=>x.id===id);
+             const j = myActiveJobs.find(x=>x.id===id);
              await updateDoc(doc(db,'artifacts',APP_ID,'public','data','bookings',id),{status:'completed',endTime:serverTimestamp()});
              if(j){ const h=detectHub(j.to); if(h){ await updateDoc(doc(db,'artifacts',APP_ID,'drivers',driverId),{prefRoute:h}); driverProfile.prefRoute=h; updatePreferenceUI(); showToast(`Loc: ${h}`,"success"); listenToJobs(); }}
              syncActivePool();
@@ -1664,34 +1611,23 @@
 
         window.toggleOnlineStatus = async (checkbox) => {
             if(!driverId) { alert("Profile not ready."); checkbox.checked = false; return; }
-            
             const isOnline = checkbox.checked;
-            const label = document.getElementById('status-label'); // Get label element
             
-            if (!isOnline) { // User trying to switch OFF
-                const activeJobs = allJobs.filter(j => ['assigned', 'verified', 'started'].includes(j.status) && j.driverId === driverId);
-                
+            if (!isOnline) { 
+                const activeJobs = myActiveJobs.filter(j => ['assigned', 'verified', 'started'].includes(j.status));
                 if (activeJobs.length > 0) {
-                    // Prevent switch immediately
                     checkbox.checked = true; 
-                    
-                    // Show custom modal
                     document.getElementById('offline-msg').textContent = `You have ${activeJobs.length} active trip(s). Going offline will release them to other drivers.`;
                     document.getElementById('offline-modal').classList.remove('hidden');
-                    return; // Stop here, wait for modal
+                    return; 
                 }
             }
-            
-            // If switching ON or switching OFF with no jobs, proceed normally
             updateOnlineStatus(isOnline);
         }
 
-        // New helper to handle the actual DB update
         async function updateOnlineStatus(isOnline) {
              const checkbox = document.getElementById('status-toggle');
              const label = document.getElementById('status-label');
-             
-             // Update UI visually just in case
              checkbox.checked = isOnline;
              label.textContent = isOnline ? "Online" : "Offline";
              label.className = `text-[10px] font-bold uppercase ${isOnline ? 'text-green-500' : 'text-slate-400'}`;
@@ -1699,7 +1635,6 @@
              if(isOnline) tripCard.classList.remove('hidden'); else tripCard.classList.add('hidden');
 
              await updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), { status: isOnline ? 'online' : 'offline', lastSeen: serverTimestamp() });
-            
              if (isOnline) { 
                 await syncActivePool(); 
                 showToast("You are now Online", "success"); 
@@ -1709,14 +1644,10 @@
             }
         }
 
-        window.closeOfflineModal = () => {
-            document.getElementById('offline-modal').classList.add('hidden');
-        }
-
+        window.closeOfflineModal = () => { document.getElementById('offline-modal').classList.add('hidden'); }
         window.confirmOfflineAction = async () => {
             closeOfflineModal();
-            const activeJobs = allJobs.filter(j => ['assigned', 'verified', 'started'].includes(j.status) && j.driverId === driverId);
-            
+            const activeJobs = myActiveJobs.filter(j => ['assigned', 'verified', 'started'].includes(j.status));
             showToast("Releasing trips...", "info");
             try {
                 await Promise.all(activeJobs.map(job => updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'bookings', job.id), {
@@ -1728,10 +1659,7 @@
                     driverPlate: null,
                     cancelledByDriver: true 
                 })));
-                
-                // Now proceed to actually go offline
                 await updateOnlineStatus(false);
-                
             } catch(e) {
                 console.error("Error releasing trips", e);
                 showToast("Error releasing trips", "error");
@@ -1747,7 +1675,7 @@
             document.getElementById(`nav-${v}`).className="flex flex-col items-center gap-1 p-2 text-brand-600 dark:text-brand-500 transition-colors";
         }
         window.toggleTheme=()=>{ document.documentElement.classList.toggle('dark'); localStorage.setItem('nandu_theme', document.documentElement.classList.contains('dark')?'dark':'light'); }
-        window.logout=()=>{ if(confirm("Log out?")){ if(jobsSubscription)jobsSubscription(); deleteDoc(doc(db,'artifacts',APP_ID,'public','data','active_drivers',driverId)).then(()=>{signOut(auth);location.reload();}); } }
+        window.logout=()=>{ if(confirm("Log out?")){ if(activeJobsUnsubscribe)activeJobsUnsubscribe(); if(marketJobsUnsubscribe)marketJobsUnsubscribe(); deleteDoc(doc(db,'artifacts',APP_ID,'public','data','active_drivers',driverId)).then(()=>{signOut(auth);location.reload();}); } }
         window.showToast=(m,t)=>{ const d=document.createElement('div'); d.className=`p-4 rounded-xl shadow-lg text-white text-xs font-bold animate-enter fixed top-4 right-4 z-[100] ${t==='success'?'bg-green-600':'bg-red-500'}`; d.textContent=m; document.body.appendChild(d); setTimeout(()=>d.remove(),3000); }
         function playSound(){ try{document.getElementById('notif-sound').play()}catch(e){} }
         

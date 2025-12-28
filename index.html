@@ -112,6 +112,11 @@
 
     <!-- Login Screen -->
     <div id="login-screen" class="fixed inset-0 bg-white z-[90] flex flex-col justify-center px-6 hidden overflow-y-auto">
+        <!-- Close Button for Login Screen (Optional, if user wants to browse without login first, though app forces login for booking) -->
+        <button onclick="document.getElementById('login-screen').classList.add('hidden')" class="absolute top-4 right-4 p-2 bg-slate-100 rounded-full hover:bg-slate-200">
+             <i data-lucide="x" class="h-5 w-5 text-slate-500"></i>
+        </button>
+
         <div class="text-center mb-8 mt-10">
             <div class="bg-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-blue-200">
                 <i data-lucide="smartphone" class="h-8 w-8 text-white"></i>
@@ -486,7 +491,7 @@
                                             </div>
                                             <div class="w-1/2 bg-slate-50 p-2 rounded-2xl border border-slate-100 flex items-center gap-2 hover:bg-white transition-colors group">
                                                 <div class="bg-white p-2 rounded-xl shadow-sm"><i data-lucide="user" class="text-blue-500 h-4 w-4"></i></div>
-                                                <div class="text-xs font-bold text-slate-700 overflow-hidden text-ellipsis whitespace-nowrap pt-1" id="display-user-name">User</div>
+                                                <div class="text-xs font-bold text-slate-700 overflow-hidden text-ellipsis whitespace-nowrap pt-1" id="display-user-name">Guest</div>
                                             </div>
                                         </div>
                                         <div id="extra-address" class="hidden space-y-3 pt-2 animate-fade-in">
@@ -504,7 +509,6 @@
                                     </div>
 
                                     <div class="pt-4 mt-2">
-                                        <!-- Fixed: Removed md:hidden so price always shows -->
                                         <div class="flex justify-between items-end mb-4 px-1"><span class="text-slate-500 text-sm font-medium">Total Estimate</span><div class="text-right"><span class="text-3xl font-black text-slate-900 tracking-tight leading-none">₹<span id="total-price-mobile">400</span></span></div></div>
                                         <button type="submit" id="submit-btn" class="w-full py-4 rounded-2xl text-white font-bold text-lg shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all transform active:scale-[0.98] bg-blue-600 hover:bg-blue-700 flex justify-center items-center gap-3"><span>Confirm Booking</span><i data-lucide="arrow-right" class="h-5 w-5 stroke-[3]"></i></button>
                                     </div>
@@ -553,6 +557,43 @@
         </div>
     </div>
 
+    <!-- Rating Modal -->
+    <div id="rating-modal" class="fixed inset-0 bg-black/70 z-[120] hidden flex items-center justify-center p-4 animate-fade-in">
+        <div class="bg-white rounded-3xl p-6 max-w-sm w-full text-center relative overflow-hidden">
+            <!-- Close Button for Non-Mandatory Rating -->
+            <button onclick="closeRatingModal(true)" class="absolute top-3 right-3 p-2 bg-slate-100 rounded-full hover:bg-slate-200 text-slate-500 z-20">
+                <i data-lucide="x" class="h-5 w-5"></i>
+            </button>
+
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
+            
+            <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100 shadow-sm mt-4">
+                <i data-lucide="star" class="h-8 w-8 text-blue-500 fill-current"></i>
+            </div>
+            
+            <h3 class="text-xl font-black text-slate-900 mb-1">Rate Your Trip</h3>
+            <p class="text-slate-500 text-sm mb-4">How was your experience?</p>
+
+            <!-- Dynamic Trip Details -->
+            <div id="rating-trip-details" class="bg-slate-50 rounded-xl p-3 mb-6 text-left border border-slate-100 flex items-center gap-3">
+                 <!-- Populated via JS -->
+                 <p class="text-xs text-slate-400 text-center w-full">Loading trip info...</p>
+            </div>
+            
+            <div class="flex justify-center gap-2 mb-6" id="star-container">
+                <button onclick="handleStarClick(1)" class="star-btn transition hover:scale-110 active:scale-90"><i data-lucide="star" class="h-8 w-8 text-slate-300 stroke-[1.5]" id="star-1"></i></button>
+                <button onclick="handleStarClick(2)" class="star-btn transition hover:scale-110 active:scale-90"><i data-lucide="star" class="h-8 w-8 text-slate-300 stroke-[1.5]" id="star-2"></i></button>
+                <button onclick="handleStarClick(3)" class="star-btn transition hover:scale-110 active:scale-90"><i data-lucide="star" class="h-8 w-8 text-slate-300 stroke-[1.5]" id="star-3"></i></button>
+                <button onclick="handleStarClick(4)" class="star-btn transition hover:scale-110 active:scale-90"><i data-lucide="star" class="h-8 w-8 text-slate-300 stroke-[1.5]" id="star-4"></i></button>
+                <button onclick="handleStarClick(5)" class="star-btn transition hover:scale-110 active:scale-90"><i data-lucide="star" class="h-8 w-8 text-slate-300 stroke-[1.5]" id="star-5"></i></button>
+            </div>
+            
+            <textarea id="rating-feedback" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500/20 mb-4 font-medium" rows="3" placeholder="Write a review (optional)..."></textarea>
+            
+            <button onclick="submitRating()" id="submit-rating-btn" class="w-full py-3.5 bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:bg-slate-800 transition">Submit Review</button>
+        </div>
+    </div>
+
     <!-- Duplicate Booking Warning Modal -->
     <div id="duplicate-booking-modal" class="fixed inset-0 bg-black/60 z-[110] hidden flex items-center justify-center p-4 animate-fade-in">
         <div class="bg-white rounded-2xl p-6 max-w-sm w-full text-center">
@@ -589,8 +630,21 @@
             <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i data-lucide="alert-triangle" class="h-8 w-8 text-red-500"></i>
             </div>
-            <h3 class="text-lg font-bold text-slate-900 mb-2">Cancel Booking?</h3>
-            <p class="text-slate-500 text-sm mb-6">Are you sure you want to cancel this ride? This action cannot be undone.</p>
+            <h3 class="text-lg font-bold text-slate-900 mb-1">Cancel Booking?</h3>
+            <p class="text-slate-500 text-sm mb-4">Please select a reason for cancellation.</p>
+            
+            <div class="text-left mb-6">
+                <select id="cancel-reason-select" class="w-full bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-xl focus:ring-red-500 focus:border-red-500 block p-3 outline-none font-medium appearance-none">
+                    <option value="" disabled selected>Select a reason...</option>
+                    <option value="Change of plans">Change of plans</option>
+                    <option value="Booked by mistake">Booked by mistake</option>
+                    <option value="Driver is too far">Driver is too far</option>
+                    <option value="Found another ride">Found another ride</option>
+                    <option value="Wait time too long">Wait time too long</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
             <div class="grid grid-cols-2 gap-3">
                 <button onclick="closeCancelModal()" class="py-3 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50">No, Keep</button>
                 <button id="confirm-cancel-btn" class="py-3 rounded-xl bg-red-500 text-white font-bold shadow-lg hover:bg-red-600">Yes, Cancel</button>
@@ -611,7 +665,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, doc, setDoc, getDoc, onSnapshot, updateDoc, query, where, getDocs, orderBy, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, doc, setDoc, getDoc, onSnapshot, updateDoc, query, where, getDocs, orderBy, limit, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         let firebaseConfig;
         try { if (typeof __firebase_config !== 'undefined') firebaseConfig = JSON.parse(__firebase_config); } catch(e) { console.error("Config Parse Error", e); }
@@ -621,11 +675,19 @@
         try { app = initializeApp(firebaseConfig); auth = getAuth(app); db = getFirestore(app); auth.languageCode = 'en'; } catch (e) { console.error("Init Error", e); }
         
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'travel-nandu-v1';
-        let currentUser = null; let userData = null; let ordersUnsubscribe = null; let allUserOrders = [];
+        let currentUser = null; 
+        let userData = null; 
+        let isProfileLoading = false; // Flag to track profile loading state
+        let ordersUnsubscribe = null; 
+        let allUserOrders = [];
         let currentViewingOrderId = null;
         let confirmationResult = null;
-        let activeDrivers = []; // Store active drivers globally
+        let activeDrivers = []; 
         let driversUnsubscribe = null;
+
+        // Rating Variables
+        let currentRatingStars = 0;
+        let currentRatingOrderId = null;
 
         window.addEventListener('load', () => {
             const splash = document.getElementById('splash-screen');
@@ -639,49 +701,73 @@
                 if (user) {
                     currentUser = user;
                     const mobile = user.phoneNumber;
-                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_profiles', mobile);
-                    const docSnap = await getDoc(docRef);
+                    isProfileLoading = true;
+                    updateAuthUI(true); // Show basic logged in UI immediately
                     
-                    if(docSnap.exists()) {
-                        userData = docSnap.data();
-                        updateAuthUI(true);
-                        listenToOrders();
-                        document.getElementById('mobile-connection-status').classList.remove('bg-yellow-400', 'animate-pulse');
-                        document.getElementById('mobile-connection-status').classList.add('bg-green-500');
-                    } else {
-                        document.getElementById('auth-step-1').classList.add('hidden');
-                        document.getElementById('auth-step-2').classList.add('hidden');
-                        document.getElementById('auth-step-3').classList.remove('hidden');
-                        document.getElementById('login-screen').classList.remove('hidden');
+                    try {
+                        const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_profiles', mobile);
+                        const docSnap = await getDoc(docRef);
+                        
+                        if(docSnap.exists()) {
+                            userData = docSnap.data();
+                            listenToOrders();
+                            document.getElementById('mobile-connection-status').classList.remove('bg-yellow-400', 'animate-pulse');
+                            document.getElementById('mobile-connection-status').classList.add('bg-green-500');
+                            
+                            // Ensure name is displayed
+                            const nameDisplay = document.getElementById('display-user-name'); 
+                            if(nameDisplay && userData.name) nameDisplay.textContent = userData.name;
+                            
+                            // If user is on Login Screen, hide it
+                            document.getElementById('login-screen').classList.add('hidden');
+                        } else {
+                            // User exists in Auth but not in DB (incomplete registration)
+                            userData = null;
+                            if (!document.getElementById('login-screen').classList.contains('hidden')) {
+                                document.getElementById('auth-step-1').classList.add('hidden');
+                                document.getElementById('auth-step-2').classList.add('hidden');
+                                document.getElementById('auth-step-3').classList.remove('hidden');
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Profile Fetch Error", err);
+                        // Optional: Show retry or offline message
+                    } finally {
+                        isProfileLoading = false;
                     }
                 } else {
+                    currentUser = null;
+                    userData = null;
+                    isProfileLoading = false;
                     updateAuthUI(false);
                     if(!window.recaptchaVerifier) {
-                        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-                            'size': 'normal',
-                            'callback': (response) => { }
-                        });
-                        window.recaptchaVerifier.render();
+                        try {
+                             window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                                'size': 'normal',
+                                'callback': (response) => { }
+                            });
+                            window.recaptchaVerifier.render();
+                        } catch(e) {
+                             console.error("Recaptcha Init Error", e);
+                        }
                     }
                 }
             });
         });
 
-        // --- DRIVER LISTENER & AVAILABILITY UI ---
+        // --- OPTIMIZED DRIVER LISTENER ---
         function listenToDrivers() {
-            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'active_drivers'));
+            const q = query(collection(db, 'artifacts', appId, 'public', 'data', 'active_drivers'), limit(50));
             driversUnsubscribe = onSnapshot(q, (snapshot) => {
                 activeDrivers = [];
                 snapshot.forEach(doc => {
                     const d = doc.data();
-                    // Basic validation: must have vehicle details
                     if(d.vehicleType) activeDrivers.push(d);
                 });
                 updateFleetUI();
             });
         }
 
-        // Global Fleet Update
         function updateFleetUI() {
             const fleetText = document.getElementById('fleet-stats-text');
             const fleetContainer = document.getElementById('live-fleet-status');
@@ -690,13 +776,12 @@
                 fleetContainer.classList.add('hidden');
                 return;
             }
-            // Trigger recalculation of context-specific fleet if form is visible
             if(!document.getElementById('booking-form-card').classList.contains('hidden')) {
                 calculateEstimate(); 
             }
         }
 
-        // --- ORDER ID GENERATOR (YYMMDDHHmmSSS) ---
+        // --- ORDER ID GENERATOR ---
         function generateOrderId() {
             const now = new Date();
             const yy = String(now.getFullYear()).slice(-2);
@@ -704,9 +789,7 @@
             const dd = String(now.getDate()).padStart(2, '0');
             const hh = String(now.getHours()).padStart(2, '0');
             const min = String(now.getMinutes()).padStart(2, '0');
-            // Random sequence (3 digits) to simulate order count/extension.
             const seq = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
-            
             return `${yy}${mm}${dd}${hh}${min}${seq}`;
         }
 
@@ -719,18 +802,31 @@
             btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin h-5 w-5"></i> Sending...';
             btn.disabled = true;
             lucide.createIcons();
+            
+            // Timeout Guard
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Network Timeout")), 15000));
+            
             try {
-                confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier);
+                if(!window.recaptchaVerifier) {
+                    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {'size': 'normal'});
+                    await window.recaptchaVerifier.render();
+                }
+
+                confirmationResult = await Promise.race([
+                    signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier),
+                    timeoutPromise
+                ]);
+
                 document.getElementById('auth-step-1').classList.add('hidden');
                 document.getElementById('auth-step-2').classList.remove('hidden');
                 document.getElementById('display-otp-mobile').textContent = phoneNumber;
                 window.recaptchaVerifier.clear();
             } catch (error) {
                 console.error("SMS Error:", error);
-                alert("SMS Error: " + error.message);
+                alert("Error sending OTP: " + (error.message || "Please check connection"));
                 btn.innerHTML = 'Send OTP <i data-lucide="arrow-right" class="h-4 w-4"></i>';
                 btn.disabled = false;
-                window.recaptchaVerifier.reset();
+                if(window.recaptchaVerifier) window.recaptchaVerifier.reset();
                 lucide.createIcons();
             }
         };
@@ -745,19 +841,26 @@
                 const result = await confirmationResult.confirm(code);
                 const user = result.user;
                 const mobile = user.phoneNumber;
+                
+                // Fetch profile immediately to determine flow
                 const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'user_profiles', mobile);
                 const docSnap = await getDoc(docRef);
+                
                 if (docSnap.exists()) {
+                    userData = docSnap.data();
                     document.getElementById('login-screen').classList.add('hidden');
+                    updateAuthUI(true);
                     showSection('booking');
                     showBookingForm();
+                    const nameDisplay = document.getElementById('display-user-name'); 
+                    if(nameDisplay) nameDisplay.textContent = userData.name;
                 } else {
                     document.getElementById('auth-step-2').classList.add('hidden');
                     document.getElementById('auth-step-3').classList.remove('hidden');
                 }
             } catch (error) {
                 console.error("Verify Error:", error);
-                alert("Invalid OTP");
+                alert("Invalid OTP or Verification Failed");
                 btn.innerText = "Verify & Login";
                 btn.disabled = false;
             }
@@ -768,18 +871,26 @@
             if(!name) { alert("Please enter your name"); return; }
             const user = auth.currentUser;
             if(!user) return;
+            
+            const btn = document.querySelector('#auth-step-3 button');
+            const originalText = btn.innerText;
+            btn.innerText = "Saving..."; btn.disabled = true;
+
             try {
                 await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'user_profiles', user.phoneNumber), {
                     name: name,
                     mobile: user.phoneNumber,
                     createdAt: serverTimestamp()
                 });
+                userData = { name, mobile: user.phoneNumber }; // Set locally immediately
                 document.getElementById('login-screen').classList.add('hidden');
                 showSection('booking');
                 showBookingForm();
+                updateAuthUI(true);
             } catch(e) {
                 console.error("Profile Save Error:", e);
                 alert("Failed to save profile.");
+                btn.innerText = originalText; btn.disabled = false;
             }
         };
 
@@ -789,17 +900,28 @@
             const btn = document.getElementById('btn-send-otp');
             btn.innerHTML = 'Send OTP <i data-lucide="arrow-right" class="h-4 w-4"></i>';
             btn.disabled = false;
-            window.recaptchaVerifier.render();
+            try { window.recaptchaVerifier.render(); } catch(e) {}
             lucide.createIcons();
         }
 
-        window.handleLogout = () => { if(confirm("Are you sure you want to logout?")) { signOut(auth); location.reload(); } };
+        window.handleLogout = async () => { 
+            if(confirm("Are you sure you want to logout?")) { 
+                await signOut(auth); 
+                currentUser = null;
+                userData = null;
+                allUserOrders = [];
+                location.reload(); 
+            } 
+        };
 
         function updateAuthUI(isLoggedIn) {
             if(isLoggedIn) {
                 if(window.innerWidth < 768) document.getElementById('mobile-nav').classList.remove('hidden');
                 document.getElementById('desktop-auth-btn').innerHTML = `<button onclick="handleLogout()" class="text-xs font-bold text-red-500 bg-red-50 px-3 py-1.5 rounded-full hover:bg-red-100 transition">Logout</button>`;
-                if(userData) { const nameDisplay = document.getElementById('display-user-name'); if(nameDisplay) nameDisplay.textContent = userData.name; }
+                if(userData) { 
+                    const nameDisplay = document.getElementById('display-user-name'); 
+                    if(nameDisplay) nameDisplay.textContent = userData.name; 
+                }
             } else {
                 document.getElementById('mobile-nav').classList.add('hidden');
                 document.getElementById('desktop-auth-btn').innerHTML = `<button onclick="document.getElementById('login-screen').classList.remove('hidden')" class="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-full hover:bg-blue-100 transition">Login</button>`;
@@ -831,7 +953,7 @@
             document.getElementById('booking-success-view').classList.add('hidden');
             currentViewingOrderId = null;
             document.getElementById('section-title').textContent = "Book Ride";
-            updateFleetUI(); // Refresh fleet status when form opens
+            updateFleetUI(); 
         };
 
         function listenToOrders() {
@@ -850,6 +972,7 @@
                     if (updatedOrder) renderLiveTripDetails(updatedOrder);
                 }
 
+                // Check for duplicate/assignment popups
                 active.forEach(b => {
                     if (b.status === 'assigned' && !sessionStorage.getItem(`popup_shown_${b.id}`)) {
                         if (currentViewingOrderId !== b.id) showBookingConfirmedPopup(b);
@@ -860,6 +983,81 @@
                 if(!document.getElementById('live-status-card').classList.contains('hidden')) filterOrdersTab(currentFilterTab);
             });
         }
+        
+        // --- RATING LOGIC ---
+        window.openRatingModal = (order) => {
+            currentRatingOrderId = order.id;
+            const modal = document.getElementById('rating-modal');
+            const detailsContainer = document.getElementById('rating-trip-details');
+            const dName = order.driverName || "Driver";
+            const dImage = order.driverImage || "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+            const dVehicle = order.driverVehicle || "Vehicle";
+            const route = `${order.from.split(',')[0]} ➝ ${order.to.split(',')[0]}`;
+            const price = order.price;
+
+            detailsContainer.innerHTML = `
+                <img src="${dImage}" class="w-12 h-12 rounded-lg object-cover bg-white shadow-sm" onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-center mb-0.5">
+                        <p class="text-xs font-bold text-slate-900 truncate">${dName}</p>
+                        <span class="text-[10px] font-bold text-slate-500 bg-white px-1.5 py-0.5 rounded border border-slate-200">₹${price}</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 truncate">${dVehicle}</p>
+                    <p class="text-[10px] text-blue-600 font-bold truncate mt-0.5">${route}</p>
+                </div>
+            `;
+            modal.classList.remove('hidden');
+            resetStarRating();
+            lucide.createIcons();
+        };
+
+        window.closeRatingModal = (isSkipped = false) => {
+            document.getElementById('rating-modal').classList.add('hidden');
+            if (isSkipped && currentRatingOrderId) sessionStorage.setItem(`rating_ignored_${currentRatingOrderId}`, 'true');
+            currentRatingOrderId = null;
+        };
+
+        window.handleStarClick = (rating) => {
+            currentRatingStars = rating;
+            for (let i = 1; i <= 5; i++) {
+                const icon = document.getElementById(`star-${i}`);
+                if (i <= rating) {
+                    icon.classList.remove('text-slate-300', 'stroke-[1.5]');
+                    icon.classList.add('text-yellow-400', 'fill-current');
+                } else {
+                    icon.classList.add('text-slate-300', 'stroke-[1.5]');
+                    icon.classList.remove('text-yellow-400', 'fill-current');
+                }
+            }
+        };
+
+        window.resetStarRating = () => {
+            currentRatingStars = 0;
+            document.getElementById('rating-feedback').value = '';
+            for (let i = 1; i <= 5; i++) {
+                const icon = document.getElementById(`star-${i}`);
+                icon.classList.add('text-slate-300', 'stroke-[1.5]');
+                icon.classList.remove('text-yellow-400', 'fill-current');
+            }
+        };
+
+        window.submitRating = async () => {
+            if (currentRatingStars === 0) { alert("Please select a star rating"); return; }
+            if (!currentRatingOrderId) return;
+            const btn = document.getElementById('submit-rating-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "Submitting..."; btn.disabled = true;
+            const feedback = document.getElementById('rating-feedback').value.trim();
+            try {
+                const bookingRef = doc(db, 'artifacts', appId, 'public', 'data', 'bookings', currentRatingOrderId);
+                await updateDoc(bookingRef, { userRating: currentRatingStars, userFeedback: feedback });
+                closeRatingModal(true);
+            } catch (e) {
+                console.error("Rating Error:", e); alert("Failed to submit rating. Please try again.");
+            } finally {
+                btn.innerText = originalText; btn.disabled = false;
+            }
+        };
 
         // --- ORDER FILTERING & UI RENDERING ---
         let currentFilterTab = 'all';
@@ -935,16 +1133,31 @@
                 const dPlate = order.driverPlate || '';
                 const dPhone = order.driverPhone || '917842424201';
                 driverHtml = `
-                <div class="bg-slate-50 p-4 rounded-2xl mb-6">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase mb-2">Driver Details</p>
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-400 shadow-sm"><i data-lucide="user" class="h-5 w-5"></i></div>
-                        <div>
-                            <p class="font-bold text-slate-900 text-sm">${dName}</p>
-                            <p class="text-xs text-slate-500">${dVehicle} • ${dPlate}</p>
+                <div class="bg-blue-50 border border-blue-100 p-4 rounded-2xl mb-6 text-left animate-fade-in">
+                    <p class="text-[10px] font-bold text-blue-500 uppercase mb-3">Driver Assigned</p>
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="relative">
+                            <img src="${order.driverImage || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" 
+                                 class="w-16 h-16 rounded-2xl object-cover shadow-sm border-2 border-white" 
+                                 onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                            <div class="absolute -bottom-2 -right-2 bg-white px-1.5 py-0.5 rounded-lg shadow-sm border border-slate-100 flex items-center gap-0.5">
+                                <i data-lucide="star" class="h-3 w-3 text-yellow-400 fill-current"></i>
+                                <span class="text-[10px] font-bold text-slate-800">${order.driverRating || '4.8'}</span>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-black text-slate-900 text-lg leading-tight">${dName}</h4>
+                            <p class="text-xs text-slate-500 font-medium mb-2">ID: ${order.driverId ? order.driverId.slice(-6).toUpperCase() : 'N/A'}</p>
+                            <div class="flex items-center gap-3 text-xs">
+                                <span class="bg-white px-2 py-1 rounded-lg border border-blue-100 text-blue-700 font-bold"><i data-lucide="award" class="h-3 w-3 inline mr-1"></i>${order.driverTrips || '120+'} Rides</span>
+                            </div>
                         </div>
                     </div>
-                    ${isActive ? `<a href="tel:${dPhone}" class="mt-3 w-full py-2.5 bg-green-500 text-white rounded-xl font-bold text-xs shadow-lg flex items-center justify-center gap-2"><i data-lucide="phone" class="h-3 w-3"></i> Call Driver</a>` : ''}
+                    <div class="bg-white p-3 rounded-xl border border-blue-100 mb-4 flex items-center justify-between">
+                        <div><p class="text-[10px] text-slate-400 font-bold uppercase">Vehicle</p><p class="text-sm font-bold text-slate-900">${dVehicle}</p></div>
+                        <div class="text-right"><p class="text-[10px] text-slate-400 font-bold uppercase">Plate</p><p class="text-sm font-bold text-slate-900 font-mono">${dPlate}</p></div>
+                    </div>
+                    ${isActive ? `<a href="tel:${dPhone}" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 transition hover:bg-blue-700"><i data-lucide="phone" class="h-4 w-4"></i> Call Driver</a>` : ''}
                 </div>`;
             } else {
                 driverHtml = `
@@ -955,9 +1168,23 @@
             }
 
             const timeStr = order.createdAt ? new Date(order.createdAt.seconds * 1000).toLocaleString() : 'Just now';
-            // Show OTP if order is assigned or started.
-            // Even if pending initially, OTP is now generated upfront, so it will display once status changes.
             const showOtp = ['assigned', 'started'].includes(order.status) && order.otp;
+
+            let cancelReasonHtml = '';
+            if (order.status === 'cancelled') {
+                const reason = order.cancelReason || "Cancelled by driver due to unforeseen circumstances.";
+                const byUser = order.cancelledBy === 'user' ? "(You)" : "(Driver)";
+                cancelReasonHtml = `<div class="bg-red-50 border border-red-100 p-4 rounded-2xl mb-4 text-left">
+                    <p class="text-xs font-bold text-red-600 uppercase mb-1">Cancellation Reason ${byUser}</p>
+                    <p class="text-sm text-slate-700">${reason}</p>
+                </div>`;
+            }
+            
+            let ratingHtml = '';
+            if (order.status === 'completed' && order.userRating) {
+                let stars = ''; for(let i=0; i<order.userRating; i++) stars += '★';
+                ratingHtml = `<div class="bg-yellow-50 border border-yellow-100 p-4 rounded-2xl mb-4"><p class="text-xs font-bold text-yellow-600 uppercase mb-1">Your Rating</p><p class="text-yellow-500 text-lg tracking-widest">${stars}</p>${order.userFeedback ? `<p class="text-xs text-slate-600 mt-1 italic">"${order.userFeedback}"</p>` : ''}</div>`;
+            }
 
             content.innerHTML = `
                 <div class="text-center mb-6">
@@ -968,31 +1195,17 @@
                 </div>
                 
                 <div class="space-y-4 mb-6">
-                    <div class="flex justify-between border-b border-slate-100 pb-2">
-                        <span class="text-xs text-slate-500">Status</span>
-                        <span class="text-xs font-bold uppercase text-slate-900">${order.status}</span>
-                    </div>
-                    <div class="flex justify-between border-b border-slate-100 pb-2">
-                        <span class="text-xs text-slate-500">Booked At</span>
-                        <span class="text-xs font-bold text-slate-900">${timeStr}</span>
-                    </div>
-                     <div class="flex justify-between border-b border-slate-100 pb-2">
-                        <span class="text-xs text-slate-500">Seats</span>
-                        <span class="text-xs font-bold text-slate-900">${order.passengers || 1}</span>
-                    </div>
-                     <div class="flex justify-between border-b border-slate-100 pb-2">
-                        <span class="text-xs text-slate-500">Cost</span>
-                        <span class="text-xs font-bold text-slate-900">₹${order.price}</span>
-                    </div>
+                    <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-xs text-slate-500">Status</span><span class="text-xs font-bold uppercase text-slate-900">${order.status}</span></div>
+                    <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-xs text-slate-500">Booked At</span><span class="text-xs font-bold text-slate-900">${timeStr}</span></div>
+                     <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-xs text-slate-500">Seats</span><span class="text-xs font-bold text-slate-900">${order.passengers || 1}</span></div>
+                     <div class="flex justify-between border-b border-slate-100 pb-2"><span class="text-xs text-slate-500">Cost</span><span class="text-xs font-bold text-slate-900">₹${order.price}</span></div>
                     <div>
                         <span class="text-xs text-slate-500 block mb-1">Route</span>
-                        <div class="flex items-center gap-2 text-sm font-medium text-slate-900">
-                            <span class="truncate max-w-[150px]">${order.from}</span>
-                            <i data-lucide="arrow-right" class="h-4 w-4 text-slate-400"></i>
-                            <span class="truncate max-w-[150px]">${order.to}</span>
-                        </div>
+                        <div class="flex items-center gap-2 text-sm font-medium text-slate-900"><span class="truncate max-w-[150px]">${order.from}</span><i data-lucide="arrow-right" class="h-4 w-4 text-slate-400"></i><span class="truncate max-w-[150px]">${order.to}</span></div>
                     </div>
                 </div>
+                ${cancelReasonHtml}
+                ${ratingHtml}
                 ${driverHtml}
                 <div class="grid ${isActive ? 'grid-cols-2' : 'grid-cols-1'} gap-3">
                     ${['pending', 'offered', 'assigned'].includes(order.status) ? `<button onclick="confirmCancel('${order.id}')" class="py-3 rounded-xl border border-red-100 text-red-500 font-bold text-sm hover:bg-red-50">Cancel Order</button>` : ''}
@@ -1059,12 +1272,10 @@
             updateRealTimeAvailability(fromLoc, toLoc);
         }
 
-        // --- NEW: Real-Time Availability based on Route ---
         function updateRealTimeAvailability(fromLoc, toLoc) {
             const fleetText = document.getElementById('fleet-stats-text');
             const fleetContainer = document.getElementById('live-fleet-status');
             
-            // Basic matching logic
             const tripFrom = fromLoc.toLowerCase();
             let routeDrivers = activeDrivers.filter(d => {
                 const dr = (d.prefRoute || '').toLowerCase();
@@ -1076,7 +1287,6 @@
                 return locMatch;
             });
 
-            // Filter further by type
             let count = 0;
             if (state.bookingType === 'shared') {
                 count = routeDrivers.filter(d => (d.vehicleType.includes('7 Seater') || d.vehicleType.includes('5 Seater')) && d.seatsAvailable > 0).length;
@@ -1091,19 +1301,38 @@
             fleetContainer.classList.remove('hidden');
         }
         
-        // --- NEW CONFIRMATION LOGIC ---
-        let pendingBookingPayload = null; // Store data if we need fallback/duplicate confirm
+        let pendingBookingPayload = null; 
         
         window.initiateBookingProcess = (e) => {
             e.preventDefault();
-            if(!currentUser) { alert("Please login first."); return; }
+            if(!currentUser) { 
+                document.getElementById('login-screen').classList.remove('hidden'); 
+                return; 
+            }
+            
+            // Wait for profile logic to settle
+            if(isProfileLoading) {
+                const btn = document.getElementById('submit-btn');
+                const orig = btn.innerHTML;
+                btn.innerText = "Loading Profile...";
+                setTimeout(() => { btn.innerHTML = orig; initiateBookingProcess(e); }, 1000);
+                return;
+            }
+
+            // CRITICAL FIX: Ensure userData exists before proceeding
+            if(!userData) {
+                 // Try to reload or force re-auth flow
+                 document.getElementById('login-screen').classList.remove('hidden');
+                 document.getElementById('auth-step-3').classList.remove('hidden');
+                 alert("Please complete your profile first.");
+                 return;
+            }
             
             // 1. Prepare Data
             const from = document.getElementById('from-loc').value; 
             const to = document.getElementById('to-loc').value; 
             let requiredVehicle = 'ANY';
             
-            // Determine required vehicle
             if (state.bookingType === 'shared') { 
                 const seatType = document.querySelector('input[name="seat-type"]:checked').value; 
                 requiredVehicle = `SHARED_${seatType}`; 
@@ -1114,7 +1343,6 @@
                 requiredVehicle = cabVariant === 'suv' ? 'CAB_7' : 'CAB_5'; 
             }
 
-            // 2. Check Duplicate
             const hasDuplicate = allUserOrders.find(o => 
                 ['pending', 'assigned', 'started'].includes(o.status) && 
                 o.requiredVehicle === requiredVehicle
@@ -1122,11 +1350,10 @@
             
             if (hasDuplicate) {
                 document.getElementById('duplicate-booking-modal').classList.remove('hidden');
-                return; // Stop here, wait for modal
+                return;
             }
             
-            // No duplicate, proceed
-            executeBooking(false); // false = not forced (allow fallback check)
+            executeBooking(false); 
         };
 
         window.closeDuplicateModal = () => document.getElementById('duplicate-booking-modal').classList.add('hidden');
@@ -1135,7 +1362,6 @@
             executeBooking(false);
         };
 
-        // Fallback Logic
         let fallbackDriver = null;
         window.closeFallbackModal = () => document.getElementById('fallback-booking-modal').classList.add('hidden');
         document.getElementById('confirm-fallback-btn').onclick = () => {
@@ -1144,16 +1370,26 @@
         };
 
         async function executeBooking(forceAnyDriver, specificDriver = null) {
+            // SAFEGUARD: userData check again
+            if (!userData) {
+                alert("Session incomplete. Please login again.");
+                location.reload();
+                return;
+            }
+
             const overlay = document.getElementById('card-searching-overlay');
             overlay.classList.remove('hidden');
             const btn = document.getElementById('submit-btn'); const originalText = btn.innerHTML; 
             btn.innerHTML = '<i data-lucide="loader-2" class="animate-spin h-5 w-5"></i> Processing...'; 
             btn.disabled = true;
 
-            const from = document.getElementById('from-loc').value; const to = document.getElementById('to-loc').value; const mobile = currentUser.phoneNumber; const name = userData.name; const date = document.getElementById('travel-date').value; const price = document.getElementById('total-price-mobile').textContent;
+            const from = document.getElementById('from-loc').value; const to = document.getElementById('to-loc').value; 
+            const mobile = currentUser.phoneNumber; 
+            const name = userData.name; // This is now safe
+            const date = document.getElementById('travel-date').value; const price = document.getElementById('total-price-mobile').textContent;
+            
             let displayFrom = from; let displayTo = to; let serviceName = ""; let requiredVehicle = 'ANY';
             
-            // Re-calc logic for payload
             if (state.bookingType === 'shared') { const seatType = document.querySelector('input[name="seat-type"]:checked').value; const acType = document.querySelector('input[name="ac-type"]:checked').value; serviceName = `${seatType} Seater (${acType.toUpperCase()}) - ${state.passengers} Seats`; requiredVehicle = `SHARED_${seatType}`; } 
             else if (state.service === 'ambulance') { const selectedVariant = document.querySelector('input[name="amb-type"]:checked').value; const tripTypeStr = state.ambTripType === 'oneWay' ? "One Way" : "Round Trip"; serviceName = `Ambulance (${selectedVariant.toUpperCase()}) - ${tripTypeStr}`; requiredVehicle = 'AMBULANCE'; displayFrom = document.getElementById('amb-pickup-addr').value || displayFrom; displayTo = document.getElementById('amb-drop-addr').value || displayTo; } 
             else { 
@@ -1174,19 +1410,12 @@
 
                 const delayPromise = new Promise(resolve => setTimeout(resolve, 1500));
                 
-                // Find driver logic
                 let selectedDriver = specificDriver;
-
-                // STRICT RULE: Only Auto-Assign for SHARED rides. 
-                // Private/Ambulance rides must be manually accepted (Pending status) to ensure requirements/rules are met.
                 const isAutoAssignAllowed = state.bookingType === 'shared';
 
                 if (!selectedDriver && isAutoAssignAllowed) {
-                    // Try exact match with LOCATION FILTER
                      for(let d of activeDrivers) {
                         let isMatch = false;
-                        
-                        // --- STRICT LOCATION MATCHING ---
                         const dr = (d.prefRoute || '').toLowerCase();
                         const tripFrom = from.toLowerCase();
 
@@ -1207,9 +1436,7 @@
                         if (isMatch) { selectedDriver = d; break; }
                      }
 
-                    // Fallback Check
                     if (!selectedDriver && !forceAnyDriver && state.service !== 'ambulance') {
-                        // Look for alternative in SAME LOCATION
                         let altDriver = activeDrivers.find(d => {
                              const dr = (d.prefRoute || '').toLowerCase();
                              const tripFrom = from.toLowerCase();
@@ -1219,18 +1446,15 @@
                              else if (dr === 'rgi airport' && (tripFrom.includes('airport') || tripFrom.includes('rgi'))) locMatch = true;
                              else if (dr === 'hyderabad' && !tripFrom.includes('karimnagar')) locMatch = true;
                              
-                             // Must check seats available for current requested passenger count
                              return locMatch && d.seatsAvailable >= state.passengers && d.vehicleType !== 'Ambulance';
                         });
                         
                         if (altDriver) {
-                            // Determine Alt Price
                             const altType = altDriver.vehicleType.includes('SUV') || altDriver.vehicleType.includes('7') ? '7' : '5';
-                            const altAc = 'ac'; // Assume AC available for simple fallback pricing, or refine based on driver data if available
+                            const altAc = 'ac'; 
                             const altRate = PRICES.SHARED[`SEATER_${altType}`][altAc];
                             const altTotal = (altRate * state.passengers).toLocaleString();
 
-                            // Show Fallback Modal
                             overlay.classList.add('hidden');
                             btn.innerHTML = originalText; btn.disabled = false;
                             
@@ -1239,19 +1463,27 @@
                             
                             fallbackDriver = altDriver;
                             document.getElementById('fallback-booking-modal').classList.remove('hidden');
-                            return; // Stop process, wait for user
+                            return; 
                         }
                     }
                 }
 
-                // Generate Custom ID
                 const customId = generateOrderId();
                 const otpVal = Math.floor(1000 + Math.random() * 9000);
                 
-                // If specific driver forced via fallback, update price in payload if necessary (omitted for simplicity, using original estimate)
-                const bookingData = { userId: currentUser.uid, name, mobile, date, price, serviceName, from: displayFrom, to: displayTo, requiredVehicle, vehicleType: targetVehicleType, passengers: state.passengers, otp: otpVal, createdAt: serverTimestamp(), rejectedBy: [] };
+                const bookingData = { 
+                    userId: currentUser.uid, 
+                    name, mobile, date, price, serviceName, 
+                    from: displayFrom, to: displayTo, 
+                    requiredVehicle, vehicleType: targetVehicleType, 
+                    passengers: state.passengers, 
+                    otp: otpVal, 
+                    createdAt: serverTimestamp(), 
+                    rejectedBy: [],
+                    // NEW: Add a routeKey for driver filtering efficiency
+                    routeKey: from === "JBS-Hyderabad" ? "JBS" : (from === "Karimnagar" ? "Karimnagar" : (from === "Airport-RGI" ? "RGI Airport" : "Hyderabad"))
+                };
                 
-                // Firestore Write
                 if (selectedDriver) { 
                     bookingData.status = 'assigned'; 
                     bookingData.driverId = selectedDriver.uid; 
@@ -1259,6 +1491,9 @@
                     bookingData.driverVehicle = selectedDriver.vehicleType; 
                     bookingData.driverPlate = selectedDriver.vehicleNo; 
                     bookingData.driverPhone = selectedDriver.phone || ""; 
+                    bookingData.driverImage = selectedDriver.photoUrl || null;
+                    bookingData.driverRating = selectedDriver.rating || "4.8";
+                    bookingData.driverTrips = selectedDriver.trips || "120+";
 
                     await runTransaction(db, async (transaction) => { 
                         const driverRef = doc(db, 'artifacts', appId, 'public', 'data', 'active_drivers', selectedDriver.uid); 
@@ -1300,7 +1535,7 @@
             }
         }
 
-        // --- RENDER LIVE DETAILS (Same as previous) ---
+        // --- RENDER LIVE DETAILS ---
         function renderLiveTripDetails(order) {
             const container = document.getElementById('booking-success-view');
             const isActive = ['assigned', 'started'].includes(order.status);
@@ -1312,22 +1547,55 @@
             if (order.status === 'pending') statusColor = 'text-yellow-600 bg-yellow-50';
 
             let driverBlock = '';
-            if (isActive) {
+            if (isActive || order.status === 'completed') {
+                const dName = order.driverName || "Driver Assigned";
+                const dImage = order.driverImage || 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+                const dRating = order.driverRating || "4.8";
+                const dTrips = order.driverTrips || "120+";
+                const dVehicle = order.driverVehicle || "Vehicle";
+                const dPlate = order.driverPlate || "";
+                const dId = order.driverId ? order.driverId.slice(-6).toUpperCase() : 'N/A';
+
                 driverBlock = `
-                <div class="bg-blue-50 border border-blue-100 p-4 rounded-2xl mb-6 text-left animate-fade-in">
-                    <p class="text-[10px] font-bold text-blue-500 uppercase mb-3">Driver Assigned</p>
-                    <div class="flex items-center gap-4 mb-4">
-                        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center text-blue-600 shadow-sm border border-blue-100">
-                            <i data-lucide="user" class="h-6 w-6"></i>
+                <div class="bg-blue-50 border border-blue-100 p-4 rounded-2xl mb-6 text-left animate-fade-in shadow-sm">
+                    <div class="flex items-center justify-between mb-3">
+                        <p class="text-[10px] font-bold text-blue-500 uppercase">Driver Details</p>
+                        <span class="text-[10px] font-mono text-slate-400 bg-white px-1.5 py-0.5 rounded border border-blue-100">ID: ${dId}</span>
+                    </div>
+                    
+                    <div class="flex items-start gap-4 mb-4">
+                        <div class="relative flex-shrink-0">
+                            <img src="${dImage}" 
+                                 class="w-16 h-16 rounded-2xl object-cover shadow-sm border-2 border-white bg-white" 
+                                 onerror="this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png'">
+                            <div class="absolute -bottom-2 -right-2 bg-white px-1.5 py-0.5 rounded-lg shadow-sm border border-slate-100 flex items-center gap-0.5">
+                                <i data-lucide="star" class="h-3 w-3 text-yellow-400 fill-current"></i>
+                                <span class="text-[10px] font-bold text-slate-800">${dRating}</span>
+                            </div>
                         </div>
-                        <div>
-                            <p class="font-black text-slate-900 text-lg">${order.driverName}</p>
-                            <p class="text-xs font-bold text-slate-500">${order.driverVehicle} • ${order.driverPlate}</p>
+                        
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-black text-slate-900 text-lg leading-tight truncate">${dName}</h4>
+                            <div class="flex items-center gap-2 mt-1 mb-2">
+                                <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <i data-lucide="award" class="h-3 w-3"></i> ${dTrips} Rides
+                                </span>
+                            </div>
                         </div>
                     </div>
-                    <a href="tel:${order.driverPhone}" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 transition hover:bg-blue-700">
-                        <i data-lucide="phone" class="h-4 w-4"></i> Call Driver
-                    </a>
+                    
+                    <div class="bg-white p-3 rounded-xl border border-blue-100 mb-4 flex items-center justify-between shadow-sm">
+                        <div>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase">Vehicle</p>
+                            <p class="text-sm font-bold text-slate-900">${dVehicle}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] text-slate-400 font-bold uppercase">Plate</p>
+                            <p class="text-sm font-bold text-slate-900 font-mono">${dPlate}</p>
+                        </div>
+                    </div>
+
+                    ${isActive ? `<a href="tel:${order.driverPhone}" class="w-full py-3 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 transition hover:bg-blue-700"><i data-lucide="phone" class="h-4 w-4"></i> Call Driver</a>` : ''}
                 </div>`;
             } else if (order.status === 'pending' || order.status === 'offered') {
                 driverBlock = `
@@ -1353,6 +1621,16 @@
                      <p class="text-4xl font-black tracking-[0.2em]">${order.otp}</p>
                      <p class="text-[10px] text-slate-400 mt-2">Share this code with driver to start ride</p>
                 </div>` : '';
+
+            let cancelReasonHtml = '';
+            if (order.status === 'cancelled') {
+                const reason = order.cancelReason || "Cancelled by driver due to unforeseen circumstances.";
+                const byUser = order.cancelledBy === 'user' ? "(You)" : "(Driver)";
+                cancelReasonHtml = `<div class="bg-red-50 border border-red-100 p-4 rounded-2xl mb-4 text-left">
+                    <p class="text-xs font-bold text-red-600 uppercase mb-1">Cancellation Reason ${byUser}</p>
+                    <p class="text-sm text-slate-700">${reason}</p>
+                </div>`;
+            }
 
             container.innerHTML = `
                 <div class="mb-6">
@@ -1382,6 +1660,7 @@
                         <p class="text-sm font-bold text-slate-900 truncate">${order.to.split(',')[0]}</p>
                     </div>
                 </div>
+                ${cancelReasonHtml}
                 ${driverBlock}
                 <div class="mt-auto space-y-3">
                      ${['pending', 'offered', 'assigned'].includes(order.status) ? `<button onclick="confirmCancel('${order.id}')" class="w-full py-3.5 rounded-xl border border-red-100 text-red-500 font-bold text-sm hover:bg-red-50 transition">Cancel Order</button>` : ''}
@@ -1400,13 +1679,34 @@
         }
         
         let cancelTargetId = null;
-        window.confirmCancel = (id) => { cancelTargetId = id; document.getElementById('cancel-modal').classList.remove('hidden'); };
+        window.confirmCancel = (id) => { 
+            cancelTargetId = id; 
+            document.getElementById('cancel-reason-select').value = "";
+            document.getElementById('cancel-modal').classList.remove('hidden'); 
+        };
         window.closeCancelModal = () => { cancelTargetId = null; document.getElementById('cancel-modal').classList.add('hidden'); };
+        
         document.getElementById('confirm-cancel-btn').addEventListener('click', async () => {
             if(!cancelTargetId) return;
+            const reasonSelect = document.getElementById('cancel-reason-select');
+            const reason = reasonSelect.value;
+            if(!reason) { alert("Please select a cancellation reason."); return; }
+
             const btn = document.getElementById('confirm-cancel-btn'); const originalText = btn.innerText;
             btn.innerText = "Cancelling..."; btn.disabled = true;
-            try { await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', cancelTargetId), { status: 'cancelled' }); closeCancelModal(); document.getElementById('order-modal').classList.add('hidden'); } catch(e) { console.log("Cancel error", e); alert("Failed to cancel"); } finally { btn.innerText = originalText; btn.disabled = false; }
+            try { 
+                await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'bookings', cancelTargetId), { 
+                    status: 'cancelled',
+                    cancelReason: reason,
+                    cancelledBy: 'user'
+                }); 
+                closeCancelModal(); 
+                document.getElementById('order-modal').classList.add('hidden'); 
+            } catch(e) { 
+                console.log("Cancel error", e); alert("Failed to cancel"); 
+            } finally { 
+                btn.innerText = originalText; btn.disabled = false; 
+            }
         });
 
         window.cancelBooking = window.confirmCancel; 
