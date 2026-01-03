@@ -62,7 +62,7 @@ It features a mobile-first Progressive Web App (PWA) for customers, a landing pa
 ### **Installation**
 
 1. **Clone the repository:**  
-   git clone \[https://github.com/yourusername/travel-with-nandu.git\](https://github.com/yourusername/travel-with-nandu.git)  
+   git clone \[https://github.com/mani1028/travelweb](https://github.com/mani1028/travelweb)  
    cd travel-with-nandu
 
 2. **Firebase Setup:**  
