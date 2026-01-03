@@ -1,98 +1,134 @@
-# **🚀 Nandu Travels Platform (v1.1.0)**
+# **🚖 Travel With Nandu \- Intercity Cab & Ambulance Platform**
 
-⚠️ Release Status: Pre-Release / Beta  
-🛑 Testing Status: Partially Tested  
-📅 Last Updated: December 27, 2025
+**Travel With Nandu** is a full-stack web application designed as an aggregator platform for intercity travel between **Karimnagar** and **Hyderabad**. The platform facilitates booking for Shared Rides, Private Cabs, and Emergency Ambulance services.
 
-## **📝 Overview**
+It features a mobile-first Progressive Web App (PWA) for customers, a landing page for driver partners, and a comprehensive Admin Dashboard for fleet management and analytics.
 
-**Travel With Nandu** is a comprehensive travel ecosystem designed to bridge the gap between customers and local travel partners. This repository contains the complete source code for the platform, comprising two main components:
+## **🌟 Key Features**
 
-1. **Customer Web App:** A seamless booking interface for users.  
-2. **Driver Partner Portal:** A dedicated dashboard for drivers to manage rides and earnings.
+### **📱 Customer App (PWA)**
 
-The system is built on a serverless architecture using **Google Firebase** (Authentication & Firestore) with a highly responsive, mobile-first frontend powered by **Tailwind CSS**.
+* **Authentication:** Secure Login/Signup using Mobile OTP (Firebase Auth).  
+* **Multi-Service Booking:**  
+  * **Shared Rides:** Book individual seats in Innovas/Ertigas.  
+  * **Private Cabs:** Rent full Sedans or SUVs.  
+  * **Ambulance:** 24/7 Emergency booking (Basic & Ventilator support).  
+* **Live Tracking:** Real-time status updates (Pending \-\> Assigned \-\> Started \-\> Completed).  
+* **Profile Management:** Edit details, view ride history, and rate drivers.  
+* **Support:** Built-in chat interface and ticket raising system.
 
-## **✨ Key Features**
+### **🛡️ Admin Dashboard**
 
-### **🚗 User Application (index.html)**
+* **Live Operations:** Monitor active bookings and force-cancel orders if necessary.  
+* **Driver Management:** Verify driver documents (License, RC, Insurance) and block/unblock drivers.  
+* **Customer Database:** View registered users and chat links.  
+* **Analytics:** Visual charts for Revenue trends and Service splits (Chart.js).  
+* **Settings:** Control Surge Pricing multipliers and send broadcast messages to drivers.
 
-The customer-facing application focuses on ease of use, security, and real-time feedback.
+### **🤝 Partner Portal**
 
-* **Authentication & Profile**  
-  * **Secure Login:** Mobile number authentication via Firebase Phone Auth (OTP).  
-  * **Onboarding:** Streamlined flow for new users to set up their profiles.  
-  * **Session Persistence:** Keeps users logged in for a smooth experience.  
-* **Advanced Booking Engine**  
-  * **Multi-Service Support:**  
-    * **Shared Cabs:** Economical 5-Seater & 7-Seater options.  
-    * **Private Taxis:** Sedan & SUV (AC/Non-AC variants) for exclusive travel.  
-    * **Ambulance Service:** Specialized booking for Basic, Standard (Oxygen), and ICU (Ventilator) ambulances.  
-  * **Dynamic Pricing:** Real-time fare estimation algorithm based on route distance, vehicle type, and passenger count.  
-  * **Route Logic:** Hard-coded optimizations for core routes (e.g., Karimnagar ⇄ Hyderabad/JBS/Airport).  
-* **Real-Time Intelligence**  
-  * **Live Availability:** Users can see the exact count of available drivers or seats on their selected route in real-time.  
-  * **Smart Fallback:** If a specific requested vehicle isn't available, the system intelligently suggests alternatives (e.g., suggesting a 7-seater if 5-seaters are full).  
-  * **Duplicate Detection:** Logic to prevent users from accidentally double-booking or creating conflicting ride requests.  
-* **Order Management**  
-  * **Live Tracking:** View assigned driver details including Name, Photo, Rating, and Vehicle Number.  
-  * **OTP Verification:** Secure "Start Ride" OTP displayed to the user to share with the driver.  
-  * **Trip History:** Comprehensive list of Active, Completed, and Cancelled trips.  
-  * **Rating System:** Interactive star rating and feedback mechanism for completed rides.  
-  * **Cancellation:** User-friendly cancellation flow with specific reason selection.
+* Informational landing page for onboarding new drivers.  
+* Earnings calculator and app download links.
 
-### **🚕 Driver Partner Portal (driver-portal.html)**
+## **🛠️ Tech Stack**
 
-A robust toolset for partners to manage their business efficiently.
+* **Frontend:** HTML5, JavaScript (ES6+ Modules).  
+* **Styling:** [Tailwind CSS](https://tailwindcss.com/) (via CDN).  
+* **Icons:** [Lucide Icons](https://lucide.dev/).  
+* **Backend / Database:** [Google Firebase](https://firebase.google.com/) (v11.6.1).  
+  * **Authentication:** Phone Auth & Email/Password (Admin).  
+  * **Firestore:** Real-time NoSQL database.  
+* **Charts:** [Chart.js](https://www.chartjs.org/).
 
-* **Onboarding & Identity**  
-  * **Registration:** Detailed capture of Vehicle details (Number Plate, Type).  
-  * **Partner IDs:** Auto-generation of unique IDs (Format: ID-YYYY-XXXX).  
-  * **Profile Management:** Capability to edit contact info and upload profile pictures.  
-* **Job Management Dashboard**  
-  * **Ride Radar:** Real-time stream of "New Requests" that specifically match the driver's vehicle type and preferred route.  
-  * **Smart Filtering:** Jobs are strictly filtered based on the Driver's settings (e.g., "AC Only" or specific "Hubs").  
-  * **Trip Workflow:** Full lifecycle management: Accept Job \-\> Verify OTP \-\> Start Trip \-\> Collect Cash \-\> Complete Trip.  
-  * **Exception Handling:** Options to report issues like "Customer Not Responding" or "Not Interested" to cancel rides gracefully.  
-* **Capacity Management**  
-  * **Manual Seat Filler:** Allows drivers to manually log passengers picked up offline, ensuring the platform's availability count remains accurate.  
-* **Wallet & Analytics**  
-  * **Earnings Tracker:** Visual dashboard displaying income versus expenses.  
-  * **Expense Logging:** Tools to manually log operational costs like Fuel, Tolls, and Maintenance.  
-  * **Trip Logs:** Detailed history of past trips with financial breakdowns.  
-* **Utilities**  
-  * **Theme Support:** Built-in Dark Mode and Light Mode.  
-  * **Document Upload:** UI for uploading Driving License and Insurance documents.  
-  * **Status Toggle:** Online/Offline switch with safety checks to prevent going offline while trips are active.
+## **📂 Project Structure**
 
-## **🛠 Technical Stack**
+/  
+├── index.html            \# Landing Page (Marketing)  
+├── app.html              \# Main Web App (Booking Logic)  
+├── partner.html          \# Driver Partner Information  
+├── admin.html            \# Admin Dashboard  
+├── terms.html            \# Terms of Service  
+├── privacy-policy.html   \# Privacy Policy  
+└── firebase-config.js    \# Firebase Configuration file
 
-* **Frontend:** HTML5, Vanilla JavaScript (ES6 Modules).  
-* **Styling:** Tailwind CSS (via CDN), Lucide Icons for UI elements.  
-* **Backend / Database:** Google Firebase Firestore (NoSQL) for real-time data syncing.  
-* **Authentication:** Firebase Phone Authentication (with reCAPTCHA verifier).  
-* **Deployment:** Ready for Static Web Hosting (e.g., GitHub Pages, Netlify, Firebase Hosting).
+## **🚀 Getting Started**
 
-## **📦 Deployment Instructions**
+### **Prerequisites**
 
-To deploy this project to your own environment:
+1. A code editor (VS Code recommended).  
+2. A Google Firebase account.  
+3. A local development server (e.g., Live Server extension for VS Code) is required due to ES Module imports and CORS policies.
 
-1. **Firebase Configuration:**  
-   * Create a project in the [Firebase Console](https://console.firebase.google.com/).  
-   * Enable **Authentication** (Phone Provider) and **Firestore**.  
-   * Replace the firebaseConfig object in both index.html and driver-portal.html with your project's specific keys.  
-   * Update the \_\_app\_id variable to match your desired Firestore collection structure.  
-2. **Firestore Rules:**  
-   * Set up Firestore security rules to allow read/write access to the /artifacts/{appId}/... path for authenticated users.  
-3. **Hosting:**  
-   * Deploy index.html as the main entry point (Customer App).  
-   * Deploy driver-portal.html as a separate route or within a protected directory (e.g., /partner) for drivers.
+### **Installation**
 
-## **🐛 Known Issues & Limitations**
+1. **Clone the repository:**  
+   git clone \[https://github.com/yourusername/travel-with-nandu.git\](https://github.com/yourusername/travel-with-nandu.git)  
+   cd travel-with-nandu
 
-* **Concurrency:** High-concurrency booking stress tests have not been performed; race conditions may occur under extremely heavy load.  
-* **Payment Integration:** The system currently relies on "Cash on Delivery" logic. Online payment gateway integration is planned for future releases.  
-* **Document Verification:** The document upload feature in the driver portal is currently a UI demonstration and does not perform backend file storage or OCR verification.  
-* **Edge Cases:** Network interruption handling during critical states (like "Booking Processing") requires further robustness testing.
+2. **Firebase Setup:**  
+   * Create a new project in the [Firebase Console](https://console.firebase.google.com/).  
+   * Enable **Authentication**:  
+     * Turn on **Phone Number** sign-in (for Users).  
+     * Turn on **Email/Password** sign-in (for Admin).  
+   * Create a **Firestore Database**.  
+   * Copy your web app configuration keys.  
+3. **Configure the App:**  
+   * Open firebase-config.js.  
+   * Replace the firebaseConfig object with your own credentials:
 
-*Developed with ❤️ for Nandu Travels.*
+export const firebaseConfig \= {  
+  apiKey: "YOUR\_API\_KEY",  
+  authDomain: "YOUR\_PROJECT\_ID.firebaseapp.com",  
+  projectId: "YOUR\_PROJECT\_ID",  
+  storageBucket: "YOUR\_PROJECT\_ID.appspot.com",  
+  messagingSenderId: "YOUR\_SENDER\_ID",  
+  appId: "YOUR\_APP\_ID"  
+};
+
+4. **Run the App:**  
+   * Open the folder in VS Code.  
+   * Right-click index.html (or app.html) and select **"Open with Live Server"**.
+
+## **🗄️ Database Structure (Firestore)**
+
+To ensure the app functions correctly, the following collections are used:
+
+| Collection Name | Document ID | Description |
+| :---- | :---- | :---- |
+| artifacts/{APP\_ID}/public/data/bookings | orderId | Stores all ride bookings. |
+| artifacts/{APP\_ID}/public/data/user\_profiles | phoneNumber | Stores customer profiles. |
+| artifacts/{APP\_ID}/drivers | driverId | Stores driver details, location, status, and docs. |
+| artifacts/{APP\_ID}/settings | config | Stores global settings (e.g., surgeMultiplier). |
+| artifacts/{APP\_ID}/support\_tickets | auto-id | Stores user complaints/issues. |
+
+**Note:** The code uses a namespaced structure under artifacts/travel-nandu-v1/... to organize data.
+
+## **🔐 Admin Access**
+
+To access admin.html:
+
+1. Create an admin user in your Firebase Authentication tab (Email/Password).  
+2. Open admin.html in your browser.  
+3. Login with those credentials.
+
+## **📱 Screenshots**
+
+| Landing Page | Booking App | Admin Dashboard |
+| :---- | :---- | :---- |
+| *(Add screenshot of index.html)* | *(Add screenshot of app.html)* | *(Add screenshot of admin.html)* |
+
+## **🤝 Contributing**
+
+Contributions are welcome\! Please follow these steps:
+
+1. Fork the repository.  
+2. Create a new branch (git checkout \-b feature/AmazingFeature).  
+3. Commit your changes (git commit \-m 'Add some AmazingFeature').  
+4. Push to the branch (git push origin feature/AmazingFeature).  
+5. Open a Pull Request.
+
+## **📄 License**
+
+This project is licensed under the MIT License \- see the [LICENSE](https://www.google.com/search?q=LICENSE) file for details.
+
+**Built with ❤️ for Telangana**
