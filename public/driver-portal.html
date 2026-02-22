@@ -713,9 +713,8 @@
                     </div>
 
                     <div class="mt-4 flex gap-2">
-                        <span class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold rounded-full border border-green-200 dark:border-green-900 flex items-center gap-1"><i data-lucide="badge-check" class="h-3 w-3"></i> Verified Partner</span>
-                        <span id="prof-verify-badge" class="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full">Pending Verification</span>
-                        <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold rounded-full border border-blue-200 dark:border-blue-900" id="prof-type">Type</span>
+                            <span id="prof-verify-badge" class="px-3 py-1 text-xs font-bold rounded-full"></span>
+                            <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold rounded-full border border-blue-200 dark:border-blue-900" id="prof-type">Type</span>
                     </div>
                 </div>
 
@@ -770,7 +769,6 @@
                                      <span class="text-xs font-medium dark:text-white">Driving License</span>
                                  </div>
                                  <span class="text-[10px] font-bold text-yellow-500 bg-yellow-100 px-2 py-0.5 rounded">Pending Upload</span>
-                                <span class="text-[10px] font-bold text-yellow-500 bg-yellow-100 px-2 py-0.5 rounded">Pending Upload</span>
                              </div>
                              <div class="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
                                  <div class="flex items-center gap-2">
@@ -778,7 +776,6 @@
                                      <span class="text-xs font-medium dark:text-white">Insurance</span>
                                  </div>
                                  <span class="text-[10px] font-bold text-yellow-500 bg-yellow-100 px-2 py-0.5 rounded">Pending Upload</span>
-                                <span class="text-[10px] font-bold text-yellow-500 bg-yellow-100 px-2 py-0.5 rounded">Pending Upload</span>
                              </div>
                         </div>
                     </div>
@@ -1511,7 +1508,59 @@ window.driverRegNextStep = (currentStep) => {
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem('nandu_theme', isDark ? 'dark' : 'light');
         };
-
+// --- SANITIZE INPUT HELPER ---
+function sanitizeInput(str) {
+    return String(str || "").trim();
+}
+// --- VERIFICATION BADGE UPDATER ---
+function updateVerificationBadge(data) {
+    const badge = document.getElementById("prof-verify-badge");
+    if (!badge) return;
+    const status = data.verificationStatus || "pending";
+    if (status === "verified") {
+        badge.innerText = "Verified Partner";
+        badge.className = "px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full";
+    } else if (status === "rejected") {
+        badge.innerText = "Verification Rejected";
+        badge.className = "px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full";
+    } else {
+        badge.innerText = "Pending Verification";
+        badge.className = "px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full";
+    }
+}
+// --- DOCUMENT STATUS UPDATER ---
+function updateDocumentStatus(data) {
+    const docs = data.documents || {};
+    const licenseStatus = docs.license || "pending";
+    const insuranceStatus = docs.insurance || "pending";
+    // Example: update UI elements if needed
+    // document.getElementById("license-status").innerText = licenseStatus;
+    // document.getElementById("insurance-status").innerText = insuranceStatus;
+}
+// --- UNIFIED PROFILE LOADER ---
+async function loadUserProfile(uid) {
+    const driverRef = doc(db, "drivers", uid);
+    const profileRef = doc(db, "user_profiles", uid);
+    const driverSnap = await getDoc(driverRef);
+    const profileSnap = await getDoc(profileRef);
+    const driverData = driverSnap.exists() ? driverSnap.data() : {};
+    const profileData = profileSnap.exists() ? profileSnap.data() : {};
+    driverProfile = { ...driverData, ...profileData };
+    // EMAIL (prefer profile → driver)
+    const email = profileData.email || driverData.email || "";
+    document.getElementById("prof-email").value = email;
+    // LOCATION (prefRoute stored in drivers)
+    const location =
+        driverData.prefRoute ||
+        profileData.location ||
+        driverData.location ||
+        "";
+    document.getElementById("prof-address").value = location;
+    // Call badge and document updaters
+    updateVerificationBadge(driverProfile);
+    updateDocumentStatus(driverProfile);
+    // ...existing code for other fields...
+}
         /* --- UI FUNCTIONS (EXPOSED TO WINDOW) --- */
 
         // --- HELPER: CAPACITY ---
@@ -2012,45 +2061,12 @@ window.driverRegNextStep = (currentStep) => {
             // 2. Add to Wallet
             await addDoc(collection(db, 'artifacts', APP_ID, 'drivers', driverId, 'wallet_txns'), { 
                 amount: parseInt(job.price), 
-                type: 'credit', 
-                jobId: job.id, 
-                date: serverTimestamp() 
+                jobId: job.id,
+                date: serverTimestamp(),
+                type: 'credit',
+                description: `Trip completed: ${job.from} → ${job.to}`
             });
-
-            // 3. Update Driver Stats (Accurate Job Count)
-            await updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), {
-                completedJobs: increment(1)
-            });
-            
-            // Update local stat immediately for UI snapiness
-            if(driverProfile) {
-                driverProfile.completedJobs = (driverProfile.completedJobs || 0) + 1;
-                document.getElementById('stat-jobs').innerText = driverProfile.completedJobs;
-            }
         }
-        
-        window.openOptions = (event, id) => {
-            event.stopPropagation();
-            pendingOptionsJobId = id;
-            document.getElementById('options-modal').classList.remove('hidden');
-        };
-
-        window.reportNoResponse = () => {
-            if(pendingOptionsJobId) { showToast("Reported: No Response", "success"); document.getElementById('options-modal').classList.add('hidden'); }
-        };
-
-        window.reportNotInterested = () => {
-             if(pendingOptionsJobId) { showToast("Reported: Not Interested", "success"); document.getElementById('options-modal').classList.add('hidden'); }
-        };
-
-        window.cancelTripReason = () => {
-             if(pendingOptionsJobId) {
-                updateDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'bookings', pendingOptionsJobId), { status: 'cancelled' });
-                showToast("Trip Cancelled", "error");
-                document.getElementById('options-modal').classList.add('hidden');
-            }
-        };
-        
         window.closeDocModal = () => document.getElementById('doc-upload-modal').classList.add('hidden');
         window.openDocModal = () => document.getElementById('doc-upload-modal').classList.remove('hidden');
         window.closeTripModal = () => document.getElementById('trip-details-modal').classList.add('hidden');
