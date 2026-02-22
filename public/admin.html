@@ -311,6 +311,7 @@
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 document.getElementById('admin-login-screen').style.display = 'none';
+                loadDriverProfile(user.uid);
                 init();
             } else {
                 document.getElementById('admin-login-screen').style.display = 'flex';

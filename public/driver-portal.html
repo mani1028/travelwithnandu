@@ -2039,6 +2039,45 @@ window.driverRegNextStep = (currentStep) => {
         
         init(); 
 
+// --- LOAD DRIVER PROFILE FROM FIRESTORE ---
+            async function loadDriverProfile(uid) {
+                // Use correct Firestore path: drivers/{UID}
+                const docRef = doc(db, "drivers", uid);
+                const snap = await getDoc(docRef);
+                if (!snap.exists()) {
+                    console.log("Driver profile not found");
+                    return;
+                }
+                const data = snap.data();
+                driverProfile = data;
+                // ===== HEADER =====
+                const nameEl = document.getElementById("driver-name");
+                if (nameEl) nameEl.innerText = data.name || "Driver";
+                const plateEl = document.getElementById("header-plate");
+                if (plateEl) plateEl.innerText = data.vehicleNo || "...";
+                // ===== PROFILE TAB =====
+                const profNameEl = document.getElementById("prof-name");
+                if (profNameEl) profNameEl.innerText = data.name || "Driver";
+                const profIdEl = document.getElementById("prof-id");
+                if (profIdEl) profIdEl.innerText = "ID-" + (data.customId || "N/A");
+                const profPhoneEl = document.getElementById("prof-phone");
+                if (profPhoneEl) profPhoneEl.innerText = data.phone || "Not set";
+                const profEmailEl = document.getElementById("prof-email");
+                if (profEmailEl) profEmailEl.value = data.email || "";
+                const profAddressEl = document.getElementById("prof-address");
+                if (profAddressEl) profAddressEl.value = data.prefRoute || "Not set";
+                const profTypeEl = document.getElementById("prof-type");
+                if (profTypeEl) profTypeEl.innerText = data.vehicleType || "Vehicle";
+                // ===== STATS =====
+                const statJobsEl = document.getElementById("stat-jobs");
+                if (statJobsEl) statJobsEl.innerText = data.completedJobs || 0;
+                // ===== SETTINGS =====
+                const homePrefRouteEl = document.getElementById("home-pref-route");
+                if (homePrefRouteEl) homePrefRouteEl.innerText = data.prefRoute || "...";
+                const homePrefAcEl = document.getElementById("home-pref-ac");
+                if (homePrefAcEl) homePrefAcEl.innerText = data.prefAc ? "AC" : "Non-AC";
+            }
+
     function androidSetDriver(phone){ if (window.Android && phone) { Android.setDriverPhone(phone); } }
     function androidGoOnline(phone){ if (window.Android && phone) { Android.driverOnline(phone); } }
     function androidGoOffline(phone){ if (window.Android && phone) { Android.driverOffline(phone); } }
