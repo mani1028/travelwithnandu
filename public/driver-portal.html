@@ -1073,19 +1073,6 @@ window.driverRegSubmit = async () => {
                 btn.innerHTML = "Verify & Login";
             }
         };
-                    
-                    transaction.set(doc(db, 'artifacts', APP_ID, 'drivers', user.uid), newProfile);
-                    transaction.set(counterRef, { date: dateStr, count: seq });
-                });
-                
-                // Reload to trigger auth listener fresh
-                location.reload();
-                
-            } catch(e) {
-                console.error("Reg Error", e);
-                alert("Registration Failed: " + e.message);
-            }
-        };
 
         // --- INIT ---
         // --- SANITIZE INPUT HELPER ---
