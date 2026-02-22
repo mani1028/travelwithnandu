@@ -1067,6 +1067,7 @@ window.driverRegSubmit = async () => {
                 vehicleType: type,
                 prefRoute: route,
                 status: 'offline',
+                isVerified: false,
                 rating: 5.0,
                 completedJobs: 0,
                 createdAt: serverTimestamp(),
@@ -2075,6 +2076,17 @@ async function loadDriverProfile(uid) {
     // PERSONAL INFO
     document.getElementById("prof-email").value = d.email || "";
     document.getElementById("prof-address").value = d.prefRoute || "";
+    // VERIFICATION BADGE
+    const badge = document.getElementById("prof-verify-badge");
+    if (badge) {
+        if (d.isVerified === true) {
+            badge.innerText = "Verified Partner";
+            badge.className = "px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full";
+        } else {
+            badge.innerText = "Pending Verification";
+            badge.className = "px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full";
+        }
+    }
     // STATS
     document.getElementById("stat-jobs").innerText = d.completedJobs || 0;
     // HOME SETTINGS
