@@ -713,8 +713,8 @@
                     </div>
 
                     <div class="mt-4 flex gap-2">
-                            <span id="prof-verify-badge" class="px-3 py-1 text-xs font-bold rounded-full"></span>
-                            <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold rounded-full border border-blue-200 dark:border-blue-900" id="prof-type">Type</span>
+                            <span id="prof-verify-badge" class="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full">Pending Verification</span>
+                                <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold rounded-full border border-blue-200 dark:border-blue-900" id="prof-type">Type</span>
                     </div>
                 </div>
 
@@ -728,10 +728,10 @@
                      <div class="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 text-center">
                           <p class="text-[10px] text-slate-400 font-bold uppercase">Rating</p>
                           <div class="flex items-center justify-center gap-1">
-                               <span class="text-2xl font-black text-slate-900 dark:text-white">4.9</span>
+                               <span id="stat-rating" class="text-2xl font-black text-slate-900 dark:text-white">5.0</span>
                                <i data-lucide="star" class="h-4 w-4 text-yellow-400 fill-current"></i>
                           </div>
-                          <span class="text-[9px] text-slate-400">50+ Reviews</span>
+                          <span class="text-[9px] text-slate-400"><span id="stat-reviews">0</span> Reviews</span>
                      </div>
                 </div>
 
@@ -768,14 +768,14 @@
                                      <i data-lucide="file-text" class="h-4 w-4 text-slate-400"></i>
                                      <span class="text-xs font-medium dark:text-white">Driving License</span>
                                  </div>
-                                 <span class="text-[10px] font-bold text-yellow-500 bg-yellow-100 px-2 py-0.5 rounded">Pending Upload</span>
+                                 <span id="license-status" class="text-[10px] font-bold text-yellow-500 bg-yellow-100 px-2 py-0.5 rounded">Pending Upload</span>
                              </div>
                              <div class="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
                                  <div class="flex items-center gap-2">
                                      <i data-lucide="shield" class="h-4 w-4 text-slate-400"></i>
                                      <span class="text-xs font-medium dark:text-white">Insurance</span>
                                  </div>
-                                 <span class="text-[10px] font-bold text-yellow-500 bg-yellow-100 px-2 py-0.5 rounded">Pending Upload</span>
+                                 <span id="insurance-status" class="text-[10px] font-bold text-yellow-500 bg-yellow-100 px-2 py-0.5 rounded">Pending Upload</span>
                              </div>
                         </div>
                     </div>
@@ -926,69 +926,7 @@
         
         // AUTH STATE
         let isRegistering = false; // Toggle between Login and Register
-   // ===== LOGIN / REGISTER TOGGLE =====
-window.toggleAuthMode = (mode) => {
-
-    isRegistering = (mode === 'register');
-
-    const btnLogin = document.getElementById('tab-login');
-    const btnRegister = document.getElementById('tab-register');
-    const title = document.getElementById('auth-title');
-    const sub = document.getElementById('auth-subtitle');
-
-    if (isRegistering) {
-
-        btnLogin.className =
-          "px-6 py-2 rounded-lg text-xs font-bold transition-all text-slate-500";
-
-        btnRegister.className =
-          "px-6 py-2 rounded-lg text-xs font-bold transition-all bg-white shadow-sm text-brand-600";
-
-        title.innerText = "New Partner";
-        sub.innerText = "Register to Drive";
-
-    } else {
-
-        btnLogin.className =
-          "px-6 py-2 rounded-lg text-xs font-bold transition-all bg-white shadow-sm text-brand-600";
-
-        btnRegister.className =
-          "px-6 py-2 rounded-lg text-xs font-bold transition-all text-slate-500";
-
-        title.innerText = "Partner Portal";
-        sub.innerText = "Driver Login";
-    }
-};
-
-
-// ===== REGISTRATION STEP NAVIGATION =====
-window.driverRegNextStep = (step) => {
-
-    if (step === 1) {
-
-        const name = document.getElementById('reg-name').value.trim();
-        if (!name) {
-            alert("Please enter your name");
-            return;
-        }
-
-        document.getElementById('driver-reg-step-1').classList.add('hidden');
-        document.getElementById('driver-reg-step-2').classList.remove('hidden');
-
-    } else if (step === 2) {
-
-        const plate = document.getElementById('reg-plate').value.trim();
-        if (!plate) {
-            alert("Please enter vehicle number");
-            return;
-        }
-
-        document.getElementById('driver-reg-step-2').classList.add('hidden');
-        document.getElementById('driver-reg-step-3').classList.remove('hidden');
-    }
-
-    if (window.lucide) lucide.createIcons();
-};
+// --- AUTH MODE TOGGLE (single authoritative definition below in window scope) ---
         // State
         let myActiveJobs = []; 
         let availableMarketJobs = []; 
@@ -1010,27 +948,7 @@ window.driverRegNextStep = (step) => {
 
         // --- AUTH FUNCTIONS (Exposed to Window for Button Clicks) ---
 
-// --- FIX: Registration Steps Navigation ---
-window.driverRegNextStep = (currentStep) => {
-    if (currentStep === 1) {
-        const name = document.getElementById('reg-name').value.trim();
-        if (!name) return alert("Please enter your name");
-
-        document.getElementById('driver-reg-step-1').classList.add('hidden');
-        document.getElementById('driver-reg-step-2').classList.remove('hidden');
-
-    } else if (currentStep === 2) {
-        const plate = document.getElementById('reg-plate').value.trim();
-        if (!plate) return alert("Please enter your vehicle number");
-
-        document.getElementById('driver-reg-step-2').classList.add('hidden');
-        document.getElementById('driver-reg-step-3').classList.remove('hidden');
-    }
-
-    if (window.lucide) lucide.createIcons();
-};
-
-// --- REGISTRATION SUBMISSION ---
+// --- REGISTRATION STEP NAVIGATION (single authoritative definition below in window scope) ---
 window.driverRegSubmit = async () => {
     const user = auth.currentUser;
     if (!user) return;
@@ -1359,15 +1277,61 @@ window.driverRegNextStep = (currentStep) => {
             driverId = user.uid;
             driverProfile = profile;
             
-            // Update UI
+            // Update UI - Basic Info
             document.getElementById("driver-name").innerText = profile.name || "Driver";
             document.getElementById("prof-name").innerText = profile.name || "Driver"; 
             document.getElementById("header-plate").innerText = profile.vehicleNo || "TS--";
-            document.getElementById("prof-phone").innerText = profile.phone;
+            document.getElementById("prof-phone").innerText = profile.phone || "Not set";
             document.getElementById("prof-id").innerText = profile.customId ? "ID-" + profile.customId : "ID-" + user.uid.slice(-4).toUpperCase();
             document.getElementById('stat-jobs').innerText = profile.completedJobs || 0;
             document.getElementById("prof-type").innerText = profile.vehicleType || "Vehicle"; 
-            
+
+            // --- FIX: Populate email and address fields ---
+            document.getElementById("prof-email").value = profile.email || "";
+            document.getElementById("prof-address").value = profile.prefRoute || profile.location || "";
+
+            // --- FIX: Rating from profile ---
+            if (document.getElementById('stat-rating')) {
+                document.getElementById('stat-rating').innerText = (profile.rating || 5.0).toFixed(1);
+            }
+            if (document.getElementById('stat-reviews')) {
+                document.getElementById('stat-reviews').innerText = profile.totalReviews || 0;
+            }
+
+            // --- FIX: Unified verification badge (supports both isVerified boolean and verificationStatus string) ---
+            const badge = document.getElementById("prof-verify-badge");
+            if (badge) {
+                const status = profile.verificationStatus || (profile.isVerified === true ? "verified" : "pending");
+                if (status === "verified") {
+                    badge.innerText = "Verified Partner";
+                    badge.className = "px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full";
+                } else if (status === "rejected") {
+                    badge.innerText = "Verification Rejected";
+                    badge.className = "px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full";
+                } else {
+                    badge.innerText = "Pending Verification";
+                    badge.className = "px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full";
+                }
+            }
+
+            // --- FIX: Document status badges ---
+            const docs = profile.documents || {};
+            const docStatusMap = {
+                'license': document.getElementById('license-status'),
+                'insurance': document.getElementById('insurance-status')
+            };
+            for (const [key, el] of Object.entries(docStatusMap)) {
+                if (!el) continue;
+                const s = docs[key] || "pending";
+                if (s === "verified") {
+                    el.innerText = "Verified"; el.className = "text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded";
+                } else if (s === "uploaded") {
+                    el.innerText = "Under Review"; el.className = "text-[10px] font-bold text-blue-500 bg-blue-100 px-2 py-0.5 rounded";
+                } else {
+                    el.innerText = "Pending Upload"; el.className = "text-[10px] font-bold text-yellow-500 bg-yellow-100 px-2 py-0.5 rounded";
+                }
+            }
+
             // Set Preferences UI
             if(profile.prefAc !== undefined) document.getElementById('setting-ac').checked = profile.prefAc;
             if(profile.prefRoute) {
@@ -1508,59 +1472,7 @@ window.driverRegNextStep = (currentStep) => {
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem('nandu_theme', isDark ? 'dark' : 'light');
         };
-// --- SANITIZE INPUT HELPER ---
-function sanitizeInput(str) {
-    return String(str || "").trim();
-}
-// --- VERIFICATION BADGE UPDATER ---
-function updateVerificationBadge(data) {
-    const badge = document.getElementById("prof-verify-badge");
-    if (!badge) return;
-    const status = data.verificationStatus || "pending";
-    if (status === "verified") {
-        badge.innerText = "Verified Partner";
-        badge.className = "px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full";
-    } else if (status === "rejected") {
-        badge.innerText = "Verification Rejected";
-        badge.className = "px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full";
-    } else {
-        badge.innerText = "Pending Verification";
-        badge.className = "px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full";
-    }
-}
-// --- DOCUMENT STATUS UPDATER ---
-function updateDocumentStatus(data) {
-    const docs = data.documents || {};
-    const licenseStatus = docs.license || "pending";
-    const insuranceStatus = docs.insurance || "pending";
-    // Example: update UI elements if needed
-    // document.getElementById("license-status").innerText = licenseStatus;
-    // document.getElementById("insurance-status").innerText = insuranceStatus;
-}
-// --- UNIFIED PROFILE LOADER ---
-async function loadUserProfile(uid) {
-    const driverRef = doc(db, "drivers", uid);
-    const profileRef = doc(db, "user_profiles", uid);
-    const driverSnap = await getDoc(driverRef);
-    const profileSnap = await getDoc(profileRef);
-    const driverData = driverSnap.exists() ? driverSnap.data() : {};
-    const profileData = profileSnap.exists() ? profileSnap.data() : {};
-    driverProfile = { ...driverData, ...profileData };
-    // EMAIL (prefer profile → driver)
-    const email = profileData.email || driverData.email || "";
-    document.getElementById("prof-email").value = email;
-    // LOCATION (prefRoute stored in drivers)
-    const location =
-        driverData.prefRoute ||
-        profileData.location ||
-        driverData.location ||
-        "";
-    document.getElementById("prof-address").value = location;
-    // Call badge and document updaters
-    updateVerificationBadge(driverProfile);
-    updateDocumentStatus(driverProfile);
-    // ...existing code for other fields...
-}
+
         /* --- UI FUNCTIONS (EXPOSED TO WINDOW) --- */
 
         // --- HELPER: CAPACITY ---
@@ -2075,40 +1987,69 @@ async function loadUserProfile(uid) {
         
         init(); 
 
-// --- LOAD DRIVER PROFILE FROM FIRESTORE ---
-async function loadDriverProfile(uid) {
-    const snap = await getDoc(doc(db, "drivers", uid));
-    if (!snap.exists()) return;
-    const d = snap.data();
-    driverProfile = d;
-    // HEADER
-    document.getElementById("driver-name").innerText = d.name || "Driver";
-    document.getElementById("header-plate").innerText = d.vehicleNo || "...";
-    // PROFILE CARD
-    document.getElementById("prof-name").innerText = d.name || "Driver";
-    document.getElementById("prof-id").innerText = "ID-" + (d.customId || "N/A");
-    document.getElementById("prof-phone").innerText = d.phone || "Not set";
-    document.getElementById("prof-type").innerText = d.vehicleType || "Vehicle";
-    // PERSONAL INFO
-    document.getElementById("prof-email").value = d.email || "";
-    document.getElementById("prof-address").value = d.prefRoute || "";
-    // VERIFICATION BADGE
-    const badge = document.getElementById("prof-verify-badge");
-    if (badge) {
-        if (d.isVerified === true) {
-            badge.innerText = "Verified Partner";
-            badge.className = "px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full";
-        } else {
-            badge.innerText = "Pending Verification";
-            badge.className = "px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full";
-        }
+// --- FIX: toggleEditProfile — enables editing of email/address fields ---
+window.toggleEditProfile = () => {
+    const emailInput = document.getElementById('prof-email');
+    const addressInput = document.getElementById('prof-address');
+    const saveBtn = document.getElementById('save-profile-btn');
+    const isCurrentlyDisabled = emailInput.disabled;
+    emailInput.disabled = !isCurrentlyDisabled;
+    addressInput.disabled = !isCurrentlyDisabled;
+    if (isCurrentlyDisabled) {
+        // Entering edit mode
+        saveBtn.classList.remove('hidden');
+        emailInput.classList.add('border', 'border-brand-400', 'rounded-lg', 'px-2', 'py-1', 'bg-white', 'dark:bg-slate-800');
+        addressInput.classList.add('border', 'border-brand-400', 'rounded-lg', 'px-2', 'py-1', 'bg-white', 'dark:bg-slate-800');
+    } else {
+        // Exiting edit mode without saving
+        saveBtn.classList.add('hidden');
+        emailInput.classList.remove('border', 'border-brand-400', 'rounded-lg', 'px-2', 'py-1', 'bg-white', 'dark:bg-slate-800');
+        addressInput.classList.remove('border', 'border-brand-400', 'rounded-lg', 'px-2', 'py-1', 'bg-white', 'dark:bg-slate-800');
     }
-    // STATS
-    document.getElementById("stat-jobs").innerText = d.completedJobs || 0;
-    // HOME SETTINGS
-    document.getElementById("home-pref-route").innerText = d.prefRoute || "...";
-    document.getElementById("home-pref-ac").innerText = d.prefAc ? "AC" : "Non-AC";
-}
+};
+
+// --- FIX: saveProfileChanges — saves email/address to Firestore ---
+window.saveProfileChanges = async () => {
+    if (!driverId) return;
+    const email = document.getElementById('prof-email').value.trim();
+    const address = document.getElementById('prof-address').value.trim();
+    const saveBtn = document.getElementById('save-profile-btn');
+    saveBtn.disabled = true;
+    saveBtn.innerText = "Saving...";
+    try {
+        await updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), {
+            email: email,
+            prefRoute: address
+        });
+        if (driverProfile) { driverProfile.email = email; driverProfile.prefRoute = address; }
+        showToast("Profile Updated!", "success");
+        // Exit edit mode
+        document.getElementById('prof-email').disabled = true;
+        document.getElementById('prof-address').disabled = true;
+        saveBtn.classList.add('hidden');
+        saveBtn.disabled = false;
+        saveBtn.innerText = "Save Changes";
+    } catch(e) {
+        console.error("Save profile error:", e);
+        showToast("Failed to save changes", "error");
+        saveBtn.disabled = false;
+        saveBtn.innerText = "Save Changes";
+    }
+};
+
+// --- FIX: uploadProfilePic — uploads profile picture ---
+window.uploadProfilePic = (input) => {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('profile-img').src = e.target.result;
+        document.getElementById('header-pic').src = e.target.result;
+        showToast("Profile photo updated!", "success");
+        // NOTE: To persist to Firebase Storage, integrate Firebase Storage upload here
+    };
+    reader.readAsDataURL(file);
+};
 
     function androidSetDriver(phone){ if (window.Android && phone) { Android.setDriverPhone(phone); } }
     function androidGoOnline(phone){ if (window.Android && phone) { Android.driverOnline(phone); } }
