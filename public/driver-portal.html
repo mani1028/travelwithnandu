@@ -714,6 +714,7 @@
 
                     <div class="mt-4 flex gap-2">
                         <span class="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-bold rounded-full border border-green-200 dark:border-green-900 flex items-center gap-1"><i data-lucide="badge-check" class="h-3 w-3"></i> Verified Partner</span>
+                        <span id="prof-verify-badge" class="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full">Pending Verification</span>
                         <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold rounded-full border border-blue-200 dark:border-blue-900" id="prof-type">Type</span>
                     </div>
                 </div>
@@ -746,11 +747,11 @@
                         <div class="space-y-3 text-sm">
                             <div class="flex items-center gap-3">
                                 <div class="bg-slate-50 dark:bg-slate-800 p-2 rounded-lg"><i data-lucide="mail" class="h-4 w-4 text-slate-400"></i></div>
-                                <input type="email" id="prof-email" value="driver@nandu.com" class="bg-transparent outline-none w-full text-slate-600 dark:text-slate-300" disabled>
+                                <input type="email" id="prof-email" value="" placeholder="Email not set" class="bg-transparent outline-none w-full text-slate-600 dark:text-slate-300" disabled>
                             </div>
                             <div class="flex items-center gap-3">
                                 <div class="bg-slate-50 dark:bg-slate-800 p-2 rounded-lg"><i data-lucide="map-pin" class="h-4 w-4 text-slate-400"></i></div>
-                                <input type="text" id="prof-address" value="Karimnagar, Telangana" class="bg-transparent outline-none w-full text-slate-600 dark:text-slate-300" disabled>
+                                <input type="text" id="prof-address" value="" placeholder="Location not set" class="bg-transparent outline-none w-full text-slate-600 dark:text-slate-300" disabled>
                             </div>
                         </div>
                         <button id="save-profile-btn" class="hidden w-full mt-3 py-2 bg-brand-600 text-white rounded-lg text-xs font-bold" onclick="saveProfileChanges()">Save Changes</button>
@@ -768,7 +769,7 @@
                                      <i data-lucide="file-text" class="h-4 w-4 text-slate-400"></i>
                                      <span class="text-xs font-medium dark:text-white">Driving License</span>
                                  </div>
-                                 <span class="text-[10px] font-bold text-green-500 bg-green-100 dark:bg-green-900/30 px-2 py-0.5 rounded">Verified</span>
+                                 <span class="text-[10px] font-bold text-yellow-500 bg-yellow-100 px-2 py-0.5 rounded">Pending Upload</span>
                                 <span class="text-[10px] font-bold text-yellow-500 bg-yellow-100 px-2 py-0.5 rounded">Pending Upload</span>
                              </div>
                              <div class="flex justify-between items-center p-2 bg-slate-50 dark:bg-slate-800 rounded-lg">
@@ -776,7 +777,7 @@
                                      <i data-lucide="shield" class="h-4 w-4 text-slate-400"></i>
                                      <span class="text-xs font-medium dark:text-white">Insurance</span>
                                  </div>
-                                 <span class="text-[10px] font-bold text-orange-500 bg-orange-100 dark:bg-orange-900/30 px-2 py-0.5 rounded">Expiring Soon</span>
+                                 <span class="text-[10px] font-bold text-yellow-500 bg-yellow-100 px-2 py-0.5 rounded">Pending Upload</span>
                                 <span class="text-[10px] font-bold text-yellow-500 bg-yellow-100 px-2 py-0.5 rounded">Pending Upload</span>
                              </div>
                         </div>
@@ -2058,43 +2059,28 @@ window.driverRegNextStep = (currentStep) => {
         init(); 
 
 // --- LOAD DRIVER PROFILE FROM FIRESTORE ---
-            async function loadDriverProfile(uid) {
-                // Use correct Firestore path: drivers/{UID}
-                const docRef = doc(db, "drivers", uid);
-                const snap = await getDoc(docRef);
-                if (!snap.exists()) {
-                    console.log("Driver profile not found");
-                    return;
-                }
-                const data = snap.data();
-                driverProfile = data;
-                // ===== HEADER =====
-                const nameEl = document.getElementById("driver-name");
-                if (nameEl) nameEl.innerText = data.name || "Driver";
-                const plateEl = document.getElementById("header-plate");
-                if (plateEl) plateEl.innerText = data.vehicleNo || "...";
-                // ===== PROFILE TAB =====
-                const profNameEl = document.getElementById("prof-name");
-                if (profNameEl) profNameEl.innerText = data.name || "Driver";
-                const profIdEl = document.getElementById("prof-id");
-                if (profIdEl) profIdEl.innerText = "ID-" + (data.customId || "N/A");
-                const profPhoneEl = document.getElementById("prof-phone");
-                if (profPhoneEl) profPhoneEl.innerText = data.phone || "Not set";
-                const profEmailEl = document.getElementById("prof-email");
-                if (profEmailEl) profEmailEl.value = data.email || "";
-                const profAddressEl = document.getElementById("prof-address");
-                if (profAddressEl) profAddressEl.value = data.prefRoute || "Not set";
-                const profTypeEl = document.getElementById("prof-type");
-                if (profTypeEl) profTypeEl.innerText = data.vehicleType || "Vehicle";
-                // ===== STATS =====
-                const statJobsEl = document.getElementById("stat-jobs");
-                if (statJobsEl) statJobsEl.innerText = data.completedJobs || 0;
-                // ===== SETTINGS =====
-                const homePrefRouteEl = document.getElementById("home-pref-route");
-                if (homePrefRouteEl) homePrefRouteEl.innerText = data.prefRoute || "...";
-                const homePrefAcEl = document.getElementById("home-pref-ac");
-                if (homePrefAcEl) homePrefAcEl.innerText = data.prefAc ? "AC" : "Non-AC";
-            }
+async function loadDriverProfile(uid) {
+    const snap = await getDoc(doc(db, "drivers", uid));
+    if (!snap.exists()) return;
+    const d = snap.data();
+    driverProfile = d;
+    // HEADER
+    document.getElementById("driver-name").innerText = d.name || "Driver";
+    document.getElementById("header-plate").innerText = d.vehicleNo || "...";
+    // PROFILE CARD
+    document.getElementById("prof-name").innerText = d.name || "Driver";
+    document.getElementById("prof-id").innerText = "ID-" + (d.customId || "N/A");
+    document.getElementById("prof-phone").innerText = d.phone || "Not set";
+    document.getElementById("prof-type").innerText = d.vehicleType || "Vehicle";
+    // PERSONAL INFO
+    document.getElementById("prof-email").value = d.email || "";
+    document.getElementById("prof-address").value = d.prefRoute || "";
+    // STATS
+    document.getElementById("stat-jobs").innerText = d.completedJobs || 0;
+    // HOME SETTINGS
+    document.getElementById("home-pref-route").innerText = d.prefRoute || "...";
+    document.getElementById("home-pref-ac").innerText = d.prefAc ? "AC" : "Non-AC";
+}
 
     function androidSetDriver(phone){ if (window.Android && phone) { Android.setDriverPhone(phone); } }
     function androidGoOnline(phone){ if (window.Android && phone) { Android.driverOnline(phone); } }
