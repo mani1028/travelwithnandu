@@ -45,8 +45,7 @@
         /* Utilities */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-            border-color: #3B82F6; background-color: #EFF6FF; color: #1D4ED8; box-shadow: 0 0 0 2px #3B82F6;
-        }
+        .amb-radio:checked + div { border-color: #3B82F6; background-color: #EFF6FF; color: #1D4ED8; box-shadow: 0 0 0 2px #3B82F6; }
         .amb-radio:checked + div { border-color: #EF4444; background-color: #FEF2F2; color: #B91C1C; box-shadow: 0 0 0 2px #EF4444; }
 
         @keyframes radar-ping { 0% { transform: scale(0.8); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
@@ -111,12 +110,16 @@
                 <p class="text-slate-500 text-sm font-medium">Enter mobile number to continue</p>
             </div>
             <div id="auth-step-1" class="space-y-4">
-                <div class="flex"><span class="px-4 py-4 bg-slate-100 border border-r-0 border-slate-200 rounded-l-2xl text-slate-500 font-bold">+91</span><input type="tel" id="login-mobile" class="flex-1 px-4 py-4 bg-slate-50 border border-slate-200 rounded-r-2xl outline-none font-bold text-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" placeholder="9876543210" maxlength="10"></div>
-                <!-- ReCAPTCHA Container -->
-                <div id="recaptcha-container" class="flex justify-center my-4"></div>
-                <button onclick="sendOtp()" id="btn-send-otp" class="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-lg hover:bg-blue-700 animate-scale">Get OTP</button>
-                                            <p class="text-xs text-blue-700 font-semibold mt-2">Phone numbers and emails are used only for booking management and identity verification.</p>
-                            <p class="text-xs text-blue-700 font-semibold mt-2">Phone numbers and emails are used only for booking management and identity verification.</p>
+                <input type="email" id="login-email" class="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold" placeholder="Email Address">
+                <input type="password" id="login-password" class="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold" placeholder="Password">
+                <button onclick="loginWithEmail()" class="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-lg">Login / Sign Up</button>
+                <div class="relative py-4">
+                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+                    <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-2 text-slate-500">Or continue with</span></div>
+                </div>
+                <button onclick="loginWithGoogle()" class="w-full py-4 bg-white border border-slate-200 text-slate-700 font-bold rounded-2xl shadow-sm flex items-center justify-center gap-2">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/action/google.svg" class="w-5 h-5"> Google
+                </button>
             </div>
             <div id="auth-step-2" class="hidden space-y-4">
                 <p class="text-center text-sm text-slate-500">OTP sent to <span id="display-otp-mobile" class="font-bold text-slate-900"></span></p>
@@ -248,8 +251,8 @@
                              <div class="space-y-1.5">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider pl-1">Comfort</label>
                                 <div class="flex gap-2">
-                                    <label class="cursor-pointer flex-1"><input type="radio" name="shared-ac" value="ac" class="hidden ac-radio" checked onclick="calculateEstimate()"><div class="border border-slate-200 bg-white rounded-xl p-2.5 text-center transition-all"><span class="text-xs font-bold block text-slate-800">AC</span></div></label>
-                                    <label class="cursor-pointer flex-1"><input type="radio" name="shared-ac" value="non-ac" class="hidden ac-radio" onclick="calculateEstimate()"><div class="border border-slate-200 bg-white rounded-xl p-2.5 text-center transition-all"><span class="text-xs font-bold block text-slate-800">Non-AC</span></div></label>
+                                    <label class="cursor-pointer flex-1"><input type="radio" name="shared-ac" value="ac" class="hidden ac-radio" checked onclick="calculateEstimate()"><div class="border border-slate-200 bg-white p-2.5 text-center transition-all"><span class="text-xs font-bold block text-slate-800">AC</span></div></label>
+                                    <label class="cursor-pointer flex-1"><input type="radio" name="shared-ac" value="non-ac" class="hidden ac-radio" onclick="calculateEstimate()"><div class="border border-slate-200 bg-white p-2.5 text-center transition-all"><span class="text-xs font-bold block text-slate-800">Non-AC</span></div></label>
                                 </div>
                             </div>
                             <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
@@ -591,9 +594,8 @@
     <!-- LOGIC -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, query, where, serverTimestamp, runTransaction, limit, addDoc, getDocs, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
         import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-functions.js";
         import { firebaseConfig } from './firebase-config.js';
 
@@ -640,8 +642,7 @@
         onAuthStateChanged(auth, async (u) => {
             if(u) {
                 user = u;
-                syncData(); // NEW: Sync Data Logic
-
+                syncData();
                 try {
                     // OFFLINE-FIRST: Try local storage first if offline
                     const cachedUser = localStorage.getItem('user_profile');
@@ -649,7 +650,8 @@
                         userData = JSON.parse(cachedUser);
                         initUserUI(u);
                     } else {
-                        const snap = await getDoc(doc(db,'artifacts',APP_ID,'public','data','user_profiles',u.phoneNumber));
+                        // Use uid as key for user_profiles
+                        const snap = await getDoc(doc(db,'artifacts',APP_ID,'public','data','user_profiles',u.uid));
                         if(snap.exists()) {
                             userData = snap.data();
                             localStorage.setItem('user_profile', JSON.stringify(userData));
@@ -675,9 +677,8 @@
             document.getElementById('auth-screen').classList.add('hidden');
             updateUserDisplayNames(userData.name);
             document.getElementById('profile-name').innerText = userData.name;
-            document.getElementById('profile-mobile').innerText = u.phoneNumber;
-            
-            const seed = u.phoneNumber.replace('+91','') || 'guest';
+            document.getElementById('profile-mobile').innerText = u.email || 'No email';
+            const seed = u.email ? u.email.replace(/[^a-zA-Z0-9]/g, '') : 'guest';
             const avatarUrl = `https://api.dicebear.com/9.x/micah/svg?seed=${seed}&backgroundColor=e0e7ff&radius=50`;
             const avatarEl = document.getElementById('profile-avatar');
             if(avatarEl) avatarEl.src = avatarUrl;
@@ -762,61 +763,41 @@
         }
 
         // --- AUTH ---
-        window.sendOtp = async () => {
-            const num = document.getElementById('login-mobile').value;
-            if(!num || num.length!==10) return alert("Invalid Number. Please enter 10 digits.");
-            
-            if(!navigator.onLine) return alert("Offline: Cannot send OTP. Please check internet.");
-
-            const btn = document.getElementById('btn-send-otp');
-            const originalText = btn.innerText;
-            btn.innerText="Sending...";
-            btn.disabled = true;
-
+        window.loginWithEmail = async () => {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            if(!email || !password) return alert("Please enter email and password.");
             try {
-                if(!auth) throw new Error("Auth not initialized");
-                document.getElementById('recaptcha-container').innerHTML = '';
-
-                if(window.recaptchaVerifier) {
-                    try { window.recaptchaVerifier.clear(); } catch(e) {}
-                    window.recaptchaVerifier = null;
-                }
-
-                window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-                    'size': 'invisible',
-                    'callback': (response) => {},
-                    'expired-callback': () => {
-                        if(window.recaptchaVerifier) {
-                            try { window.recaptchaVerifier.clear(); } catch(e){}
-                            window.recaptchaVerifier = null;
-                        }
-                    }
-                });
-
-                window.confirmationResult = await signInWithPhoneNumber(auth, "+91"+num, window.recaptchaVerifier);
-                document.getElementById('auth-step-1').classList.add('hidden');
-                document.getElementById('auth-step-2').classList.remove('hidden');
-                document.getElementById('display-otp-mobile').innerText="+91"+num;
-            } catch(e) { 
-                console.error("SMS Error:", e);
-                btn.innerText = originalText;
-                btn.disabled = false;
-                alert("Login Error: " + e.message);
+                const { signInWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
+                await signInWithEmailAndPassword(auth, email, password);
+            } catch(e) {
+                alert("Login failed: " + e.message);
             }
         }
 
-        window.verifyOtp = async () => {
+        window.registerWithEmail = async () => {
+            const email = document.getElementById('register-email').value.trim();
+            const password = document.getElementById('register-password').value;
+            if(!email || !password) return alert("Please enter email and password.");
             try {
-                const otpInput = document.getElementById('otp-input').value;
-                const res = await window.confirmationResult.confirm(otpInput);
-                const snap = await getDoc(doc(db,'artifacts',APP_ID,'public','data','user_profiles',res.user.phoneNumber));
-                if(snap.exists()) {
-                    location.reload();
-                } else { 
-                    document.getElementById('auth-step-2').classList.add('hidden'); 
-                    document.getElementById('auth-step-3').classList.remove('hidden'); 
-                }
-            } catch(e) { alert("Invalid OTP or Code Expired"); }
+                const { createUserWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
+                await createUserWithEmailAndPassword(auth, email, password);
+                // After registration, show profile step
+                document.getElementById('auth-step-1').classList.add('hidden');
+                document.getElementById('auth-step-3').classList.remove('hidden');
+            } catch(e) {
+                alert("Registration failed: " + e.message);
+            }
+        }
+
+        window.loginWithGoogle = async () => {
+            try {
+                const { GoogleAuthProvider, signInWithPopup } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+            } catch(e) {
+                alert("Google login failed: " + e.message);
+            }
         }
 
         // Sanitize input to prevent XSS
@@ -828,19 +809,18 @@
         window.saveUserProfile = async () => {
             const nameInput = document.getElementById('user-name-input').value;
             const safeName = sanitizeInput(nameInput);
-            await setDoc(doc(db,'artifacts',APP_ID,'public','data','user_profiles',auth.currentUser.phoneNumber), { name: safeName, mobile: auth.currentUser.phoneNumber, createdAt: serverTimestamp() });
+            await setDoc(doc(db,'artifacts',APP_ID,'public','data','user_profiles',auth.currentUser.uid), { name: safeName, email: auth.currentUser.email, createdAt: serverTimestamp() });
             location.reload();
         }
         window.handleLogout = async () => { if(confirm("Logout?")) { await signOut(auth); location.reload(); } }
         window.resetAuth = () => location.reload();
-        
         window.enableNameEdit = () => { document.getElementById('name-edit-container').classList.remove('hidden'); document.getElementById('edit-profile-name-input').value = userData.name; }
         window.saveNameEdit = async () => {
             const newNameRaw = document.getElementById('edit-profile-name-input').value.trim();
             if(!newNameRaw) return;
             const newName = sanitizeInput(newNameRaw);
             if(navigator.onLine) {
-                 await updateDoc(doc(db,'artifacts',APP_ID,'public','data','user_profiles',user.phoneNumber), {name: newName});
+                 await updateDoc(doc(db,'artifacts',APP_ID,'public','data','user_profiles',user.uid), {name: newName});
             } else {
                 alert("Saved locally. Will update server when online.");
             }
@@ -850,7 +830,6 @@
             document.getElementById('name-edit-container').classList.add('hidden');
             updateUserDisplayNames(newName);
         }
-
         // --- NEW FEATURES LOGIC ---
         window.applyCoupon = async () => {
             const code = document.getElementById('coupon-code').value.toUpperCase();
@@ -912,7 +891,7 @@
             
             if(navigator.onLine) {
                 await addDoc(collection(db, 'artifacts', APP_ID, 'support_tickets'), {
-                    userId: user.uid, userMobile: user.phoneNumber,
+                    userId: user.uid, userEmail: user.email,
                     orderId: ticketOrderId, issue: issue, description: desc,
                     status: 'open', createdAt: serverTimestamp()
                 });
@@ -1014,27 +993,25 @@
         window.changePassengers = (d) => { let n = state.passengers + d; if(n>=1 && n<=6) { state.passengers=n; document.getElementById('passenger-count').innerText=n; calculateEstimate(); } }
         
         window.handleLocationChange = (side) => {
-            const f = document.getElementById('from-loc'); 
-            const t = document.getElementById('to-loc');
-            const fVal = f.value; 
-            const tVal = t.value;
+            const f = document.getElementById('from-loc').value;
+            const t = document.getElementById('to-loc').value;
             
             if(state.bookingType==='shared') {
-                if(fVal===tVal) { 
-                    if(side==='from') t.value = fVal==="Karimnagar"?"JBS-Hyderabad":"Karimnagar"; 
-                    else f.value = tVal==="Karimnagar"?"JBS-Hyderabad":"Karimnagar"; 
+                if(f===t) { 
+                    if(side==='from') t.value = f==="Karimnagar"?"JBS-Hyderabad":"Karimnagar"; 
+                    else f.value = t==="Karimnagar"?"JBS-Hyderabad":"Karimnagar"; 
                 }
             } else {
                  if (side === 'from') {
-                    if (fVal === "Karimnagar") { 
-                        if (tVal === "Karimnagar") t.value = "JBS-Hyderabad"; 
-                    } else if (HYD_GROUP.includes(fVal)) { 
+                    if (f === "Karimnagar") { 
+                        if (t === "Karimnagar") t.value = "JBS-Hyderabad"; 
+                    } else if (HYD_GROUP.includes(f)) { 
                         t.value = "Karimnagar"; 
                     }
                  } else {
-                    if (tVal === "Karimnagar") { 
-                        if (fVal === "Karimnagar") f.value = "JBS-Hyderabad"; 
-                    } else if (HYD_GROUP.includes(tVal)) { 
+                    if (t === "Karimnagar") { 
+                        if (f === "Karimnagar") f.value = "JBS-Hyderabad"; 
+                    } else if (HYD_GROUP.includes(t)) { 
                         f.value = "Karimnagar"; 
                     }
                  }
@@ -1318,7 +1295,7 @@
             
             let payload = {
                 orderId: oid, // NEW: REQUIRED BY CLOUD FUNCTION!
-                userId: user.uid, name: userData.name, mobile: user.phoneNumber,
+                userId: user.uid, name: userData.name, email: user.email,
                 from: displayFrom, to: displayTo, 
                 price: document.getElementById('total-price-mobile').innerText,
                 date: document.getElementById('travel-date').value,
