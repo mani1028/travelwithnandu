@@ -532,7 +532,6 @@
                         Finish Registration <i data-lucide="check" class="h-5 w-5"></i>
                     </button>
                 </div>
-                </button>
             </div>
         </div>
     </div>
@@ -1286,46 +1285,44 @@ window.driverRegNextStep = (currentStep) => {
                     if (pendingOptionsJobId) document.getElementById('options-modal').classList.remove('hidden');
                 }
             });
-
-            // Auth State Listener
-            onAuthStateChanged(auth, async (user) => {
-                const splash = document.getElementById('splash-screen');
-                const login = document.getElementById('login-screen');
-                const appScreen = document.getElementById('app-screen');
-
-                if (user) {
-                    console.log("User Logged In:", user.uid);
-                    // 1. Fetch Profile first
-                    let profile = await fetchProfile(user.uid);
-                    if (profile) {
-                        // EXISTING DRIVER: Proceed to dashboard
-                        loadAppWithProfile(user, profile);
-                    } else {
-                        // NEW DRIVER: Force Registration Flow
-                        splash.classList.add('hidden');
-                        login.classList.remove('hidden');
-                        appScreen.classList.add('hidden');
-
-                        // Set state to registering
-                        isRegistering = true;
-
-                        // Toggle UI to registration mode (Updates titles/tabs)
-                        window.toggleAuthMode('register'); 
-
-                        // Hide initial login buttons and show the detail collection form
-                        document.getElementById('auth-step-1').classList.add('hidden');
-                        document.getElementById('auth-step-3-register').classList.remove('hidden');
-
-                        showToast('Welcome! Please complete your profile to continue.', 'info');
-                    }
-                } else {
-                    // NO USER: Show login screen
-                    splash.classList.add('hidden');
-                    login.classList.remove('hidden');
-                    appScreen.classList.add('hidden');
-                }
-            });
         }
+onAuthStateChanged(auth, async (user) => {
+    const splash = document.getElementById('splash-screen');
+    const login = document.getElementById('login-screen');
+    const appScreen = document.getElementById('app-screen');
+
+    if (user) {
+        console.log("User Logged In:", user.uid);
+        
+        // 1. Check if a profile document exists in Firestore
+        let profile = await fetchProfile(user.uid);
+        
+        if (profile) {
+            // EXISTING DRIVER: Proceed to dashboard
+            loadAppWithProfile(user, profile);
+        } else {
+            // NEW DRIVER DETECTED: Force Registration Flow
+            splash.classList.add('hidden');
+            login.classList.remove('hidden');
+            appScreen.classList.add('hidden');
+
+            // Force the UI into registration mode
+            isRegistering = true;
+            window.toggleAuthMode('register');
+            
+            // Hide the initial Login buttons and show the detail form
+            document.getElementById('auth-step-1').classList.add('hidden');
+            document.getElementById('auth-step-3-register').classList.remove('hidden');
+            
+            showToast('Please complete your profile to continue.', 'info');
+        }
+    } else {
+        // NO USER: Standard login screen
+        splash.classList.add('hidden');
+        login.classList.remove('hidden');
+        appScreen.classList.add('hidden');
+    }
+});
         
         function loadAppWithProfile(user, profile) {
             driverId = user.uid;
