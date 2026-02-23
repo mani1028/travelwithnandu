@@ -136,40 +136,178 @@
     </div>
 
     <!-- AUTH MODAL -->
-    <div id="auth-screen" class="fixed inset-0 bg-white/95 backdrop-blur-md z-[90] flex items-center justify-center hidden p-4 overflow-y-auto">
-        <div class="bg-white w-full max-w-md p-8 rounded-[2.5rem] shadow-2xl border border-slate-100 relative">
-            <a href="index.html" class="inline-flex items-center gap-2 text-slate-500 font-bold text-sm mb-8 hover:text-blue-600"><i data-lucide="arrow-left" class="h-4 w-4"></i> Back to Website</a>
+    <div id="auth-screen" class="fixed inset-0 z-[90] hidden overflow-y-auto" style="background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #1d4ed8 100%);">
+        
+        <!-- Background decoration -->
+        <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute -top-20 -right-20 w-80 h-80 bg-white/5 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-20 -left-20 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl"></div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/3 rounded-full blur-3xl"></div>
+        </div>
+
+        <div class="relative min-h-screen flex flex-col items-center justify-center p-4 py-10">
+
+            <!-- Brand Header -->
             <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4 text-blue-600 shadow-sm"><i data-lucide="smartphone" class="h-8 w-8"></i></div>
-                <h2 class="text-2xl font-black text-slate-900">Login / Signup</h2>
-                <p class="text-slate-500 text-sm font-medium">Enter your credentials to continue</p>
-            </div>
-            <div id="auth-step-1" class="space-y-4">
-                <input type="email" id="login-email" class="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold" placeholder="Email Address">
-                <input type="password" id="login-password" class="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold" placeholder="Password">
-                <button onclick="loginWithEmail()" class="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-lg">Login / Sign Up</button>
-                <div class="relative py-4">
-                    <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
-                    <div class="relative flex justify-center text-xs uppercase"><span class="bg-white px-2 text-slate-500">Or continue with</span></div>
+                <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-2xl mb-4">
+                    <i data-lucide="car" class="h-8 w-8 text-blue-600"></i>
                 </div>
-                <button onclick="loginWithGoogle()" class="w-full py-4 bg-white border border-slate-200 text-slate-700 font-bold rounded-2xl shadow-sm flex items-center justify-center gap-2">
-                    <img src="assets/google.svg" class="w-5 h-5" alt="Google" onerror="this.style.display='none'"> Google Login
-                </button>
+                <h1 class="text-white text-2xl font-black tracking-tight">Nandu Travels</h1>
+                <p class="text-blue-200 text-sm font-medium mt-1">Your trusted ride partner</p>
             </div>
-            <div id="auth-step-2" class="hidden space-y-4">
-                <p class="text-center text-sm text-slate-500">OTP sent to <span id="display-otp-mobile" class="font-bold text-slate-900"></span></p>
-                <input type="tel" id="otp-input" class="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold text-3xl text-center tracking-[0.5em] focus:border-blue-500 transition" maxlength="6" placeholder="------">
-                <button onclick="verifyOtp()" id="btn-verify-otp" class="w-full py-4 bg-green-600 text-white font-bold rounded-2xl shadow-lg hover:bg-green-700">Verify & Login</button>
-                <button onclick="resetAuth()" class="w-full text-xs font-bold text-slate-400 hover:text-slate-600 transition">Change Number</button>
-            </div>
-            <div id="auth-step-3" class="hidden space-y-4">
-                <div class="text-center mb-4"><p class="text-sm text-slate-600">New here? Let's get to know you.</p></div>
-                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Your Name</label>
-                <input type="text" id="user-name-input" class="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:border-blue-500 transition" placeholder="Full Name">
-                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Phone Number</label>
-                <input type="tel" id="user-phone-input" class="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:border-blue-500 transition" placeholder="10-digit mobile number" maxlength="10">
-                <button onclick="saveUserProfile()" class="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl shadow-lg hover:bg-slate-800">Create Profile</button>
-            </div>
+
+            <!-- Auth Card -->
+            <div class="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden">
+
+                <!-- ── STEP 1: Login / Register Tabs ── -->
+                <div id="auth-step-1">
+                    <!-- Tab Switcher -->
+                    <div class="flex border-b border-slate-100">
+                        <button id="tab-login-btn" onclick="switchAuthTab('login')"
+                            class="flex-1 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition-all">
+                            Login
+                        </button>
+                        <button id="tab-register-btn" onclick="switchAuthTab('register')"
+                            class="flex-1 py-4 text-sm font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition-all">
+                            Sign Up
+                        </button>
+                    </div>
+
+                    <div class="p-6 space-y-4">
+
+                        <!-- LOGIN FORM -->
+                        <div id="login-form">
+                            <div class="space-y-3 mb-4">
+                                <div class="relative">
+                                    <i data-lucide="mail" class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
+                                    <input type="email" id="login-email"
+                                        class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-blue-400 focus:bg-white transition"
+                                        placeholder="Email address">
+                                </div>
+                                <div class="relative">
+                                    <i data-lucide="lock" class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
+                                    <input type="password" id="login-password"
+                                        class="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-blue-400 focus:bg-white transition"
+                                        placeholder="Password"
+                                        onkeydown="if(event.key==='Enter') loginWithEmail()">
+                                    <button type="button" onclick="togglePassword('login-password', this)"
+                                        class="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
+                                        <i data-lucide="eye" class="h-4 w-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Error msg -->
+                            <p id="login-error" class="hidden text-xs text-red-500 font-bold text-center mb-3 bg-red-50 py-2 px-3 rounded-xl"></p>
+
+                            <button onclick="loginWithEmail()" id="btn-login"
+                                class="w-full py-3.5 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 active:scale-95 transition text-sm flex items-center justify-center gap-2">
+                                <i data-lucide="log-in" class="h-4 w-4"></i> Login to My Account
+                            </button>
+
+                            <p class="text-center text-xs text-slate-400 font-medium mt-3">
+                                No account? <button onclick="switchAuthTab('register')" class="text-blue-600 font-bold hover:underline">Sign up free →</button>
+                            </p>
+                        </div>
+
+                        <!-- REGISTER FORM -->
+                        <div id="register-form" class="hidden">
+                            <div class="space-y-3 mb-4">
+                                <div class="relative">
+                                    <i data-lucide="user" class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
+                                    <input type="text" id="reg-name"
+                                        class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-blue-400 focus:bg-white transition"
+                                        placeholder="Full name">
+                                </div>
+                                <div class="relative">
+                                    <i data-lucide="phone" class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
+                                    <input type="tel" id="reg-phone" maxlength="10"
+                                        class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-blue-400 focus:bg-white transition"
+                                        placeholder="10-digit mobile number">
+                                </div>
+                                <div class="relative">
+                                    <i data-lucide="mail" class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
+                                    <input type="email" id="reg-email"
+                                        class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-blue-400 focus:bg-white transition"
+                                        placeholder="Email address">
+                                </div>
+                                <div class="relative">
+                                    <i data-lucide="lock" class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
+                                    <input type="password" id="reg-password"
+                                        class="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-blue-400 focus:bg-white transition"
+                                        placeholder="Create password (min 6 chars)"
+                                        onkeydown="if(event.key==='Enter') registerWithEmail()">
+                                    <button type="button" onclick="togglePassword('reg-password', this)"
+                                        class="absolute right-3 top-3 text-slate-400 hover:text-slate-600">
+                                        <i data-lucide="eye" class="h-4 w-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Error msg -->
+                            <p id="register-error" class="hidden text-xs text-red-500 font-bold text-center mb-3 bg-red-50 py-2 px-3 rounded-xl"></p>
+
+                            <button onclick="registerWithEmail()" id="btn-register"
+                                class="w-full py-3.5 bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:bg-slate-800 active:scale-95 transition text-sm flex items-center justify-center gap-2">
+                                <i data-lucide="user-plus" class="h-4 w-4"></i> Create My Account
+                            </button>
+
+                            <p class="text-center text-xs text-slate-400 font-medium mt-3">
+                                Already have an account? <button onclick="switchAuthTab('login')" class="text-blue-600 font-bold hover:underline">Login →</button>
+                            </p>
+                        </div>
+
+                        <!-- Divider + Google -->
+                        <div class="relative py-1">
+                            <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-100"></div></div>
+                            <div class="relative flex justify-center text-[10px] uppercase font-bold"><span class="bg-white px-3 text-slate-400">or</span></div>
+                        </div>
+                        <button onclick="loginWithGoogle()"
+                            class="w-full py-3 bg-white border-2 border-slate-100 text-slate-700 font-bold rounded-xl hover:border-slate-200 hover:bg-slate-50 active:scale-95 transition text-sm flex items-center justify-center gap-2 shadow-sm">
+                            <svg class="w-4 h-4" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.2 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34 6.5 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.6-8 19.6-20 0-1.3-.1-2.7-.4-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.1 18.9 12 24 12c3 0 5.7 1.1 7.8 2.9l5.7-5.7C34 6.5 29.3 4 24 4 16.3 4 9.6 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.9 13.5-5l-6.2-5.2C29.4 35.6 26.8 36 24 36c-5.2 0-9.6-2.9-11.3-7.1l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3c-.9 2.4-2.5 4.4-4.6 5.8l6.2 5.2C40.8 35.7 44 30.3 44 24c0-1.3-.1-2.7-.4-4z"/></svg>
+                            Continue with Google
+                        </button>
+
+                    </div>
+                </div>
+
+                <!-- ── STEP 3: Complete Profile (shown after Google signup or if profile missing) ── -->
+                <div id="auth-step-3" class="hidden p-6 space-y-4">
+                    <div class="text-center mb-2">
+                        <div class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                            <i data-lucide="check-circle" class="h-6 w-6 text-green-500"></i>
+                        </div>
+                        <h3 class="font-black text-slate-900 text-lg">Almost there!</h3>
+                        <p class="text-slate-500 text-xs font-medium mt-1">Just a few more details to set up your account</p>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="relative">
+                            <i data-lucide="user" class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
+                            <input type="text" id="user-name-input"
+                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-blue-400 focus:bg-white transition"
+                                placeholder="Your full name">
+                        </div>
+                        <div class="relative">
+                            <i data-lucide="phone" class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
+                            <input type="tel" id="user-phone-input" maxlength="10"
+                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-blue-400 focus:bg-white transition"
+                                placeholder="10-digit mobile number">
+                        </div>
+                    </div>
+                    <button onclick="saveUserProfile()"
+                        class="w-full py-3.5 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 active:scale-95 transition text-sm flex items-center justify-center gap-2">
+                        <i data-lucide="arrow-right" class="h-4 w-4"></i> Finish Setup
+                    </button>
+                    <p class="text-[10px] text-slate-400 text-center font-medium">Your info is secure and never shared</p>
+                </div>
+
+            </div><!-- /auth card -->
+
+            <!-- Footer link -->
+            <a href="index.html" class="mt-6 text-blue-200 hover:text-white text-xs font-bold flex items-center gap-1.5 transition">
+                <i data-lucide="arrow-left" class="h-3.5 w-3.5"></i> Back to Website
+            </a>
+
         </div>
     </div>
 
@@ -795,13 +933,25 @@
                     localStorage.setItem('user_profile', JSON.stringify(userData));
                     initUserUI(u);
                 } else {
+                    // No profile yet (e.g. Google sign-in) — show profile completion step
                     document.getElementById('auth-screen').classList.remove('hidden');
                     document.getElementById('auth-step-1').classList.add('hidden');
                     document.getElementById('auth-step-3').classList.remove('hidden');
+                    // Pre-fill name if Google provided one
+                    if (u.displayName) {
+                        const nameEl = document.getElementById('user-name-input');
+                        if (nameEl) nameEl.value = u.displayName;
+                    }
+                    lucide.createIcons();
                 }
             } else {
+                // Not logged in — show login/register screen
                 document.getElementById('auth-screen').classList.remove('hidden');
                 document.getElementById('auth-step-1').classList.remove('hidden');
+                document.getElementById('auth-step-3').classList.add('hidden');
+                // Default to login tab
+                switchAuthTab('login');
+                lucide.createIcons();
             }
         });
         
@@ -918,22 +1068,117 @@
             if (headerName) headerName.innerText = first;
         }
 
+        // --- AUTH TAB SWITCHER ---
+        window.switchAuthTab = (tab) => {
+            const loginForm = document.getElementById('login-form');
+            const registerForm = document.getElementById('register-form');
+            const loginBtn = document.getElementById('tab-login-btn');
+            const registerBtn = document.getElementById('tab-register-btn');
+
+            if (tab === 'login') {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+                loginBtn.className = 'flex-1 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition-all';
+                registerBtn.className = 'flex-1 py-4 text-sm font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition-all';
+                document.getElementById('login-error').classList.add('hidden');
+            } else {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+                loginBtn.className = 'flex-1 py-4 text-sm font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition-all';
+                registerBtn.className = 'flex-1 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition-all';
+                document.getElementById('register-error').classList.add('hidden');
+            }
+        }
+
+        window.togglePassword = (inputId, btn) => {
+            const input = document.getElementById(inputId);
+            const isText = input.type === 'text';
+            input.type = isText ? 'password' : 'text';
+            btn.innerHTML = isText
+                ? '<i data-lucide="eye" class="h-4 w-4"></i>'
+                : '<i data-lucide="eye-off" class="h-4 w-4"></i>';
+            lucide.createIcons();
+        }
+
+        function showAuthError(elId, msg) {
+            const el = document.getElementById(elId);
+            el.textContent = msg;
+            el.classList.remove('hidden');
+        }
+
+        function setButtonLoading(btnId, loading, label) {
+            const btn = document.getElementById(btnId);
+            if (!btn) return;
+            btn.disabled = loading;
+            btn.innerHTML = loading
+                ? `<svg class="animate-spin h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg> Please wait...`
+                : label;
+        }
+
         // --- AUTH ---
         window.loginWithEmail = async () => {
             const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value;
-            if (!email || !password) return alert("Please enter email and password.");
+            document.getElementById('login-error').classList.add('hidden');
+
+            if (!email) return showAuthError('login-error', '⚠️ Please enter your email address.');
+            if (!password) return showAuthError('login-error', '⚠️ Please enter your password.');
+
+            setButtonLoading('btn-login', true);
             try {
-                const { signInWithEmailAndPassword, createUserWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
-                try {
-                    await signInWithEmailAndPassword(auth, email, password);
-                } catch(loginErr) {
-                    if (loginErr.code === 'auth/user-not-found' || loginErr.code === 'auth/invalid-credential') {
-                        await createUserWithEmailAndPassword(auth, email, password);
-                    } else throw loginErr;
-                }
+                const { signInWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
+                await signInWithEmailAndPassword(auth, email, password);
+                // onAuthStateChanged will handle the rest
             } catch(e) {
-                alert("Auth failed: " + e.message);
+                let msg = '⚠️ Login failed. Please try again.';
+                if (e.code === 'auth/user-not-found') msg = '⚠️ No account found. Please sign up first.';
+                else if (e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential') msg = '⚠️ Incorrect password. Please try again.';
+                else if (e.code === 'auth/invalid-email') msg = '⚠️ Invalid email address.';
+                else if (e.code === 'auth/too-many-requests') msg = '⚠️ Too many attempts. Try again later.';
+                showAuthError('login-error', msg);
+            } finally {
+                setButtonLoading('btn-login', false, '<i data-lucide="log-in" class="h-4 w-4"></i> Login to My Account');
+                lucide.createIcons();
+            }
+        }
+
+        window.registerWithEmail = async () => {
+            const name = document.getElementById('reg-name').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
+            document.getElementById('register-error').classList.add('hidden');
+
+            if (!name) return showAuthError('register-error', '⚠️ Please enter your full name.');
+            if (!/^\d{10}$/.test(phone)) return showAuthError('register-error', '⚠️ Please enter a valid 10-digit phone number.');
+            if (!email) return showAuthError('register-error', '⚠️ Please enter your email address.');
+            if (password.length < 6) return showAuthError('register-error', '⚠️ Password must be at least 6 characters.');
+
+            setButtonLoading('btn-register', true);
+            try {
+                const { createUserWithEmailAndPassword } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
+                const cred = await createUserWithEmailAndPassword(auth, email, password);
+
+                // Save profile directly since we collected all info upfront
+                const safeName = sanitizeInput(name);
+                const safePhone = sanitizeInput(phone);
+                await setDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'user_profiles', cred.user.uid), {
+                    name: safeName,
+                    email: email,
+                    phone: safePhone,
+                    registrationComplete: true,
+                    createdAt: serverTimestamp()
+                });
+                // onAuthStateChanged picks up the new user and loads dashboard
+            } catch(e) {
+                let msg = '⚠️ Registration failed. Please try again.';
+                if (e.code === 'auth/email-already-in-use') msg = '⚠️ This email is already registered. Please login.';
+                else if (e.code === 'auth/invalid-email') msg = '⚠️ Invalid email address.';
+                else if (e.code === 'auth/weak-password') msg = '⚠️ Password is too weak. Use at least 6 characters.';
+                showAuthError('register-error', msg);
+            } finally {
+                setButtonLoading('btn-register', false, '<i data-lucide="user-plus" class="h-4 w-4"></i> Create My Account');
+                lucide.createIcons();
             }
         }
 
@@ -942,6 +1187,7 @@
                 const { GoogleAuthProvider, signInWithPopup } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
                 const provider = new GoogleAuthProvider();
                 await signInWithPopup(auth, provider);
+                // onAuthStateChanged will handle: if no profile → shows step-3
             } catch(e) {
                 alert("Google login failed: " + e.message);
             }
