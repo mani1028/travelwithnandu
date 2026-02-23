@@ -1144,12 +1144,69 @@ window.driverRegSubmit = async () => {
     const user = auth.currentUser;
     if (!user) return;
 
+    // ✨ VALIDATION: Get all form values
     const name = document.getElementById('reg-name').value.trim();
     const email = document.getElementById('reg-email').value.trim();
     const phone = document.getElementById('reg-phone').value.trim();
     const plate = document.getElementById('reg-plate').value.trim().toUpperCase();
-    const type = document.getElementById('reg-type').value;
-    const route = document.getElementById('reg-route').value;
+    const type = document.getElementById('reg-type').value.trim();
+    const route = document.getElementById('reg-route').value.trim();
+
+    // ✨ VALIDATION: Check all fields are filled
+    if (!name) {
+        showToast('❌ Please enter your full name', 'error');
+        document.getElementById('reg-name').focus();
+        return;
+    }
+
+    if (!email) {
+        showToast('❌ Please enter your email address', 'error');
+        document.getElementById('reg-email').focus();
+        return;
+    }
+
+    // ✨ VALIDATION: Email format check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showToast('❌ Please enter a valid email address', 'error');
+        document.getElementById('reg-email').focus();
+        return;
+    }
+
+    if (!phone) {
+        showToast('❌ Please enter your mobile number', 'error');
+        document.getElementById('reg-phone').focus();
+        return;
+    }
+
+    // ✨ VALIDATION: Phone number check (10 digits)
+    if (phone.length < 10 || !/^\d{10,}$/.test(phone)) {
+        showToast('❌ Please enter a valid 10-digit mobile number', 'error');
+        document.getElementById('reg-phone').focus();
+        return;
+    }
+
+    if (!plate) {
+        showToast('❌ Please enter your vehicle number', 'error');
+        document.getElementById('reg-plate').focus();
+        return;
+    }
+
+    // ✨ VALIDATION: Vehicle type
+    if (!type) {
+        showToast('❌ Please select a vehicle type', 'error');
+        document.getElementById('reg-type').focus();
+        return;
+    }
+
+    if (!route) {
+        showToast('❌ Please select your preferred route', 'error');
+        document.getElementById('reg-route').focus();
+        return;
+    }
+
+    // ✨ All validations passed - show loading
+    showToast('⏳ Creating your account...', 'info');
 
     try {
         await runTransaction(db, async (transaction) => {
@@ -1163,6 +1220,8 @@ window.driverRegSubmit = async () => {
                 if (data.date === dateStr) seq = data.count + 1;
             }
             const customId = `${dateStr}${String(seq).padStart(3, '0')}`;
+            
+            // ✨ CREATE ACCOUNT WITH ALL DATA
             transaction.set(doc(db, 'artifacts', APP_ID, 'drivers', user.uid), {
                 uid: user.uid,
                 customId: customId,
@@ -1178,15 +1237,18 @@ window.driverRegSubmit = async () => {
                 completedJobs: 0,
                 createdAt: serverTimestamp(),
                 manualFilledSeats: 0,
-                prefAc: false
+                prefAc: false,
+                // ✨ ADD TIMESTAMP TO VERIFY COMPLETE REGISTRATION
+                registrationComplete: true,
+                registrationCompletedAt: serverTimestamp()
             });
             transaction.set(counterRef, { date: dateStr, count: seq });
         });
-        showToast("Welcome Partner!", "success");
+        showToast('✅ Welcome Partner! Account created successfully!', 'success');
         setTimeout(() => location.reload(), 1500);
     } catch(e) {
         console.error("Reg Error", e);
-        showToast("Registration Failed", "error");
+        showToast('❌ Registration Failed: ' + e.message, 'error');
     }
 };
         window.setupRecaptcha = () => {};
@@ -1271,26 +1333,78 @@ window.toggleAuthMode = (mode) => {
 // --- FIX: Expose Registration Navigation to window ---
 window.driverRegNextStep = (currentStep) => {
     if (currentStep === 1) {
-        const name = document.getElementById('reg-name').value.trim();
-        const email = document.getElementById('reg-email').value.trim();
-        const phone = document.getElementById('reg-phone').value.trim();
-        if (!name || !email) {
-            alert("Please enter both name and email.");
+        const nameInput = document.getElementById('reg-name');
+        const emailInput = document.getElementById('reg-email');
+        const phoneInput = document.getElementById('reg-phone');
+        
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
+        const phone = phoneInput.value.trim();
+
+        // ✨ VALIDATION: Name check
+        if (!name) {
+            showToast('❌ Please enter your full name', 'error');
+            nameInput.focus();
             return;
         }
-        // STRENGTHENED CHECK: Ensure valid 10-digit number
-        if (!phone || phone.length < 10) {
-            alert("Please enter a valid 10-digit mobile number.");
+
+        // ✨ VALIDATION: Email check
+        if (!email) {
+            showToast('❌ Please enter your email address', 'error');
+            emailInput.focus();
             return;
         }
+
+        // ✨ VALIDATION: Email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            showToast('❌ Please enter a valid email address', 'error');
+            emailInput.focus();
+            return;
+        }
+
+        // ✨ VALIDATION: Phone check
+        if (!phone) {
+            showToast('❌ Please enter your mobile number', 'error');
+            phoneInput.focus();
+            return;
+        }
+
+        // ✨ VALIDATION: Phone format (10+ digits)
+        if (phone.length < 10 || !/^\d{10,}$/.test(phone)) {
+            showToast('❌ Please enter a valid 10-digit mobile number', 'error');
+            phoneInput.focus();
+            return;
+        }
+
+        // ✨ All Step 1 validations passed
+        showToast('✅ Step 1 complete! Proceeding to vehicle details...', 'success');
         document.getElementById('driver-reg-step-1').classList.add('hidden');
         document.getElementById('driver-reg-step-2').classList.remove('hidden');
+        
     } else if (currentStep === 2) {
-        const plate = document.getElementById('reg-plate').value.trim();
+        const plateInput = document.getElementById('reg-plate');
+        const typeInput = document.getElementById('reg-type');
+        
+        const plate = plateInput.value.trim();
+        const type = typeInput.value.trim();
+
+        // ✨ VALIDATION: Vehicle plate
         if (!plate) {
-            showToast('Please enter your vehicle number', 'warning');
+            showToast('❌ Please enter your vehicle number', 'error');
+            plateInput.focus();
             return;
         }
+
+        // ✨ VALIDATION: Vehicle type
+        if (!type) {
+            showToast('❌ Please select your vehicle type', 'error');
+            typeInput.focus();
+            return;
+        }
+
+        // ✨ All Step 2 validations passed
+        showToast('✅ Step 2 complete! Select your route...', 'success');
         document.getElementById('driver-reg-step-2').classList.add('hidden');
         document.getElementById('driver-reg-step-3').classList.remove('hidden');
     }
