@@ -642,30 +642,25 @@
         onAuthStateChanged(auth, async (u) => {
             const splash = document.getElementById('splash-screen');
             const authScreen = document.getElementById('auth-screen');
-            const bookingView = document.getElementById('view-booking');
 
             if(u) {
                 user = u;
-                // 1. Check if profile exists in Firestore
+                // Check if profile exists in Firestore
                 const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'user_profiles', u.uid));
                 if(snap.exists()) {
-                    // User is fully registered
                     userData = snap.data();
                     localStorage.setItem('user_profile', JSON.stringify(userData));
-                    initUserUI(u);
+                    initUserUI(u); // Proceed to App
                     splash.classList.add('hidden');
                 } else {
-                    // 2. FORCE PROFILE SETUP: Show the details form
+                    // NEW USER: Show Profile Setup
                     splash.classList.add('hidden');
                     authScreen.classList.remove('hidden');
-                    // Hide the login inputs and show the "New here? Let's get to know you" step
                     document.getElementById('auth-step-1').classList.add('hidden');
                     document.getElementById('auth-step-2').classList.add('hidden');
                     document.getElementById('auth-step-3').classList.remove('hidden');
-                    showToast('Please enter your name to complete registration', 'info');
                 }
             } else {
-                // Standard login screen
                 splash.classList.add('hidden');
                 authScreen.classList.remove('hidden');
                 document.getElementById('auth-step-1').classList.remove('hidden');

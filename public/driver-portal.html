@@ -1313,6 +1313,7 @@ window.driverRegNextStep = (currentStep) => {
                         document.getElementById('auth-step-3-register').classList.remove('hidden');
 
                         showToast('Please complete your profile details first.', 'info');
+                        return; // Prevent any further app loading
                     }
                 } else {
                     // Standard logout view
