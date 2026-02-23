@@ -127,12 +127,15 @@
                 <button onclick="verifyOtp()" id="btn-verify-otp" class="w-full py-4 bg-green-600 text-white font-bold rounded-2xl shadow-lg hover:bg-green-700 animate-scale">Verify & Login</button>
                 <button onclick="resetAuth()" class="w-full text-xs font-bold text-slate-400 hover:text-slate-600 transition">Change Number</button>
             </div>
-            <div id="auth-step-3" class="hidden space-y-4">
-                <div class="text-center mb-4"><p class="text-sm text-slate-600">New here? Let's get to know you.</p></div>
-                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Your Name</label>
-                <input type="text" id="user-name-input" class="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" placeholder="Full Name">
-                <button onclick="saveUserProfile()" class="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl shadow-lg hover:bg-slate-800 animate-scale">Create Profile</button>
-            </div>
+<div id="auth-step-3" class="hidden space-y-4">
+    <div class="text-center mb-4"><p class="text-sm text-slate-600">New here? Let's get to know you.</p></div>
+    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Your Name</label>
+    <input type="text" id="user-name-input" class="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" placeholder="Full Name">
+    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider">Phone Number</label>
+    <input type="tel" id="user-phone-input" class="w-full px-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none font-bold focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition" placeholder="10-digit mobile number" maxlength="10">
+    <button onclick="saveUserProfile()" class="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl shadow-lg hover:bg-slate-800 animate-scale">Create Profile</button>
+</div>
+
         </div>
     </div>
 
@@ -800,18 +803,18 @@
             temp.textContent = str;
             return temp.innerHTML;
         }
-        // ...existing code...
+    
 window.saveUserProfile = async () => {
-    const nameInput = document.getElementById('user-name-input').value;
-    const phoneInput = document.getElementById('user-phone-input') ? document.getElementById('user-phone-input').value : '';
+    const nameInput = document.getElementById('user-name-input').value.trim();
+    const phoneInput = document.getElementById('user-phone-input').value.trim();
     const safeName = sanitizeInput(nameInput);
-    const safePhone = phoneInput ? sanitizeInput(phoneInput) : '';
+    const safePhone = sanitizeInput(phoneInput);
+
     if (!safeName) {
         alert("Name is required");
         return;
     }
-    // If phone field exists, require 10 digits
-    if (document.getElementById('user-phone-input') && (!/^\d{10}$/.test(safePhone))) {
+    if (!/^\d{10}$/.test(safePhone)) {
         alert("Valid 10-digit phone number required");
         return;
     }
@@ -819,12 +822,11 @@ window.saveUserProfile = async () => {
         name: safeName, 
         email: auth.currentUser.email,
         phone: safePhone,
-        registrationComplete: true, // <-- REQUIRED BY RULES
+        registrationComplete: true,
         createdAt: serverTimestamp() 
     });
     location.reload();
 }
-
 
 window.completeRegistration = async () => {
     const nameInput = document.getElementById('user-name-input');
