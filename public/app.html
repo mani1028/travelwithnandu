@@ -645,15 +645,15 @@
 
             if(u) {
                 user = u;
-                // Check if profile exists in Firestore
+                // 1. STOPS GUEST ACCESS: Check Firestore first
                 const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'user_profiles', u.uid));
                 if(snap.exists()) {
                     userData = snap.data();
                     localStorage.setItem('user_profile', JSON.stringify(userData));
-                    initUserUI(u); // Proceed to App
+                    initUserUI(u); // Proceed to Dashboard
                     splash.classList.add('hidden');
                 } else {
-                    // NEW USER: Show Profile Setup
+                    // 2. FORCE DETAILS: If no profile, show Step 3 (Name Input)
                     splash.classList.add('hidden');
                     authScreen.classList.remove('hidden');
                     document.getElementById('auth-step-1').classList.add('hidden');

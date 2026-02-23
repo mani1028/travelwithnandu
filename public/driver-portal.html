@@ -1483,34 +1483,31 @@ window.driverRegNextStep = (currentStep) => {
                 historyJobs = [];
                 const container = document.getElementById('history-list');
                 if (container) container.innerHTML = '';
-                if (snap.empty) {
-                    if (container) container.innerHTML = '<p class="text-center text-slate-400 text-xs py-8">No completed trips yet.</p>';
+                if (user) {
+                    let profile = await fetchProfile(user.uid);
+                    
+                    if (profile) {
+                        // Existing Driver: Proceed
+                        loadAppWithProfile(user, profile);
+                    } else {
+                        // NEW DRIVER: Force Registration Form
+                        splash.classList.add('hidden');
+                        login.classList.remove('hidden');
+                        
+                        // Trigger the UI to show registration steps instead of login
+                        window.toggleAuthMode('register');
+                        
+                        // Hide the initial email/Google buttons and show the profile form
+                        document.getElementById('auth-step-1').classList.add('hidden');
+                        document.getElementById('auth-step-3-register').classList.remove('hidden');
+                        
+                        showToast('Please complete your partner registration.', 'info');
+                    }
                 } else {
-                    snap.forEach(d => {
-                        const job = {id: d.id, ...d.data()};
-                        historyJobs.push(job);
-                        renderHistoryCard(job, container, false);
-                    });
+                    splash.classList.add('hidden');
+                    login.classList.remove('hidden');
+                    appScreen.classList.add('hidden');
                 }
-                updateWalletView();
-            } catch(e) { console.error('History fetch:', e); }
-        };
-
-        function renderHistoryCard(job, container, prepend) {
-            if (!container) return;
-            const div = document.createElement('div');
-            div.className = "bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm";
-            const ts = job.endTime || job.createdAt;
-            const dateStr = ts ? new Date(ts.seconds * 1000).toLocaleDateString('en-IN') : '';
-            div.innerHTML =
-                '<div class="flex justify-between mb-2">' +
-                  '<span class="text-[10px] font-bold text-slate-400">' + dateStr + '</span>' +
-                  '<span class="text-[10px] font-bold uppercase ' + (job.status === 'completed' ? 'text-green-500' : 'text-red-500') + '">' + job.status + '</span>' +
-                '</div>' +
-                '<div class="flex justify-between items-center">' +
-                  '<div><h4 class="font-bold text-sm dark:text-white">' + (job.to||'').split(',')[0] + '</h4>' +
-                       '<p class="text-xs text-slate-500">From: ' + (job.from||'').split(',')[0] + '</p></div>' +
-                  '<p class="font-black text-lg dark:text-white">₹' + job.price + '</p>' +
                 '</div>';
             prepend ? container.prepend(div) : container.appendChild(div);
         }
