@@ -640,35 +640,34 @@
         document.getElementById('travel-date').valueAsDate = new Date();
 
         onAuthStateChanged(auth, async (u) => {
+            const splash = document.getElementById('splash-screen');
+            const authScreen = document.getElementById('auth-screen');
+            const bookingView = document.getElementById('view-booking');
+
             if(u) {
                 user = u;
-                syncData();
-                try {
-                    // OFFLINE-FIRST: Try local storage first if offline
-                    const cachedUser = localStorage.getItem('user_profile');
-                    if (!navigator.onLine && cachedUser) {
-                        userData = JSON.parse(cachedUser);
-                        initUserUI(u);
-                    } else {
-                        // Use uid as key for user_profiles
-                        const snap = await getDoc(doc(db,'artifacts',APP_ID,'public','data','user_profiles',u.uid));
-                        if(snap.exists()) {
-                            userData = snap.data();
-                            localStorage.setItem('user_profile', JSON.stringify(userData));
-                            initUserUI(u);
-                        } else {
-                            document.getElementById('auth-screen').classList.remove('hidden');
-                            document.getElementById('auth-step-1').classList.add('hidden');
-                            document.getElementById('auth-step-3').classList.remove('hidden');
-                        }
-                    }
-                } catch (e) {
-                    console.error("Auth Profile Fetch Error:", e);
+                // 1. Check if profile exists in Firestore
+                const snap = await getDoc(doc(db, 'artifacts', APP_ID, 'public', 'data', 'user_profiles', u.uid));
+                if(snap.exists()) {
+                    // User is fully registered
+                    userData = snap.data();
+                    localStorage.setItem('user_profile', JSON.stringify(userData));
+                    initUserUI(u);
+                    splash.classList.add('hidden');
+                } else {
+                    // 2. FORCE PROFILE SETUP: Show the details form
+                    splash.classList.add('hidden');
+                    authScreen.classList.remove('hidden');
+                    // Hide the login inputs and show the "New here? Let's get to know you" step
+                    document.getElementById('auth-step-1').classList.add('hidden');
+                    document.getElementById('auth-step-2').classList.add('hidden');
+                    document.getElementById('auth-step-3').classList.remove('hidden');
+                    showToast('Please enter your name to complete registration', 'info');
                 }
             } else {
-                user = null;
-                userData = null;
-                document.getElementById('auth-screen').classList.remove('hidden');
+                // Standard login screen
+                splash.classList.add('hidden');
+                authScreen.classList.remove('hidden');
                 document.getElementById('auth-step-1').classList.remove('hidden');
             }
         });
@@ -808,8 +807,24 @@
         }
         window.saveUserProfile = async () => {
             const nameInput = document.getElementById('user-name-input').value;
+            const phoneInput = document.getElementById('user-phone-input') ? document.getElementById('user-phone-input').value : '';
             const safeName = sanitizeInput(nameInput);
-            await setDoc(doc(db,'artifacts',APP_ID,'public','data','user_profiles',auth.currentUser.uid), { name: safeName, email: auth.currentUser.email, createdAt: serverTimestamp() });
+            const safePhone = phoneInput ? sanitizeInput(phoneInput) : '';
+            if (!safeName) {
+                alert("Name is required");
+                return;
+            }
+            // If phone field exists, require 10 digits
+            if (document.getElementById('user-phone-input') && (!/^\d{10}$/.test(safePhone))) {
+                alert("Valid 10-digit phone number required");
+                return;
+            }
+            await setDoc(doc(db,'artifacts',APP_ID,'public','data','user_profiles',auth.currentUser.uid), { 
+                name: safeName, 
+                email: auth.currentUser.email,
+                phone: safePhone,
+                createdAt: serverTimestamp() 
+            });
             location.reload();
         }
         window.handleLogout = async () => { if(confirm("Logout?")) { await signOut(auth); location.reload(); } }

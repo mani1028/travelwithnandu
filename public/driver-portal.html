@@ -1239,11 +1239,11 @@ window.driverRegNextStep = (currentStep) => {
         const email = document.getElementById('reg-email').value.trim();
         const phone = document.getElementById('reg-phone').value.trim();
         if (!name || !email) {
-            alert("Please enter both name and email.");
+            showToast('Please enter your name and email', 'warning');
             return;
         }
-        if (!phone || phone.length < 10) {
-            alert("Please enter valid mobile number");
+        if (!phone || phone.length !== 10 || !/^\d{10}$/.test(phone)) {
+            showToast('Please enter a valid 10-digit mobile number', 'warning');
             return;
         }
         document.getElementById('driver-reg-step-1').classList.add('hidden');
@@ -1251,7 +1251,7 @@ window.driverRegNextStep = (currentStep) => {
     } else if (currentStep === 2) {
         const plate = document.getElementById('reg-plate').value.trim();
         if (!plate) {
-            alert("Please enter your vehicle number.");
+            showToast('Please enter your vehicle number', 'warning');
             return;
         }
         document.getElementById('driver-reg-step-2').classList.add('hidden');
@@ -1293,43 +1293,29 @@ window.driverRegNextStep = (currentStep) => {
                 const appScreen = document.getElementById('app-screen');
 
                 if (user) {
-                    console.log("User Logged In:", user.uid);
-                    
-                    // Fetch Profile
+                    // 1. Attempt to fetch the profile document
                     let profile = await fetchProfile(user.uid);
-                    
-                    // STRICT CHECK LOGIC
+
                     if (profile) {
-                        // User HAS a profile
-                        if (isRegistering) {
-                            alert("Account already exists with this number. Logging you in...");
-                            isRegistering = false;
-                            toggleAuthMode('login'); // Switch UI back to login
-                        }
-                        // Proceed to Load App
+                        // User already has a profile, proceed to app
                         loadAppWithProfile(user, profile);
                     } else {
-                        // User HAS NO profile (New user)
-                        if (!isRegistering) {
-                            // User tried to Login but has no account
-                            alert("No driver account found with this number. Please register.");
-                            await signOut(auth); // Kick them out
-                            toggleAuthMode('register'); // Switch UI to register
-                            document.getElementById('auth-step-2').classList.add('hidden');
-                            document.getElementById('auth-step-1').classList.remove('hidden');
-                            return;
-                        }
-                        
-                        // User is Registering and has no profile -> Show Registration Form
+                        // 2. NEW USER DETECTED: Force them to the Registration Form
+                        splash.classList.add('hidden');
+                        login.classList.remove('hidden');
+
+                        // Toggle UI to registration mode automatically
+                        window.toggleAuthMode('register');
+
+                        // Hide the initial login buttons and show the details form
                         document.getElementById('auth-step-1').classList.add('hidden');
                         document.getElementById('auth-step-2').classList.add('hidden');
                         document.getElementById('auth-step-3-register').classList.remove('hidden');
-                        
-                        splash.classList.add('hidden'); // Ensure splash is gone so they see form
-                    }
 
+                        showToast('Please complete your profile details first.', 'info');
+                    }
                 } else {
-                    console.log("No User");
+                    // Standard logout view
                     splash.classList.add('hidden');
                     login.classList.remove('hidden');
                     appScreen.classList.add('hidden');
