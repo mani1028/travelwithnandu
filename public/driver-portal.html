@@ -1483,33 +1483,12 @@ window.driverRegNextStep = (currentStep) => {
                 historyJobs = [];
                 const container = document.getElementById('history-list');
                 if (container) container.innerHTML = '';
-                if (user) {
-                    let profile = await fetchProfile(user.uid);
-                    
-                    if (profile) {
-                        // Existing Driver: Proceed
-                        loadAppWithProfile(user, profile);
-                    } else {
-                        // NEW DRIVER: Force Registration Form
-                        splash.classList.add('hidden');
-                        login.classList.remove('hidden');
-                        
-                        // Trigger the UI to show registration steps instead of login
-                        window.toggleAuthMode('register');
-                        
-                        // Hide the initial email/Google buttons and show the profile form
-                        document.getElementById('auth-step-1').classList.add('hidden');
-                        document.getElementById('auth-step-3-register').classList.remove('hidden');
-                        
-                        showToast('Please complete your partner registration.', 'info');
-                    }
-                } else {
-                    splash.classList.add('hidden');
-                    login.classList.remove('hidden');
-                    appScreen.classList.add('hidden');
-                }
-                '</div>';
-            prepend ? container.prepend(div) : container.appendChild(div);
+                snap.forEach(doc => {
+                    const job = { id: doc.id, ...doc.data() };
+                    historyJobs.push(job);
+                    renderHistoryCard(job, container);
+                });
+            } catch(e) { console.error('History fetch:', e); }
         }
 
         // Append a just-completed trip locally — zero extra Firestore reads
