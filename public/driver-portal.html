@@ -1918,9 +1918,12 @@ onAuthStateChanged(auth, async (user) => {
                     const cap    = getTotalCapacity();
                     const filled = driverProfile.manualFilledSeats || 0;
                     // Parallel writes: driver status + trip doc (saves 1 read + 1 sequential wait)
-                    await Promise.all([
-                        updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), { status: 'online' }),
-                        setDoc(doc(db, 'artifacts', APP_ID, 'trips', driverId), {
+await Promise.all([
+    updateDoc(doc(db, 'artifacts', APP_ID, 'drivers', driverId), { 
+        status: 'online',
+        registrationComplete: true // ✨ REQUIRED BY RULES
+    }),
+                    setDoc(doc(db, 'artifacts', APP_ID, 'trips', driverId), {
                             driverId, name: driverProfile.name, phone: driverProfile.phone,
                             vehicleType: driverProfile.vehicleType, vehicleNo: driverProfile.vehicleNo,
                             totalSeats: cap, seatsAvailable: Math.max(0, cap - filled),
