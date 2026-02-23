@@ -866,61 +866,50 @@
                         if (loginBtn) loginBtn.disabled = true;
                         
                         try {
-                                // STRATEGY 1: Check for native PWK Android bridge
+                                // STRATEGY 1: Native Android Bridge (BEST - for PWK app)
                                 if (window.Android && typeof window.Android.getGoogleAuthToken === 'function') {
-                                        console.log('Using native Android Google Auth');
-                                        return new Promise((resolve) => {
-                                                window.Android.getGoogleAuthToken((idToken) => {
-                                                        if (idToken) {
-                                                                handleGoogleToken(idToken).finally(resolve);
+                                        console.log('Using NATIVE Android Google Auth - Best UX!');
+                                        
+                                        // Setup callback to receive token
+                                        window.onGoogleAuthToken = async (result) => {
+                                                try {
+                                                        if (result.success && result.idToken) {
+                                                                console.log('Received ID Token from native auth');
+                                                                const credential = GoogleAuthProvider.credential(result.idToken);
+                                                                const authResult = await signInWithCredential(auth, credential);
+                                                                
+                                                                if (authResult && authResult.user) {
+                                                                        await handleGoogleLogin(authResult.user);
+                                                                }
                                                         } else {
                                                                 showToast('Google sign-in cancelled', 'warning');
-                                                                if (loginBtn) loginBtn.disabled = false;
-                                                                resolve();
                                                         }
-                                                });
-                                        });
+                                                } catch(error) {
+                                                        console.error('Native token handling error:', error);
+                                                        showToast('Auth error: ' + error.message, 'error');
+                                                } finally {
+                                                        if (loginBtn) loginBtn.disabled = false;
+                                                }
+                                        };
+                                        
+                                        // Initiate native Google Sign-In
+                                        window.Android.getGoogleAuthToken('onGoogleAuthToken');
+                                        return;
                                 }
                                 
-                                // STRATEGY 2: Try Firebase Popup (works on some webviews)
-                                if (isWebView()) {
-                                        console.log('Attempting popup in webview');
-                                        try {
-                                                const provider = new GoogleAuthProvider();
-                                                const result = await signInWithPopup(auth, provider);
-                                                if (result && result.user) {
-                                                        await handleGoogleLogin(result.user);
-                                                }
-                                        } catch(popupError) {
-                                                console.log('Popup failed, trying redirect strategy:', popupError.code);
-                                                // STRATEGY 3: Fallback to redirect via external browser
-                                                showGoogleAuthModal();
-                                        }
-                                } else {
-                                        // STRATEGY 4: Normal browser - use redirect
-                                        console.log('Using redirect in normal browser');
-                                        const provider = new GoogleAuthProvider();
-                                        signInWithRedirect(auth, provider);
-                                }
-                        } catch(error) {
-                                console.error('Google Login Error:', error);
-                                showToast('Google sign-in failed: ' + error.message, 'error');
-                        } finally {
-                                if (loginBtn) loginBtn.disabled = false;
-                        }
-                };
-                
-                // Handle Google authentication token
-                window.handleGoogleToken = async (idToken) => {
-                        try {
-                                const credential = GoogleAuthProvider.credential(idToken);
-                                const result = await signInWithCredential(auth, credential);
+                                // STRATEGY 2: Firebase Popup (fallback for other webviews)
+                                console.log('Native bridge not available, trying Firebase popup');
+                                const provider = new GoogleAuthProvider();
+                                const result = await signInWithPopup(auth, provider);
+                                
                                 if (result && result.user) {
                                         await handleGoogleLogin(result.user);
                                 }
-                        } catch(error) {
-                                console.error('Token handling error:', error);
-                                showToast('Authentication failed: ' + error.message, 'error');
+                        } catch(popupError) {
+                                console.log('Popup failed, showing browser redirect option');
+                                showGoogleAuthModal();
+                        } finally {
+                                if (loginBtn) loginBtn.disabled = false;
                         }
                 };
                 
