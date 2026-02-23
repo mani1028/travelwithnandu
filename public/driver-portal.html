@@ -1882,9 +1882,24 @@ window.driverRegNextStep = (currentStep) => {
             } catch(e) { console.error(e); showToast("Error going offline", "error"); }
         }
 
-        window.logout = () => {
+        // --- LOGOUT FUNCTION FOR ANDROID BRIDGE AND WEB ---
+        window.logout = async function() {
             if(confirm("Are you sure you want to log out?")) {
-                signOut(auth).then(() => location.reload());
+                let driverPhoneNumber = null;
+                if (auth.currentUser && auth.currentUser.phoneNumber) {
+                    driverPhoneNumber = auth.currentUser.phoneNumber;
+                } else if (window.currentDriver && window.currentDriver.phone) {
+                    driverPhoneNumber = window.currentDriver.phone;
+                }
+
+                if (window.Android && typeof window.Android.driverOffline === 'function') {
+                    console.log("Calling native Android logout...");
+                    window.Android.driverOffline(driverPhoneNumber || "");
+                    setTimeout(() => { window.location.href = "/login.html"; }, 500);
+                } else {
+                    await signOut(auth);
+                    window.location.href = "/login.html";
+                }
             }
         };
 
