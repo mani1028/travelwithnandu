@@ -862,51 +862,38 @@
 
                 // Auto-login with demo credentials (for webview compatibility)
 
-                // 1. GLOBAL CALLBACK - Keep this outside any other function
-                window.onGoogleAuthToken = async (result) => {
-                    try {
-                    console.log('Native Token Received:', result);
-                    // Ensure result is an object
-                    const data = typeof result === 'string' ? JSON.parse(result) : result;
-                    if (data.success && data.idToken) {
-                        showToast('Verifying with Google...', 'info');
-                        const credential = GoogleAuthProvider.credential(data.idToken);
-                        // This is the step that completes the login
-                        const authResult = await signInWithCredential(auth, credential);
-                        if (authResult && authResult.user) {
-                        await handleGoogleLogin(authResult.user);
-                        }
-                    } else {
-                        showToast('Sign-in failed or cancelled', 'warning');
-                    }
-                    } catch(error) {
-                    console.error('Auth bridge error:', error);
-                    showToast('Authentication Error: ' + error.message, 'error');
-                    }
-                };
 
-                // 2. THE TRIGGER - This only starts the process
-                window.loginWithGoogle = async function() {
-                    const loginBtn = document.querySelector('button[onclick*="loginWithGoogle"]');
-                    if (loginBtn) loginBtn.disabled = true;
+                                // --- ANDROID BRIDGE GOOGLE SIGN-IN LOGIC ---
+                                // Call this to start Google sign-in
+                                function signInWithGoogle() {
+                                    if (window.Android && typeof window.Android.getGoogleAuthToken === 'function') {
+                                        // Native Android bridge flow
+                                        window.Android.getGoogleAuthToken();
+                                    } else {
+                                        // Web fallback
+                                        const provider = new GoogleAuthProvider();
+                                        signInWithPopup(auth, provider)
+                                            .then((result) => {
+                                                if (result.user) handleGoogleLogin(result.user);
+                                            })
+                                            .catch((e) => {
+                                                showGoogleAuthModal();
+                                            });
+                                    }
+                                }
 
-                    if (window.Android && typeof window.Android.getGoogleAuthToken === 'function') {
-                    console.log('Initiating Native Google Sign-In...');
-                    // Pass the name of the GLOBAL function created above
-                    window.Android.getGoogleAuthToken('onGoogleAuthToken');
-                    } else {
-                    // Standard Firebase Web Fallback
-                    const provider = new GoogleAuthProvider();
-                    try {
-                        const result = await signInWithPopup(auth, provider);
-                        if (result.user) await handleGoogleLogin(result.user);
-                    } catch(e) {
-                        showGoogleAuthModal();
-                    } finally {
-                        if (loginBtn) loginBtn.disabled = false;
-                    }
-                    }
-                };
+                                // This function will be called by the Android app with the Google ID token
+                                function handleGoogleAuthToken(token) {
+                                    const credential = GoogleAuthProvider.credential(token);
+                                    signInWithCredential(auth, credential)
+                                        .then((result) => {
+                                            if (result.user) handleGoogleLogin(result.user);
+                                        })
+                                        .catch((error) => {
+                                            console.error(error);
+                                            showToast('Authentication Error: ' + error.message, 'error');
+                                        });
+                                }
                 
                 // Common login handler
                 window.handleGoogleLogin = async (user) => {
