@@ -1285,7 +1285,7 @@ window.driverRegNextStep = (currentStep) => {
                     if (pendingOptionsJobId) document.getElementById('options-modal').classList.remove('hidden');
                 }
             });
-        }
+        
 onAuthStateChanged(auth, async (user) => {
     const splash = document.getElementById('splash-screen');
     const login = document.getElementById('login-screen');
@@ -1322,7 +1322,8 @@ onAuthStateChanged(auth, async (user) => {
         login.classList.remove('hidden');
         appScreen.classList.add('hidden');
     }
-});
+}); 
+        }
         
         function loadAppWithProfile(user, profile) {
             driverId = user.uid;
