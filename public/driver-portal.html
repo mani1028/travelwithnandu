@@ -861,56 +861,51 @@
                 const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'travel-nandu-v1';
 
                 // Auto-login with demo credentials (for webview compatibility)
-                window.loginWithGoogle = async function() {
-                        const loginBtn = document.querySelector('button[onclick*="loginWithGoogle"]');
-                        if (loginBtn) loginBtn.disabled = true;
-                        
-                        try {
-                                // STRATEGY 1: Native Android Bridge (BEST - for PWK app)
-                                if (window.Android && typeof window.Android.getGoogleAuthToken === 'function') {
-                                        console.log('Using NATIVE Android Google Auth - Best UX!');
-                                        
-                                        // Setup callback to receive token
-                                        window.onGoogleAuthToken = async (result) => {
-                                                try {
-                                                        if (result.success && result.idToken) {
-                                                                console.log('Received ID Token from native auth');
-                                                                const credential = GoogleAuthProvider.credential(result.idToken);
-                                                                const authResult = await signInWithCredential(auth, credential);
-                                                                
-                                                                if (authResult && authResult.user) {
-                                                                        await handleGoogleLogin(authResult.user);
-                                                                }
-                                                        } else {
-                                                                showToast('Google sign-in cancelled', 'warning');
-                                                        }
-                                                } catch(error) {
-                                                        console.error('Native token handling error:', error);
-                                                        showToast('Auth error: ' + error.message, 'error');
-                                                } finally {
-                                                        if (loginBtn) loginBtn.disabled = false;
-                                                }
-                                        };
-                                        
-                                        // Initiate native Google Sign-In
-                                        window.Android.getGoogleAuthToken('onGoogleAuthToken');
-                                        return;
-                                }
-                                
-                                // STRATEGY 2: Firebase Popup (fallback for other webviews)
-                                console.log('Native bridge not available, trying Firebase popup');
-                                const provider = new GoogleAuthProvider();
-                                const result = await signInWithPopup(auth, provider);
-                                
-                                if (result && result.user) {
-                                        await handleGoogleLogin(result.user);
-                                }
-                        } catch(popupError) {
-                                console.log('Popup failed, showing browser redirect option');
-                                showGoogleAuthModal();
-                        } finally {
-                                if (loginBtn) loginBtn.disabled = false;
+
+                // 1. GLOBAL CALLBACK - Keep this outside any other function
+                window.onGoogleAuthToken = async (result) => {
+                    try {
+                    console.log('Native Token Received:', result);
+                    // Ensure result is an object
+                    const data = typeof result === 'string' ? JSON.parse(result) : result;
+                    if (data.success && data.idToken) {
+                        showToast('Verifying with Google...', 'info');
+                        const credential = GoogleAuthProvider.credential(data.idToken);
+                        // This is the step that completes the login
+                        const authResult = await signInWithCredential(auth, credential);
+                        if (authResult && authResult.user) {
+                        await handleGoogleLogin(authResult.user);
                         }
+                    } else {
+                        showToast('Sign-in failed or cancelled', 'warning');
+                    }
+                    } catch(error) {
+                    console.error('Auth bridge error:', error);
+                    showToast('Authentication Error: ' + error.message, 'error');
+                    }
+                };
+
+                // 2. THE TRIGGER - This only starts the process
+                window.loginWithGoogle = async function() {
+                    const loginBtn = document.querySelector('button[onclick*="loginWithGoogle"]');
+                    if (loginBtn) loginBtn.disabled = true;
+
+                    if (window.Android && typeof window.Android.getGoogleAuthToken === 'function') {
+                    console.log('Initiating Native Google Sign-In...');
+                    // Pass the name of the GLOBAL function created above
+                    window.Android.getGoogleAuthToken('onGoogleAuthToken');
+                    } else {
+                    // Standard Firebase Web Fallback
+                    const provider = new GoogleAuthProvider();
+                    try {
+                        const result = await signInWithPopup(auth, provider);
+                        if (result.user) await handleGoogleLogin(result.user);
+                    } catch(e) {
+                        showGoogleAuthModal();
+                    } finally {
+                        if (loginBtn) loginBtn.disabled = false;
+                    }
+                    }
                 };
                 
                 // Common login handler
