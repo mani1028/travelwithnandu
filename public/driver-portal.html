@@ -758,7 +758,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, signInWithCredential, getRedirectResult } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, signInWithPopup, signInWithCredential, getRedirectResult } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { collection, doc, setDoc, getDoc, getDocs, updateDoc, deleteDoc, onSnapshot, query, where, serverTimestamp, orderBy, addDoc, limit, arrayUnion, runTransaction, increment } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
@@ -773,23 +773,47 @@
         const db = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) });
         const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'travel-nandu-v1';
 
-        window.signInWithGoogle = function() {
+        window.signInWithGoogle = async function() {
             if (window.Android && typeof window.Android.getGoogleAuthToken === 'function') {
                 window.Android.getGoogleAuthToken();
-            } else {
+                return;
+            }
+            
+            try {
                 const provider = new GoogleAuthProvider();
-                signInWithRedirect(auth, provider)
-                    .catch((e) => {
-                        if (e.code === 'auth/unauthorized-domain') {
-                            showToast('Domain not authorized in Firebase Auth settings.', 'error');
-                            return;
-                        }
-                        if (e.code === 'auth/operation-not-allowed') {
-                            showToast('Google Sign-In is disabled in Firebase project.', 'error');
-                            return;
-                        }
-                        window.showGoogleAuthModal();
-                    });
+                provider.addScope('profile');
+                provider.addScope('email');
+                
+                // Try popup first (more reliable)
+                try {
+                    await signInWithPopup(auth, provider);
+                } catch(popupErr) {
+                    // If popup fails, try redirect
+                    if (popupErr.code === 'auth/popup-blocked' || popupErr.code === 'auth/web-storage-unsupported') {
+                        console.log("Popup blocked, trying redirect");
+                        await signInWithRedirect(auth, provider);
+                    } else {
+                        throw popupErr;
+                    }
+                }
+            } catch(e) {
+                if (e.code === 'auth/unauthorized-domain') {
+                    showToast('❌ Domain not authorized. Add your domain to Firebase Auth > Settings > Authorized domains.', 'error');
+                    return;
+                }
+                if (e.code === 'auth/operation-not-allowed') {
+                    showToast('❌ Google Sign-In disabled. Enable it in Firebase Auth > Sign-in method > Google.', 'error');
+                    return;
+                }
+                if (e.code === 'auth/cancelled-popup-request' || e.code === 'auth/popup-closed-by-user') {
+                    return; // User closed the popup - not an error
+                }
+                if (e.code === 'auth/popup-blocked') {
+                    window.showGoogleAuthModal();
+                    return;
+                }
+                console.error('Google login error:', e.code, e.message);
+                showToast('Google login failed: ' + (e.message || e.code), 'error');
             }
         };
 
