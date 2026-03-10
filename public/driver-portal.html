@@ -20,7 +20,7 @@
                     fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] },
                     colors: {
                         slate: { 850: '#151F32', 900: '#0F172A', 950: '#020617' },
-                        brand: { 500: '#3B82F6', 600: '#2563EB', 700: '#1D4ED8' }
+                        brand: { 500: '#F97316', 600: '#EA580C', 700: '#C2410C' }
                     },
                     animation: {
                         'slide-up': 'slideUp 0.3s ease-out forwards',
@@ -60,9 +60,9 @@
         .loader { width: 20px; height: 20px; border: 3px solid #FFF; border-bottom-color: transparent; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .otp-input { width: 3rem; height: 3.5rem; text-align: center; font-size: 1.5rem; border-radius: 0.75rem; border: 2px solid #e2e8f0; background: #f8fafc; transition: all 0.2s; }
-        .otp-input:focus { border-color: #3B82F6; background: #fff; outline: none; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        .otp-input:focus { border-color: #F97316; background: #fff; outline: none; box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.1); }
         .dark .otp-input { background: #0f172a; border-color: #1e293b; color: white; }
-        .dark .otp-input:focus { border-color: #3B82F6; background: #1e293b; }
+        .dark .otp-input:focus { border-color: #F97316; background: #1e293b; }
         .animation-delay-300 { animation-delay: 300ms; }
         .origin-left { transform-origin: left; }
         @keyframes shake { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)} 40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)} }
@@ -90,14 +90,14 @@
     <div id="splash-screen" class="fixed inset-0 bg-slate-50 dark:bg-slate-950 z-[150] flex flex-col items-center justify-center transition-opacity duration-700">
         <div class="relative w-24 h-24 mb-8">
             <div class="absolute inset-0 rounded-2xl animate-ping opacity-20 bg-[url('assets/nandu.png')] bg-cover bg-center bg-no-repeat"></div>
-            <div class="relative z-10 w-full h-full rounded-2xl flex items-center justify-center shadow-2xl shadow-blue-500/30 bg-[url('assets/nandu.png')] bg-cover bg-center bg-no-repeat"></div>
+            <div class="relative z-10 w-full h-full rounded-2xl flex items-center justify-center shadow-2xl shadow-orange-500/30 bg-[url('assets/nandu.png')] bg-cover bg-center bg-no-repeat"></div>
         </div>
         <div class="text-center space-y-2">
-            <h1 class="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">Move With<span class="text-blue-600">Nandu</span></h1>
+            <h1 class="text-3xl font-black tracking-tighter text-slate-900 dark:text-white">Move With<span class="text-orange-600">Nandu</span></h1>
             <p id="splash-text" class="text-slate-400 text-xs font-bold uppercase tracking-[0.2em] animate-pulse">Secure Login...</p>
         </div>
         <div class="w-48 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full mt-8 overflow-hidden">
-            <div class="h-full bg-blue-600 rounded-full animate-progress origin-left"></div>
+            <div class="h-full bg-orange-600 rounded-full animate-progress origin-left"></div>
         </div>
     </div>
 
@@ -159,7 +159,7 @@
     <div id="accept-modal" class="fixed inset-0 z-[105] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
         <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up relative">
             <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+                <div class="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
                     <i data-lucide="bell-ring" class="h-8 w-8"></i>
                 </div>
                 <h3 class="text-xl font-bold dark:text-white">New Request</h3>
@@ -203,7 +203,7 @@
                 <i data-lucide="x" class="h-4 w-4 text-slate-500"></i>
             </button>
             <div class="text-center mb-6">
-                <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-2xl flex items-center justify-center mx-auto mb-3">
                     <i data-lucide="shield-check" class="h-6 w-6"></i>
                 </div>
                 <h3 class="text-lg font-bold dark:text-white">Verify Customer</h3>
@@ -240,7 +240,7 @@
     <div id="complete-all-modal" class="fixed inset-0 z-[105] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-4 transition-opacity duration-300">
         <div class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-zoom-in relative">
             <div class="text-center mb-6">
-                <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div class="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-full flex items-center justify-center mx-auto mb-4">
                     <i data-lucide="check-circle-2" class="h-8 w-8"></i>
                 </div>
                 <h3 class="text-xl font-bold dark:text-white">End All Trips?</h3>
@@ -318,7 +318,7 @@
                 <!-- AC Toggle -->
                 <div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800">
                     <div class="flex items-center gap-3">
-                        <div class="bg-blue-100 dark:bg-blue-900/30 p-2 rounded-lg text-blue-600">
+                        <div class="bg-orange-100 dark:bg-orange-900/30 p-2 rounded-lg text-orange-600">
                             <i data-lucide="snowflake" class="h-5 w-5"></i>
                         </div>
                         <div>
@@ -515,7 +515,7 @@
                     <h2 id="driver-name" class="font-bold text-sm leading-tight dark:text-white truncate max-w-[120px]">...</h2>
                     <div class="flex items-center gap-1.5" id="header-plate-container">
                         <span id="header-plate" class="text-[10px] font-bold text-slate-500 uppercase bg-slate-100 dark:bg-slate-800 px-1.5 rounded border border-slate-200 dark:border-slate-700 flex items-center">...</span>
-                        <i data-lucide="badge-check" class="h-3 w-3 text-blue-500"></i>
+                        <i data-lucide="badge-check" class="h-3 w-3 text-orange-500"></i>
                     </div>
                 </div>
             </div>
@@ -591,7 +591,7 @@
                     <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
                     <div class="relative z-10">
                         <div class="flex justify-between items-start mb-2">
-                            <p class="text-xs font-medium text-blue-100 flex items-center gap-2"><i data-lucide="wallet" class="w-3 h-3"></i> Total Earnings</p>
+                            <p class="text-xs font-medium text-orange-100 flex items-center gap-2"><i data-lucide="wallet" class="w-3 h-3"></i> Total Earnings</p>
                             <select id="wallet-filter" onchange="updateWalletView()" class="bg-white/20 text-xs font-bold border-none rounded-lg px-2 py-1 outline-none cursor-pointer hover:bg-white/30 text-white">
                                 <option value="all" class="text-slate-900">All Time</option>
                                 <option value="week" class="text-slate-900">This Week</option>
@@ -652,7 +652,7 @@
                     </div>
                     <div class="mt-4 flex gap-2">
                         <span id="prof-verify-badge" class="px-3 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full">Pending Verification</span>
-                        <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold rounded-full border border-blue-200 dark:border-blue-900" id="prof-type">Type</span>
+                        <span class="px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 text-xs font-bold rounded-full border border-orange-200 dark:border-orange-900" id="prof-type">Type</span>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
@@ -843,7 +843,7 @@
         window.showGoogleAuthModal = function() {
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 z-[200] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in';
-            modal.innerHTML = `<div class="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full shadow-2xl space-y-6"><div class="text-center"><h3 class="text-xl font-black dark:text-white">Secure Google Login</h3><p class="text-sm text-slate-600 dark:text-slate-400 mt-2">Opening Google login in your browser.</p></div><div class="flex gap-3"><button onclick="this.closest('.fixed').remove()" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-bold rounded-xl">Cancel</button><button onclick="openGoogleAuthInBrowser()" class="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl">Continue</button></div></div>`;
+            modal.innerHTML = `<div class="bg-white dark:bg-slate-900 rounded-3xl p-8 max-w-sm w-full shadow-2xl space-y-6"><div class="text-center"><h3 class="text-xl font-black dark:text-white">Secure Google Login</h3><p class="text-sm text-slate-600 dark:text-slate-400 mt-2">Opening Google login in your browser.</p></div><div class="flex gap-3"><button onclick="this.closest('.fixed').remove()" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-bold rounded-xl">Cancel</button><button onclick="openGoogleAuthInBrowser()" class="flex-1 py-3 bg-orange-600 text-white font-bold rounded-xl">Continue</button></div></div>`;
             document.body.appendChild(modal);
         };
 
@@ -1091,7 +1091,7 @@
                 if (!el) continue;
                 const s = docs[key] || "pending";
                 if (s === "verified") { el.innerText = "Verified"; el.className = "text-[10px] font-bold text-green-600 bg-green-100 px-2 py-0.5 rounded"; }
-                else if (s === "uploaded") { el.innerText = "Under Review"; el.className = "text-[10px] font-bold text-blue-500 bg-blue-100 px-2 py-0.5 rounded"; }
+                else if (s === "uploaded") { el.innerText = "Under Review"; el.className = "text-[10px] font-bold text-orange-500 bg-orange-100 px-2 py-0.5 rounded"; }
                 else { el.innerText = "Pending Upload"; el.className = "text-[10px] font-bold text-yellow-500 bg-yellow-100 px-2 py-0.5 rounded"; }
             }
 
@@ -1488,7 +1488,7 @@
             // FIX #5: Auto-detect location and suggest nearest hub
             const locationHint = document.getElementById('location-detect-hint');
             if (locationHint) {
-                locationHint.innerHTML = '<span class="text-blue-500 animate-pulse">📍 Detecting your location...</span>';
+                locationHint.innerHTML = '<span class="text-orange-500 animate-pulse">📍 Detecting your location...</span>';
             }
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
@@ -1861,7 +1861,7 @@ Are you absolutely sure you want to proceed?`);
             if (currentTab === 'new') {
                 // FIX #6: Show accept button for all valid jobs including full cab
                 btnAction = `<button onclick="openAcceptModal('${job.id}')" class="w-full mt-3 py-2.5 bg-brand-600 text-white font-bold rounded-lg shadow-lg active:scale-95 transition">Accept Request</button>`;
-                statusColor = 'border-l-4 border-blue-500';
+                statusColor = 'border-l-4 border-orange-500';
             } else {
                 if(job.status === 'assigned') {
                     btnAction = `<button onclick="openOtpModal('${job.id}')" class="w-full mt-3 py-2.5 bg-brand-600 text-white font-bold rounded-lg shadow-lg active:scale-95 transition">Verify OTP</button>`;
@@ -2092,9 +2092,9 @@ Are you absolutely sure you want to proceed?`);
                             </div>
                             <p class="font-black text-green-600">₹${job.price}</p>
                         </div>
-                        <div class="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
-                            <p class="text-[10px] text-blue-600 font-bold">📍 Drop: ${(job.to||'').split(',')[0]}</p>
-                            <p class="text-[9px] text-blue-400 mt-0.5">Your location will update to this after completion</p>
+                        <div class="mt-2 p-2 bg-orange-50 dark:bg-orange-900/20 rounded-lg text-center">
+                            <p class="text-[10px] text-orange-600 font-bold">📍 Drop: ${(job.to||'').split(',')[0]}</p>
+                            <p class="text-[9px] text-orange-400 mt-0.5">Your location will update to this after completion</p>
                         </div>
                     `;
                 }
@@ -2180,7 +2180,7 @@ Are you absolutely sure you want to proceed?`);
 
         window.showToast = (m, t) => {
             const d = document.createElement('div');
-            const c = t === 'success' ? 'bg-green-600' : t === 'warning' ? 'bg-orange-500' : t === 'info' ? 'bg-blue-600' : 'bg-red-500';
+            const c = t === 'success' ? 'bg-green-600' : t === 'warning' ? 'bg-orange-500' : t === 'info' ? 'bg-orange-600' : 'bg-red-500';
             d.className = `p-4 rounded-xl shadow-lg text-white text-xs font-bold fixed top-4 right-4 z-[100] max-w-[280px] ${c} animate-fade-in`;
             d.textContent = m;
             document.body.appendChild(d);

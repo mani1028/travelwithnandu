@@ -38,14 +38,14 @@
             cursor: pointer;
             user-select: none;
         }
-        .option-card:hover { border-color: #93c5fd; background: #f0f9ff; }
+        .option-card:hover { border-color: #fed7aa; background: #fff7ed; }
         .option-card.selected {
-            border-color: #2563eb !important;
-            background: #eff6ff !important;
-            color: #1d4ed8 !important;
-            box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+            border-color: #f97316 !important;
+            background: #fff7ed !important;
+            color: #c2410c !important;
+            box-shadow: 0 0 0 3px rgba(249,115,22,0.15);
         }
-        .option-card.selected span { color: #1d4ed8 !important; }
+        .option-card.selected span { color: #c2410c !important; }
 
         /* Ambulance card selected = red theme */
         .option-card.selected-red {
@@ -66,14 +66,14 @@
             transition: all 0.15s ease;
             display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
         }
-        .service-option:hover { border-color: #93c5fd; background: #f0f9ff; }
-        .service-option.active { border-color: #2563eb; background: #eff6ff; }
-        .service-option.active i { color: #2563eb; opacity: 1; }
+        .service-option:hover { border-color: #fed7aa; background: #fff7ed; }
+        .service-option.active { border-color: #f97316; background: #fff7ed; }
+        .service-option.active i { color: #f97316; opacity: 1; }
         .service-option.active-red { border-color: #ef4444; background: #fef2f2; }
         .service-option.active-red i { color: #ef4444; opacity: 1; }
 
         @keyframes radar-ping { 0% { transform: scale(0.8); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
-        .radar-ring { position: absolute; border-radius: 50%; border: 2px solid #3B82F6; width: 60px; height: 60px; animation: radar-ping 2s infinite; }
+        .radar-ring { position: absolute; border-radius: 50%; border: 2px solid #F97316; width: 60px; height: 60px; animation: radar-ping 2s infinite; }
 
         @media (min-width: 1024px) {
             .main-content-bg {
@@ -83,11 +83,11 @@
         }
         
         .focus-ring { transition: box-shadow 0.2s; }
-        .focus-ring:focus-within { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+        .focus-ring:focus-within { box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2); }
 
         .chat-float {
             position: fixed; bottom: 85px; right: 20px;
-            background-color: #2563EB; color: white;
+            background-color: #F97316; color: white;
             border-radius: 50%; width: 56px; height: 56px;
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -120,7 +120,7 @@
         }
     </style>
 </head>
-<body class="text-slate-900 selection:bg-blue-100 selection:text-blue-700 h-screen overflow-hidden flex flex-col bg-slate-50">
+<body class="text-slate-900 selection:bg-orange-100 selection:text-orange-700 h-screen overflow-hidden flex flex-col bg-slate-50">
 
     <!-- OFFLINE INDICATOR -->
     <div id="offline-banner" class="fixed top-0 left-0 w-full bg-slate-800 text-white text-[10px] font-bold text-center py-2 z-[200] flex items-center justify-center gap-2">
@@ -129,20 +129,20 @@
     </div>
 
     <!-- LOADING SPLASH -->
-    <div id="splash-screen" class="fixed inset-0 bg-blue-600 z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
-        <div class="bg-white p-4 rounded-2xl shadow-xl mb-4 animate-bounce"><i data-lucide="car" class="h-10 w-10 text-blue-600"></i></div>
+    <div id="splash-screen" class="fixed inset-0 bg-orange-600 z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="bg-white p-4 rounded-2xl shadow-xl mb-4 animate-bounce"><i data-lucide="car" class="h-10 w-10 text-orange-600"></i></div>
         <h1 class="text-white text-2xl font-black tracking-tight">Move With Nandu</h1>
-        <p class="text-blue-100 text-sm font-medium">Loading App...</p>
+        <p class="text-orange-100 text-sm font-medium">Loading App...</p>
     </div>
 
     <!-- AUTH MODAL -->
-    <div id="auth-screen" class="fixed inset-0 z-[90] hidden overflow-y-auto" style="background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 50%, #1d4ed8 100%);">
+    <div id="auth-screen" class="fixed inset-0 z-[90] hidden overflow-y-auto" style="background: linear-gradient(135deg, #7c2d12 0%, #f97316 50%, #ea580c 100%);">
         
         <!-- Background decoration -->
         <div class="absolute inset-0 overflow-hidden pointer-events-none">
             <div class="absolute -top-20 -right-20 w-80 h-80 bg-white/5 rounded-full blur-3xl"></div>
-            <div class="absolute -bottom-20 -left-20 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl"></div>
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/3 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-20 -left-20 w-96 h-96 bg-orange-300/10 rounded-full blur-3xl"></div>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-300/5 rounded-full blur-3xl"></div>
         </div>
 
         <div class="relative min-h-screen flex flex-col items-center justify-center p-4 py-10">
@@ -150,10 +150,10 @@
             <!-- Brand Header -->
             <div class="text-center mb-8">
                 <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-2xl mb-4">
-                    <i data-lucide="car" class="h-8 w-8 text-blue-600"></i>
+                    <i data-lucide="car" class="h-8 w-8 text-orange-600"></i>
                 </div>
                 <h1 class="text-white text-2xl font-black tracking-tight">Move With Nandu</h1>
-                <p class="text-blue-200 text-sm font-medium mt-1">Your trusted ride partner</p>
+                <p class="text-orange-100 text-sm font-medium mt-1">Your trusted ride partner</p>
             </div>
 
             <!-- Auth Card -->
@@ -164,7 +164,7 @@
                     <!-- Tab Switcher -->
                     <div class="flex border-b border-slate-100">
                         <button id="tab-login-btn" onclick="switchAuthTab('login')"
-                            class="flex-1 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition-all">
+                            class="flex-1 py-4 text-sm font-bold text-orange-600 border-b-2 border-orange-600 transition-all">
                             Login
                         </button>
                         <button id="tab-register-btn" onclick="switchAuthTab('register')"
@@ -181,13 +181,13 @@
                                 <div class="relative">
                                     <i data-lucide="mail" class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
                                     <input type="email" id="login-email"
-                                        class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-blue-400 focus:bg-white transition"
+                                        class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-orange-400 focus:bg-white transition"
                                         placeholder="Email address">
                                 </div>
                                 <div class="relative">
                                     <i data-lucide="lock" class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
                                     <input type="password" id="login-password"
-                                        class="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-blue-400 focus:bg-white transition"
+                                        class="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-orange-400 focus:bg-white transition"
                                         placeholder="Password"
                                         onkeydown="if(event.key==='Enter') loginWithEmail()">
                                     <button type="button" onclick="togglePassword('login-password', this)"
@@ -201,12 +201,12 @@
                             <p id="login-error" class="hidden text-xs text-red-500 font-bold text-center mb-3 bg-red-50 py-2 px-3 rounded-xl"></p>
 
                             <button onclick="loginWithEmail()" id="btn-login"
-                                class="w-full py-3.5 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 active:scale-95 transition text-sm flex items-center justify-center gap-2">
+                                class="w-full py-3.5 bg-orange-600 text-white font-bold rounded-xl shadow-lg hover:bg-orange-700 active:scale-95 transition text-sm flex items-center justify-center gap-2">
                                 <i data-lucide="log-in" class="h-4 w-4"></i> Login to My Account
                             </button>
 
                             <p class="text-center text-xs text-slate-400 font-medium mt-3">
-                                No account? <button onclick="switchAuthTab('register')" class="text-blue-600 font-bold hover:underline">Sign up free →</button>
+                                No account? <button onclick="switchAuthTab('register')" class="text-orange-600 font-bold hover:underline">Sign up free →</button>
                             </p>
                         </div>
 
@@ -216,25 +216,25 @@
                                 <div class="relative">
                                     <i data-lucide="user" class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
                                     <input type="text" id="reg-name"
-                                        class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-blue-400 focus:bg-white transition"
+                                        class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-orange-400 focus:bg-white transition"
                                         placeholder="Full name">
                                 </div>
                                 <div class="relative">
                                     <i data-lucide="phone" class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
                                     <input type="tel" id="reg-phone" maxlength="10"
-                                        class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-blue-400 focus:bg-white transition"
+                                        class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-orange-400 focus:bg-white transition"
                                         placeholder="10-digit mobile number">
                                 </div>
                                 <div class="relative">
                                     <i data-lucide="mail" class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
                                     <input type="email" id="reg-email"
-                                        class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-blue-400 focus:bg-white transition"
+                                        class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-orange-400 focus:bg-white transition"
                                         placeholder="Email address">
                                 </div>
                                 <div class="relative">
                                     <i data-lucide="lock" class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
                                     <input type="password" id="reg-password"
-                                        class="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-blue-400 focus:bg-white transition"
+                                        class="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-orange-400 focus:bg-white transition"
                                         placeholder="Create password (min 6 chars)"
                                         onkeydown="if(event.key==='Enter') registerWithEmail()">
                                     <button type="button" onclick="togglePassword('reg-password', this)"
@@ -248,12 +248,12 @@
                             <p id="register-error" class="hidden text-xs text-red-500 font-bold text-center mb-3 bg-red-50 py-2 px-3 rounded-xl"></p>
 
                             <button onclick="registerWithEmail()" id="btn-register"
-                                class="w-full py-3.5 bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:bg-slate-800 active:scale-95 transition text-sm flex items-center justify-center gap-2">
+                                class="w-full py-3.5 bg-orange-600 text-white font-bold rounded-xl shadow-lg hover:bg-orange-700 active:scale-95 transition text-sm flex items-center justify-center gap-2">
                                 <i data-lucide="user-plus" class="h-4 w-4"></i> Create My Account
                             </button>
 
                             <p class="text-center text-xs text-slate-400 font-medium mt-3">
-                                Already have an account? <button onclick="switchAuthTab('login')" class="text-blue-600 font-bold hover:underline">Login →</button>
+                                Already have an account? <button onclick="switchAuthTab('login')" class="text-orange-600 font-bold hover:underline">Login →</button>
                             </p>
                         </div>
 
@@ -284,18 +284,18 @@
                         <div class="relative">
                             <i data-lucide="user" class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
                             <input type="text" id="user-name-input"
-                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-blue-400 focus:bg-white transition"
+                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-orange-400 focus:bg-white transition"
                                 placeholder="Your full name">
                         </div>
                         <div class="relative">
                             <i data-lucide="phone" class="absolute left-3.5 top-3.5 h-4 w-4 text-slate-400"></i>
                             <input type="tel" id="user-phone-input" maxlength="10"
-                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-blue-400 focus:bg-white transition"
+                                class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none font-semibold text-sm focus:border-orange-400 focus:bg-white transition"
                                 placeholder="10-digit mobile number">
                         </div>
                     </div>
                     <button onclick="saveUserProfile()"
-                        class="w-full py-3.5 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 active:scale-95 transition text-sm flex items-center justify-center gap-2">
+                        class="w-full py-3.5 bg-orange-600 text-white font-bold rounded-xl shadow-lg hover:bg-orange-700 active:scale-95 transition text-sm flex items-center justify-center gap-2">
                         <i data-lucide="arrow-right" class="h-4 w-4"></i> Finish Setup
                     </button>
                     <p class="text-[10px] text-slate-400 text-center font-medium">Your info is secure and never shared</p>
@@ -304,7 +304,7 @@
             </div><!-- /auth card -->
 
             <!-- Footer link -->
-            <a href="index.html" class="mt-6 text-blue-200 hover:text-white text-xs font-bold flex items-center gap-1.5 transition">
+            <a href="index.html" class="mt-6 text-orange-100 hover:text-white text-xs font-bold flex items-center gap-1.5 transition">
                 <i data-lucide="arrow-left" class="h-3.5 w-3.5"></i> Back to Website
             </a>
 
@@ -314,15 +314,15 @@
     <!-- DESKTOP NAVBAR -->
     <nav class="hidden lg:flex bg-white/90 backdrop-blur-md border-b border-slate-200 h-20 items-center justify-between px-8 z-30 shrink-0">
         <div class="flex items-center gap-3 cursor-pointer group" onclick="window.location.href='index.html'">
-            <div class="bg-blue-600 p-2 rounded-xl shadow-lg shadow-blue-200 group-hover:scale-105 transition-transform"><i data-lucide="car" class="h-5 w-5 text-white"></i></div>
-            <h1 class="font-extrabold text-xl text-slate-900 tracking-tight">Move With <span class="text-blue-600">Nandu</span></h1>
+            <div class="bg-orange-600 p-2 rounded-xl shadow-lg shadow-orange-200 group-hover:scale-105 transition-transform"><i data-lucide="car" class="h-5 w-5 text-white"></i></div>
+            <h1 class="font-extrabold text-xl text-slate-900 tracking-tight">Move With <span class="text-orange-600">Nandu</span></h1>
         </div>
         <div class="flex items-center gap-8">
-            <button onclick="switchView('booking')" id="d-nav-booking" class="font-bold text-blue-600 transition flex items-center gap-2 py-2 border-b-2 border-blue-600"><i data-lucide="map-pin" class="h-4 w-4"></i> Book</button>
+            <button onclick="switchView('booking')" id="d-nav-booking" class="font-bold text-orange-600 transition flex items-center gap-2 py-2 border-b-2 border-orange-600"><i data-lucide="map-pin" class="h-4 w-4"></i> Book</button>
             <button onclick="switchView('orders')" id="d-nav-orders" class="font-bold text-slate-500 hover:text-slate-800 transition flex items-center gap-2 py-2 border-b-2 border-transparent"><i data-lucide="list" class="h-4 w-4"></i> My Rides</button>
             <div class="h-6 w-px bg-slate-200 mx-2"></div>
             <button onclick="switchView('profile')" class="flex items-center gap-3 font-bold text-slate-900 hover:bg-slate-50 pl-3 pr-4 py-2 rounded-full border border-slate-200 transition shadow-sm">
-                <div class="bg-blue-100 p-1.5 rounded-full"><i data-lucide="user" class="h-4 w-4 text-blue-600"></i></div>
+                <div class="bg-orange-100 p-1.5 rounded-full"><i data-lucide="user" class="h-4 w-4 text-orange-600"></i></div>
                 <span id="header-user-name" class="text-sm">Guest</span>
             </button>
         </div>
@@ -334,12 +334,12 @@
         <!-- MOBILE HEADER -->
         <header class="lg:hidden w-full bg-white/90 backdrop-blur-md border-b border-slate-100 h-16 flex items-center justify-between px-4 z-40 sticky top-0 shrink-0">
             <div class="flex items-center gap-2">
-                <div class="bg-blue-600 p-1.5 rounded-lg"><i data-lucide="car" class="h-4 w-4 text-white"></i></div>
+                <div class="bg-orange-600 p-1.5 rounded-lg"><i data-lucide="car" class="h-4 w-4 text-white"></i></div>
                 <h1 class="font-bold text-slate-900 tracking-tight" id="header-title">Book Ride</h1>
             </div>
             <div class="flex items-center gap-3">
                 <div id="m-connection-status" class="w-2.5 h-2.5 rounded-full bg-slate-300"></div>
-                <button onclick="switchView('profile')" class="p-2 bg-slate-100 rounded-full text-slate-500 hover:text-blue-600"><i data-lucide="user" class="h-4 w-4"></i></button>
+                <button onclick="switchView('profile')" class="p-2 bg-slate-100 rounded-full text-slate-500 hover:text-orange-600"><i data-lucide="user" class="h-4 w-4"></i></button>
             </div>
         </header>
 
@@ -359,14 +359,14 @@
                     <div id="card-searching-overlay" class="absolute inset-0 bg-white/95 backdrop-blur-sm z-50 hidden flex-col items-center justify-center" style="display:none">
                         <div class="relative w-24 h-24 flex items-center justify-center mb-6">
                             <div class="radar-ring"></div><div class="radar-ring" style="animation-delay: 0.5s"></div>
-                            <div class="relative z-10 bg-blue-600 p-4 rounded-full shadow-xl"><i data-lucide="search" class="h-8 w-8 text-white animate-pulse"></i></div>
+                            <div class="relative z-10 bg-orange-600 p-4 rounded-full shadow-xl"><i data-lucide="search" class="h-8 w-8 text-white animate-pulse"></i></div>
                         </div>
                         <h3 class="font-bold text-slate-900 text-lg">Finding Drivers</h3>
                         <p class="text-slate-500 text-sm font-medium">Please wait a moment...</p>
                     </div>
 
                     <!-- Header -->
-                    <div class="bg-blue-600 p-6 text-white relative overflow-hidden">
+                    <div class="bg-orange-600 p-6 text-white relative overflow-hidden">
                         <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
                         <div class="relative z-10">
                             <div class="flex justify-between items-start">
@@ -378,8 +378,8 @@
                             </div>
                             
                             <div class="flex bg-white/20 p-1.5 rounded-2xl mt-4 backdrop-blur-md">
-                                <button onclick="switchBookingType('shared')" id="tab-shared" class="flex-1 py-3 text-xs font-bold rounded-xl bg-white text-blue-600 shadow-lg transition-all">Shared Seat</button>
-                                <button onclick="switchBookingType('full')" id="tab-full" class="flex-1 py-3 text-xs font-bold rounded-xl text-blue-100 hover:text-white transition-all hover:bg-white/10">Full Cab / Amb</button>
+                                <button onclick="switchBookingType('shared')" id="tab-shared" class="flex-1 py-3 text-xs font-bold rounded-xl bg-white text-orange-600 shadow-lg transition-all">Shared Seat</button>
+                                <button onclick="switchBookingType('full')" id="tab-full" class="flex-1 py-3 text-xs font-bold rounded-xl text-orange-100 hover:text-white transition-all hover:bg-white/10">Full Cab / Amb</button>
                             </div>
                         </div>
                     </div>
@@ -401,7 +401,7 @@
                         <div class="space-y-4">
                             <div class="relative focus-ring rounded-2xl">
                                 <label class="absolute left-10 top-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">From</label>
-                                <i data-lucide="map-pin" class="absolute left-3 top-4 h-5 w-5 text-blue-500"></i>
+                                <i data-lucide="map-pin" class="absolute left-3 top-4 h-5 w-5 text-orange-500"></i>
                                 <select id="from-loc" onchange="handleLocationChange('from')" class="w-full pl-10 pt-6 pb-2 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold outline-none focus:bg-white transition appearance-none text-slate-800 cursor-pointer h-16">
                                     <option value="Karimnagar">Karimnagar</option><option value="JBS-Hyderabad">JBS-Hyderabad</option>
                                 </select>
@@ -449,9 +449,9 @@
                             <div class="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                 <div class="flex items-center gap-3"><div class="bg-white p-2 rounded-xl shadow-sm"><i data-lucide="users" class="h-5 w-5 text-slate-400"></i></div><span class="text-sm font-bold text-slate-600">Passengers</span></div>
                                 <div class="flex items-center gap-4">
-                                    <button onclick="changePassengers(-1)" class="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-200 font-bold text-blue-600 hover:bg-slate-50 text-xl">-</button>
+                                    <button onclick="changePassengers(-1)" class="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-200 font-bold text-orange-600 hover:bg-slate-50 text-xl">-</button>
                                     <span id="passenger-count" class="font-black text-2xl w-6 text-center text-slate-900">1</span>
-                                    <button onclick="changePassengers(1)" class="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-200 font-bold text-blue-600 hover:bg-slate-50 text-xl">+</button>
+                                    <button onclick="changePassengers(1)" class="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-200 font-bold text-orange-600 hover:bg-slate-50 text-xl">+</button>
                                 </div>
                             </div>
                         </div>
@@ -461,7 +461,7 @@
                             <!-- Service Type -->
                             <div class="grid grid-cols-2 gap-3">
                                 <div id="srv-cab" onclick="selectService('cab')" class="service-option active">
-                                    <i data-lucide="car-front" class="h-7 w-7 text-blue-600"></i>
+                                    <i data-lucide="car-front" class="h-7 w-7 text-orange-600"></i>
                                     <p class="text-xs font-bold uppercase tracking-wide">Private Cab</p>
                                 </div>
                                 <div id="srv-ambulance" onclick="selectService('ambulance')" class="service-option">
@@ -528,7 +528,7 @@
                             <div class="flex gap-2">
                                 <div class="relative flex-1">
                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="ticket" class="h-4 w-4 text-slate-400"></i></div>
-                                    <input type="text" id="coupon-code" placeholder="Promo Code" class="w-full pl-9 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-blue-100">
+                                    <input type="text" id="coupon-code" placeholder="Promo Code" class="w-full pl-9 p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-orange-100">
                                 </div>
                                 <button onclick="applyCoupon()" class="bg-slate-900 text-white px-4 rounded-xl text-xs font-bold hover:bg-slate-800">Apply</button>
                             </div>
@@ -542,13 +542,13 @@
 
                         <!-- Date -->
                         <div class="flex gap-4 items-stretch pt-2">
-                            <div class="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:border-blue-100 transition cursor-pointer">
+                            <div class="w-full p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:border-orange-100 transition cursor-pointer">
                                 <label class="text-[10px] font-bold text-slate-400 uppercase block mb-1 tracking-widest">Date</label>
                                 <input type="date" id="travel-date" class="w-full bg-transparent text-sm font-bold outline-none text-slate-700 cursor-pointer" required>
                             </div>
                         </div>
 
-                        <button onclick="initiateBookingProcess()" id="submit-btn" class="w-full py-4 bg-blue-600 text-white font-bold rounded-2xl shadow-xl shadow-blue-500/30 hover:bg-blue-700 flex justify-center items-center gap-2 text-lg transition">
+                        <button onclick="initiateBookingProcess()" id="submit-btn" class="w-full py-4 bg-orange-600 text-white font-bold rounded-2xl shadow-xl shadow-orange-500/30 hover:bg-orange-700 flex justify-center items-center gap-2 text-lg transition">
                             Confirm Booking <i data-lucide="arrow-right" class="h-5 w-5 stroke-[3]"></i>
                         </button>
                     </div>
@@ -569,14 +569,14 @@
             <!-- VIEW 4: PROFILE PAGE -->
             <div id="view-profile" class="hidden w-full max-w-xl pb-24">
                 <div class="bg-white rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden min-h-[80vh] flex flex-col">
-                    <div class="absolute top-0 left-0 w-full h-48 bg-gradient-to-b from-blue-50 to-white z-0"></div>
-                    <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-100 rounded-full blur-3xl opacity-50"></div>
+                    <div class="absolute top-0 left-0 w-full h-48 bg-gradient-to-b from-orange-50 to-white z-0"></div>
+                    <div class="absolute -top-10 -right-10 w-40 h-40 bg-orange-100 rounded-full blur-3xl opacity-50"></div>
                     <div class="absolute top-20 -left-10 w-32 h-32 bg-purple-100 rounded-full blur-3xl opacity-50"></div>
 
                     <div class="relative z-10 flex flex-col items-center mt-4">
                         <div class="relative group">
                             <div class="w-32 h-32 rounded-full p-1.5 bg-white shadow-xl mb-4 relative z-10">
-                                <img id="profile-avatar" src="https://api.dicebear.com/9.x/micah/svg?seed=guest&backgroundColor=e0e7ff" alt="Avatar" class="w-full h-full rounded-full object-cover bg-blue-50">
+                                <img id="profile-avatar" src="https://api.dicebear.com/9.x/micah/svg?seed=guest&backgroundColor=fed7aa" alt="Avatar" class="w-full h-full rounded-full object-cover bg-orange-50">
                             </div>
                         </div>
                         <div class="text-center mb-8">
@@ -585,7 +585,7 @@
                         </div>
                         <div class="grid grid-cols-2 gap-4 w-full mb-8">
                             <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-lg flex flex-col items-center justify-center gap-1">
-                                <div class="bg-blue-50 p-2 rounded-xl mb-1"><i data-lucide="car" class="h-5 w-5 text-blue-600"></i></div>
+                                <div class="bg-orange-50 p-2 rounded-xl mb-1"><i data-lucide="car" class="h-5 w-5 text-orange-600"></i></div>
                                 <div class="text-3xl font-black text-slate-900" id="profile-rides-count">0</div>
                                 <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Rides</div>
                             </div>
@@ -597,14 +597,14 @@
                         </div>
                         <div class="w-full space-y-3">
                             <button onclick="enableNameEdit()" class="w-full flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-transparent hover:bg-white hover:border-slate-200 hover:shadow-md transition-all group text-left">
-                                <div class="w-12 h-12 rounded-2xl bg-white text-blue-600 flex items-center justify-center shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-colors"><i data-lucide="pencil" class="h-5 w-5"></i></div>
+                                <div class="w-12 h-12 rounded-2xl bg-white text-orange-600 flex items-center justify-center shadow-sm group-hover:bg-orange-600 group-hover:text-white transition-colors"><i data-lucide="pencil" class="h-5 w-5"></i></div>
                                 <div class="flex-1"><p class="font-bold text-slate-900 text-sm">Edit Name</p><p class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Display Name</p></div>
-                                <i data-lucide="chevron-right" class="h-4 w-4 text-slate-300 group-hover:text-blue-500 transition-colors"></i>
+                                <i data-lucide="chevron-right" class="h-4 w-4 text-slate-300 group-hover:text-orange-500 transition-colors"></i>
                             </button>
                             <div id="name-edit-container" class="hidden w-full px-1 mb-2">
-                                <div class="flex gap-2 bg-white p-2 rounded-2xl border border-blue-200 shadow-lg">
+                                <div class="flex gap-2 bg-white p-2 rounded-2xl border border-orange-200 shadow-lg">
                                     <input type="text" id="edit-profile-name-input" class="flex-1 bg-transparent px-4 py-2 text-sm font-bold outline-none text-slate-900 placeholder-slate-300" placeholder="Enter new name">
-                                    <button onclick="saveNameEdit()" class="bg-blue-600 text-white px-6 py-2 rounded-xl text-xs font-bold shadow-md hover:bg-blue-700">Save</button>
+                                    <button onclick="saveNameEdit()" class="bg-orange-600 text-white px-6 py-2 rounded-xl text-xs font-bold shadow-md hover:bg-orange-700">Save</button>
                                 </div>
                             </div>
                             <button onclick="openChat()" class="w-full flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border border-transparent hover:bg-white hover:border-slate-200 hover:shadow-md transition-all group text-left">
@@ -638,9 +638,9 @@
 
     <!-- MOBILE BOTTOM NAV -->
     <nav id="mobile-nav" class="lg:hidden bg-white/90 backdrop-blur-md border-t border-slate-200 h-20 fixed bottom-0 w-full flex justify-around items-center z-40 pb-safe shadow-[0_-4px_20px_-5px_rgba(0,0,0,0.1)]">
-        <button onclick="switchView('booking')" id="nav-booking" class="flex flex-col items-center gap-1.5 text-blue-600 transition p-2 rounded-xl"><i data-lucide="plus-circle" class="h-6 w-6 stroke-[2.5]"></i><span class="text-[10px] font-bold">Book</span></button>
-        <button onclick="switchView('orders')" id="nav-orders" class="flex flex-col items-center gap-1.5 text-slate-400 hover:text-blue-600 transition p-2 rounded-xl"><i data-lucide="list" class="h-6 w-6 stroke-[2.5]"></i><span class="text-[10px] font-bold">Orders</span></button>
-        <button onclick="switchView('profile')" id="nav-profile" class="flex flex-col items-center gap-1.5 text-slate-400 hover:text-blue-600 transition p-2 rounded-xl"><i data-lucide="user" class="h-6 w-6 stroke-[2.5]"></i><span class="text-[10px] font-bold">Profile</span></button>
+        <button onclick="switchView('booking')" id="nav-booking" class="flex flex-col items-center gap-1.5 text-orange-600 transition p-2 rounded-xl"><i data-lucide="plus-circle" class="h-6 w-6 stroke-[2.5]"></i><span class="text-[10px] font-bold">Book</span></button>
+        <button onclick="switchView('orders')" id="nav-orders" class="flex flex-col items-center gap-1.5 text-slate-400 hover:text-orange-600 transition p-2 rounded-xl"><i data-lucide="list" class="h-6 w-6 stroke-[2.5]"></i><span class="text-[10px] font-bold">Orders</span></button>
+        <button onclick="switchView('profile')" id="nav-profile" class="flex flex-col items-center gap-1.5 text-slate-400 hover:text-orange-600 transition p-2 rounded-xl"><i data-lucide="user" class="h-6 w-6 stroke-[2.5]"></i><span class="text-[10px] font-bold">Profile</span></button>
     </nav>
     
     <!-- Chat Float -->
@@ -649,19 +649,19 @@
     <!-- Chat Modal -->
     <div id="chat-modal" class="fixed inset-0 bg-black/60 z-[160] hidden items-end md:items-center justify-center p-4" style="display:none">
         <div class="bg-white w-full max-w-sm rounded-[2rem] h-[500px] flex flex-col relative shadow-2xl overflow-hidden">
-            <div class="bg-blue-600 p-4 flex justify-between items-center text-white shrink-0">
+            <div class="bg-orange-600 p-4 flex justify-between items-center text-white shrink-0">
                 <div class="flex items-center gap-3">
                     <div class="relative">
                         <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center"><i data-lucide="headset" class="h-5 w-5"></i></div>
-                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-blue-600 rounded-full"></span>
+                        <span class="absolute bottom-0 right-0 w-3 h-3 bg-green-400 border-2 border-orange-600 rounded-full"></span>
                     </div>
-                    <div><h3 class="font-bold text-sm">Nandu Support</h3><p class="text-[10px] text-blue-100">Typically replies in 5m</p></div>
+                    <div><h3 class="font-bold text-sm">Nandu Support</h3><p class="text-[10px] text-orange-100">Typically replies in 5m</p></div>
                 </div>
                 <button onclick="document.getElementById('chat-modal').style.display='none'" class="p-2 hover:bg-white/10 rounded-full transition"><i data-lucide="x" class="h-5 w-5"></i></button>
             </div>
             <div class="flex-1 bg-slate-50 p-4 overflow-y-auto space-y-4" id="chat-messages">
                 <div class="flex gap-3">
-                    <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0 text-blue-600 text-xs font-bold">N</div>
+                    <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center shrink-0 text-orange-600 text-xs font-bold">N</div>
                     <div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-slate-100 max-w-[80%]">
                         <p class="text-xs font-medium text-slate-700">Hello! 👋 How can we help you today?</p>
                         <span class="text-[9px] text-slate-400 block mt-1 text-right">Just now</span>
@@ -671,7 +671,7 @@
             <div class="p-3 bg-white border-t border-slate-100 shrink-0">
                 <div class="flex items-center gap-2 bg-slate-50 p-1.5 rounded-full border border-slate-200">
                     <input type="text" id="chat-input" placeholder="Type a message..." class="flex-1 bg-transparent px-4 py-2 text-sm font-medium outline-none text-slate-700 placeholder-slate-400">
-                    <button onclick="sendChatMessage()" class="p-2.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition shadow-sm"><i data-lucide="send" class="h-4 w-4"></i></button>
+                    <button onclick="sendChatMessage()" class="p-2.5 bg-orange-600 text-white rounded-full hover:bg-orange-700 transition shadow-sm"><i data-lucide="send" class="h-4 w-4"></i></button>
                 </div>
             </div>
         </div>
@@ -693,7 +693,7 @@
             <p class="text-xs text-slate-500 mb-6 font-medium leading-relaxed">Active booking found. Create another?</p>
             <div class="flex gap-3">
                 <button onclick="document.getElementById('duplicate-booking-modal').style.display='none'" class="flex-1 py-3 bg-slate-100 rounded-xl font-bold text-xs">Cancel</button>
-                <button id="confirm-duplicate-btn" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold text-xs">Yes, Book</button>
+                <button id="confirm-duplicate-btn" class="flex-1 py-3 bg-orange-600 text-white rounded-xl font-bold text-xs">Yes, Book</button>
             </div>
         </div>
     </div>
@@ -701,12 +701,12 @@
     <!-- Fallback Modal -->
     <div id="fallback-booking-modal" class="fixed inset-0 bg-black/60 z-[120] hidden items-center justify-center p-4" style="display:none">
         <div class="bg-white w-full max-w-xs rounded-3xl p-6 text-center shadow-2xl">
-            <div class="w-14 h-14 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-600"><i data-lucide="info" class="h-7 w-7"></i></div>
+            <div class="w-14 h-14 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 text-orange-600"><i data-lucide="info" class="h-7 w-7"></i></div>
             <h3 class="font-bold text-lg mb-2 text-slate-900">Vehicle Update</h3>
             <p class="text-xs text-slate-500 mb-6 font-medium leading-relaxed" id="fallback-msg"></p>
             <div class="flex gap-3">
                 <button onclick="document.getElementById('fallback-booking-modal').style.display='none'" class="flex-1 py-3 bg-slate-100 rounded-xl font-bold text-xs">Cancel</button>
-                <button id="confirm-fallback-btn" class="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold text-xs">Accept</button>
+                <button id="confirm-fallback-btn" class="flex-1 py-3 bg-orange-600 text-white rounded-xl font-bold text-xs">Accept</button>
             </div>
         </div>
     </div>
@@ -999,7 +999,7 @@
             document.getElementById('profile-mobile').innerText = u.email || userData.phone || 'No email';
             const seed = u.email ? u.email.replace(/[^a-zA-Z0-9]/g, '') : 'guest';
             const avatarEl = document.getElementById('profile-avatar');
-            if (avatarEl) avatarEl.src = `https://api.dicebear.com/9.x/micah/svg?seed=${seed}&backgroundColor=e0e7ff&radius=50`;
+            if (avatarEl) avatarEl.src = `https://api.dicebear.com/9.x/micah/svg?seed=${seed}&backgroundColor=fed7aa&radius=50`;
             document.getElementById('m-connection-status').classList.replace('bg-slate-300', 'bg-green-500');
             
             // FIX 2: syncData MUST be called after initUserUI so My Rides loads
@@ -1115,14 +1115,14 @@
             if (tab === 'login') {
                 loginForm.classList.remove('hidden');
                 registerForm.classList.add('hidden');
-                loginBtn.className = 'flex-1 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition-all';
+                loginBtn.className = 'flex-1 py-4 text-sm font-bold text-orange-600 border-b-2 border-orange-600 transition-all';
                 registerBtn.className = 'flex-1 py-4 text-sm font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition-all';
                 document.getElementById('login-error').classList.add('hidden');
             } else {
                 loginForm.classList.add('hidden');
                 registerForm.classList.remove('hidden');
                 loginBtn.className = 'flex-1 py-4 text-sm font-bold text-slate-400 border-b-2 border-transparent hover:text-slate-600 transition-all';
-                registerBtn.className = 'flex-1 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition-all';
+                registerBtn.className = 'flex-1 py-4 text-sm font-bold text-orange-600 border-b-2 border-orange-600 transition-all';
                 document.getElementById('register-error').classList.add('hidden');
             }
         }
@@ -1394,11 +1394,11 @@
             if(!msg) return;
             const messages = document.getElementById('chat-messages');
             const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            messages.innerHTML += `<div class="flex justify-end"><div class="bg-blue-600 text-white p-3 rounded-2xl rounded-tr-none shadow-md max-w-[80%]"><p class="text-xs font-medium">${msg}</p><span class="text-[9px] text-blue-200 block mt-1 text-right">${time}</span></div></div>`;
+            messages.innerHTML += `<div class="flex justify-end"><div class="bg-orange-600 text-white p-3 rounded-2xl rounded-tr-none shadow-md max-w-[80%]"><p class="text-xs font-medium">${msg}</p><span class="text-[9px] text-orange-100 block mt-1 text-right">${time}</span></div></div>`;
             input.value = '';
             messages.scrollTop = messages.scrollHeight;
             setTimeout(() => {
-                messages.innerHTML += `<div class="flex gap-3"><div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0 text-blue-600 text-xs font-bold">N</div><div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-slate-100 max-w-[80%]"><p class="text-xs font-medium text-slate-700">We've received your message. An agent will join shortly.</p><span class="text-[9px] text-slate-400 block mt-1 text-right">Just now</span></div></div>`;
+                messages.innerHTML += `<div class="flex gap-3"><div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center shrink-0 text-orange-600 text-xs font-bold">N</div><div class="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm border border-slate-100 max-w-[80%]"><p class="text-xs font-medium text-slate-700">We've received your message. An agent will join shortly.</p><span class="text-[9px] text-slate-400 block mt-1 text-right">Just now</span></div></div>`;
                 messages.scrollTop = messages.scrollHeight;
             }, 1500);
         }
@@ -1409,8 +1409,8 @@
             state.passengers = 1;
             document.getElementById('passenger-count').innerText = 1;
             const shared = t === 'shared';
-            document.getElementById('tab-shared').className = shared ? "flex-1 py-3 text-xs font-bold rounded-xl bg-white text-blue-600 shadow-lg transition-all" : "flex-1 py-3 text-xs font-bold rounded-xl text-blue-100 hover:text-white transition-all hover:bg-white/10";
-            document.getElementById('tab-full').className = !shared ? "flex-1 py-3 text-xs font-bold rounded-xl bg-white text-blue-600 shadow-lg transition-all" : "flex-1 py-3 text-xs font-bold rounded-xl text-blue-100 hover:text-white transition-all hover:bg-white/10";
+            document.getElementById('tab-shared').className = shared ? "flex-1 py-3 text-xs font-bold rounded-xl bg-white text-orange-600 shadow-lg transition-all" : "flex-1 py-3 text-xs font-bold rounded-xl text-orange-100 hover:text-white transition-all hover:bg-white/10";
+            document.getElementById('tab-full').className = !shared ? "flex-1 py-3 text-xs font-bold rounded-xl bg-white text-orange-600 shadow-lg transition-all" : "flex-1 py-3 text-xs font-bold rounded-xl text-orange-100 hover:text-white transition-all hover:bg-white/10";
             document.getElementById('shared-options').classList.toggle('hidden', !shared);
             document.getElementById('full-options').classList.toggle('hidden', shared);
             populateLocations();
@@ -1596,7 +1596,7 @@
                 const wantedName = currentSeat === '7' ? "Innova/SUV" : "Sedan";
                 const altName = altSeat === '7' ? "Innova/SUV" : "Sedan";
                 msgEl.className = "text-xs font-bold py-3 px-4 rounded-xl text-center bg-orange-50 text-orange-700 mb-4 block border border-orange-100 shadow-sm";
-                msgEl.innerHTML = `<div class="flex flex-col gap-1"><span>⚠️ ${wantedName} unavailable.</span><span class="text-blue-600 underline cursor-pointer" onclick="forceSelectAlt('${altSeat}')">But ${altCount} ${altName} available. Switch?</span></div>`;
+                msgEl.innerHTML = `<div class="flex flex-col gap-1"><span>⚠️ ${wantedName} unavailable.</span><span class="text-orange-600 underline cursor-pointer" onclick="forceSelectAlt('${altSeat}')">But ${altCount} ${altName} available. Switch?</span></div>`;
             } else {
                 msgEl.className = "text-xs font-bold py-3 px-4 rounded-xl text-center bg-red-50 text-red-500 mb-4 block border border-red-100";
                 msgEl.innerHTML = `❌ No drivers available right now.`;
@@ -1806,15 +1806,15 @@
             const container = document.getElementById('tracking-content');
             const isActive = ['assigned', 'started'].includes(order.status);
             
-            let statusBadge = isActive ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700';
+            let statusBadge = isActive ? 'bg-orange-100 text-orange-700' : 'bg-yellow-100 text-yellow-700';
             if(order.status === 'completed') statusBadge = 'bg-green-100 text-green-700';
             if(order.status === 'cancelled') statusBadge = 'bg-red-100 text-red-600';
 
             let driverHtml = '';
             if(isActive || order.status === 'completed') {
                 driverHtml = `
-                <div class="bg-blue-50 border border-blue-100 p-4 rounded-2xl mb-6 text-left shadow-sm">
-                    <p class="text-[10px] font-bold text-blue-500 uppercase mb-3">✅ Driver Assigned</p>
+                <div class="bg-orange-50 border border-orange-100 p-4 rounded-2xl mb-6 text-left shadow-sm">
+                    <p class="text-[10px] font-bold text-orange-500 uppercase mb-3">✅ Driver Assigned</p>
                     <div class="flex items-start gap-4 mb-4">
                         <img src="${order.driverImage || 'https://cdn-icons-png.flaticon.com/512/149/149071.png'}" class="w-16 h-16 rounded-2xl object-cover shadow-sm border-2 border-white bg-white">
                         <div class="flex-1">
@@ -1824,11 +1824,11 @@
                             </div>
                         </div>
                     </div>
-                    <div class="bg-white p-3 rounded-xl border border-blue-100 mb-4 flex items-center justify-between shadow-sm">
+                    <div class="bg-white p-3 rounded-xl border border-orange-100 mb-4 flex items-center justify-between shadow-sm">
                         <div><p class="text-[10px] text-slate-400 font-bold uppercase">Vehicle</p><p class="text-sm font-bold text-slate-900">${order.driverVehicle}</p></div>
                         <div class="text-right"><p class="text-[10px] text-slate-400 font-bold uppercase">Plate No</p><p class="text-sm font-bold text-slate-900 font-mono tracking-wider">${order.driverPlate}</p></div>
                     </div>
-                    ${isActive ? `<a href="tel:${order.driverPhone}" class="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2 hover:bg-blue-700 transition">📞 Call Driver</a>` : ''}
+                    ${isActive ? `<a href="tel:${order.driverPhone}" class="w-full py-4 bg-orange-600 text-white rounded-xl font-bold text-sm shadow-lg flex items-center justify-center gap-2 hover:bg-orange-700 transition">📞 Call Driver</a>` : ''}
                 </div>`;
             } else if(order.status === 'pending') {
                 driverHtml = `<div class="bg-yellow-50 p-6 rounded-2xl mb-6 text-center border border-yellow-100"><div class="text-3xl mb-2 animate-spin inline-block">⏳</div><p class="font-bold text-slate-800">Finding Driver...</p><p class="text-xs text-slate-500 mt-1">Please wait while we connect you.</p></div>`;
@@ -1865,7 +1865,7 @@
                         <span class="text-xs font-bold text-slate-500">Service</span>
                         <span class="text-sm font-bold text-slate-900">${order.serviceName || 'Ride'}</span>
                     </div>
-                    <div class="flex justify-between items-center p-3 bg-blue-50 rounded-xl border border-blue-100">
+                    <div class="flex justify-between items-center p-3 bg-orange-50 rounded-xl border border-orange-100">
                         <span class="text-xs font-bold text-slate-500">Total Fare</span>
                         <span class="text-lg font-black text-slate-900">₹${order.price}</span>
                     </div>
@@ -1873,7 +1873,7 @@
                 <div class="space-y-3">
                     ${['pending','assigned'].includes(order.status) ? `<button onclick="confirmCancel('${order.id || order.orderId}')" class="w-full py-3.5 border-2 border-red-100 text-red-500 rounded-xl font-bold text-sm hover:bg-red-50 transition">Cancel Order</button>` : ''}
                     <button onclick="switchView('orders')" class="w-full py-3.5 bg-slate-100 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-200 transition">View All Rides</button>
-                    <button onclick="syncData().then(()=>{ const o=allUserOrders.find(x=>x.id==='${order.id || order.orderId}'); if(o) renderLiveTripDetails(o); })" class="w-full text-xs font-bold text-blue-500 py-2">🔄 Refresh Status</button>
+                    <button onclick="syncData().then(()=>{ const o=allUserOrders.find(x=>x.id==='${order.id || order.orderId}'); if(o) renderLiveTripDetails(o); })" class="w-full text-xs font-bold text-orange-500 py-2">🔄 Refresh Status</button>
                 </div>
             `;
             lucide.createIcons();
@@ -1891,7 +1891,7 @@
                         <div class="text-5xl mb-4">🚖</div>
                         <p class="font-bold text-slate-500 text-lg">No rides yet</p>
                         <p class="text-xs text-slate-400 mt-1">Your booking history will appear here</p>
-                        <button onclick="switchView('booking')" class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm">Book a Ride</button>
+                        <button onclick="switchView('booking')" class="mt-4 px-6 py-2 bg-orange-600 text-white rounded-xl font-bold text-sm">Book a Ride</button>
                     </div>`;
                 return;
             }
@@ -1921,7 +1921,7 @@
                 }
 
                 const statusColors = {
-                    assigned: 'text-blue-700 bg-blue-100',
+                    assigned: 'text-orange-700 bg-orange-100',
                     pending: 'text-yellow-700 bg-yellow-100',
                     cancelled: 'text-red-700 bg-red-100',
                     completed: 'text-green-700 bg-green-100',
@@ -2029,21 +2029,21 @@
 
             // Mobile nav highlighting
             document.querySelectorAll('#mobile-nav button').forEach(b => {
-                b.classList.remove('text-blue-600');
+                b.classList.remove('text-orange-600');
                 b.classList.add('text-slate-400');
             });
             const mobNav = document.getElementById(`nav-${v}`);
             if(mobNav) { 
                 mobNav.classList.remove('text-slate-400'); 
-                mobNav.classList.add('text-blue-600'); 
+                mobNav.classList.add('text-orange-600'); 
             }
 
             // Desktop nav highlighting
             if(v === 'booking') {
-                document.getElementById('d-nav-booking').className = "font-bold text-blue-600 transition flex items-center gap-2 py-2 border-b-2 border-blue-600";
+                document.getElementById('d-nav-booking').className = "font-bold text-orange-600 transition flex items-center gap-2 py-2 border-b-2 border-orange-600";
                 document.getElementById('d-nav-orders').className = "font-bold text-slate-500 hover:text-slate-800 transition flex items-center gap-2 py-2 border-b-2 border-transparent";
             } else if(v === 'orders') {
-                document.getElementById('d-nav-orders').className = "font-bold text-blue-600 transition flex items-center gap-2 py-2 border-b-2 border-blue-600";
+                document.getElementById('d-nav-orders').className = "font-bold text-orange-600 transition flex items-center gap-2 py-2 border-b-2 border-orange-600";
                 document.getElementById('d-nav-booking').className = "font-bold text-slate-500 hover:text-slate-800 transition flex items-center gap-2 py-2 border-b-2 border-transparent";
             }
 
