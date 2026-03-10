@@ -835,6 +835,21 @@
         
         const APP_ID = typeof __app_id !== 'undefined' ? __app_id : 'travel-nandu-v1';
 
+        // =====================================================
+        // GOOGLE REDIRECT HANDLER - Handle Google Sign-In callback
+        // =====================================================
+        const { getRedirectResult } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
+        getRedirectResult(auth).then((result) => {
+            if (result && result.user) {
+                console.log("Google sign-in successful:", result.user.uid);
+                // onAuthStateChanged will pick this up and show profile completion if needed
+            }
+        }).catch((error) => {
+            if (error.code && error.code !== 'auth/cancelled-popup-request') {
+                console.error("Google redirect error:", error.code, error.message);
+            }
+        });
+
         function isStandalonePWA() {
             return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
         }
@@ -1215,33 +1230,46 @@
                     return;
                 }
 
-                const { GoogleAuthProvider, signInWithRedirect } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
+                const { GoogleAuthProvider, signInWithPopup, signInWithRedirect } = await import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js');
                 const provider = new GoogleAuthProvider();
-                await signInWithRedirect(auth, provider);
+                provider.addScope('profile');
+                provider.addScope('email');
+                
+                // Try popup first (works better for web apps)
+                try {
+                    const result = await signInWithPopup(auth, provider);
+                    console.log("Google login successful via popup:", result.user.uid);
+                } catch(popupErr) {
+                    // If popup fails, try redirect (for some browsers/PWAs)
+                    if (popupErr.code === 'auth/popup-blocked' || popupErr.code === 'auth/web-storage-unsupported') {
+                        console.log("Popup blocked, trying redirect method");
+                        await signInWithRedirect(auth, provider);
+                    } else {
+                        throw popupErr;
+                    }
+                }
             } catch(e) {
                 if (e.code === 'auth/unauthorized-domain') {
-                    alert("Google Sign-In is blocked for this domain. Add this site to Firebase Auth > Settings > Authorized domains.");
+                    alert("❌ Domain not authorized.\n\nAdd your domain to Firebase:\nAuth > Settings > Authorized domains");
                     return;
                 }
                 if (e.code === 'auth/operation-not-allowed') {
-                    alert("Google provider is disabled. Enable Google in Firebase Auth > Sign-in method.");
+                    alert("❌ Google Sign-In is disabled.\n\nEnable it in Firebase:\nAuth > Sign-in method > Google");
                     return;
                 }
-                if (e.code === 'auth/popup-blocked' || e.code === 'auth/web-storage-unsupported') {
-                    const opened = openCurrentPageInExternalBrowser();
-                    alert(opened
-                        ? "Google Sign-In opened in your browser."
-                        : "This environment blocks Google Sign-In. Please use Chrome browser.");
+                if (e.code === 'auth/cancelled-popup-request' || e.code === 'auth/popup-closed-by-user') {
+                    // User closed the popup - not an error
                     return;
                 }
                 if (isStandalonePWA() && e.code === 'auth/operation-not-supported-in-this-environment') {
                     const opened = openCurrentPageInExternalBrowser();
                     alert(opened
-                        ? "Google Sign-In opened in browser because PWA mode blocked it."
-                        : "Google Sign-In is blocked in PWA mode here. Open in Chrome browser.");
+                        ? "Opening Google Sign-In in browser (PWA limitation)."
+                        : "Google Sign-In blocked in PWA mode. Please use Chrome.");
                     return;
                 }
-                alert("Google login failed: " + (e.message || e.code || 'Unknown error'));
+                console.error("Google login error:", e.code, e.message);
+                alert("❌ Google login failed: " + (e.message || e.code || 'Unknown error') + "\n\nPlease try again or use Email login.");
             }
         }
 
